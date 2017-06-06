@@ -46,18 +46,33 @@
  *
  */
 
-package main.scala.placerT.algo
+/*
+ * Placer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Placer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with OscaR.
+ * If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ */
 
-import main.scala.placerT.algo.hw._
-import main.scala.placerT.algo.sw.{CPTask, CPTransmission}
-import main.scala.placerT.metadata.MappingGoal.{MappingGoal, _}
-import main.scala.placerT.metadata._
-import main.scala.placerT.metadata.hw._
-import main.scala.placerT.metadata.sw._
+package placerT.algo
+
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
-import placerT.metadata.MappingProblem
+import placerT.algo.hw._
+import placerT.algo.sw.{CPTask, CPTransmission}
+import placerT.metadata.MappingGoal.{MappingGoal, _}
+import placerT.metadata.{MappingProblem, _}
+import placerT.metadata.hw._
+import placerT.metadata.sw._
 
 object Mapper {
   def findMapping(softwareModel: SoftwareModel, hardwareModel: HardwareModel, goal: MappingGoal): Iterable[Mapping] = {

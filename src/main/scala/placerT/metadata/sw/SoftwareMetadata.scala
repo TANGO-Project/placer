@@ -46,11 +46,27 @@
  *
  */
 
-package main.scala.placerT.metadata.sw
+/*
+ * Placer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Placer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with OscaR.
+ * If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ */
 
-import main.scala.placerT.io.JSonHelper
-import main.scala.placerT.metadata._
-import main.scala.placerT.metadata.hw._
+package placerT.metadata.sw
+
+import placerT.io.JSonHelper
+import placerT.metadata._
+import placerT.metadata.hw._
 
 import scala.collection.immutable.SortedMap
 
@@ -207,7 +223,7 @@ object TransmissionTiming extends Enumeration {
   val Asap, Alap, Free = Value
 }
 
-import main.scala.placerT.metadata.sw.TransmissionTiming._
+import placerT.metadata.sw.TransmissionTiming._
 
 //on peut avoir des flux vers les process atomiques, auquel cas, c'est additioné par process sur le même HW; on peutaussi avoir des communication vers le Groupe,
 // auquel cas, chaque process a besoin de la totalité du flux; c'st donc partagé si deux process du groupe sont sur le même HW
