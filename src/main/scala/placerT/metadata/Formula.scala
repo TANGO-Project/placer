@@ -19,6 +19,7 @@
 package placerT.metadata
 
 import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.language.implicitConversions
 
 object Formula {
   implicit def intToConst(a: Int): Formula = Const(a)
