@@ -119,8 +119,8 @@ case class Mapping(hardwareName: String,
     JSonHelper.string("hardwareName", hardwareName) + "," +
     JSonHelper.int("makeSpan", makeSpan) + "," +
     JSonHelper.int("energy", energy) + "," +
-    JSonHelper.multiples("taskMapping", taskMapping.map(taskMappingToJSon(_))) + "," +
-    JSonHelper.multiples("transmissionMapping", transmissionMapping.map(transmissionMappingToJSon(_))) + "}"
+    JSonHelper.multiples("taskMapping", taskMapping.map(taskMappingToJSon)) + "," +
+    JSonHelper.multiples("transmissionMapping", transmissionMapping.map(transmissionMappingToJSon)) + "}"
 
   def taskMappingToJSon(m: (AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)): String = {
     "{" + JSonHelper.string("task", m._1.name) + "," +
