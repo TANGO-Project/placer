@@ -16,9 +16,10 @@
 
 package placerT.algo.hw
 
+import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.Mapper
+import placerT.algo.{SimpleTask, Mapper}
 import placerT.algo.sw.CPTask
 import placerT.metadata.hw.{MultiTaskPermanentTasks, ProcessingElement}
 
@@ -59,6 +60,10 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
     closeTransmissionAndComputationMemory()
   }
 
-
-
+  override def timeWidth: cp.CPIntVar = {
+    val simpleTasks = tasksPotentiallyExecutingHere.map(cpTask =>
+      new SimpleTask(cpTask.start,cpTask.duration,cpTask.end,cpTask.isRunningOnProcessor(id))
+    )
+    SimpleTask.resourceWidthOfUse(simpleTasks)
+  }
 }

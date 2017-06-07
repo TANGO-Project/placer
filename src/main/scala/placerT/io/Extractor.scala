@@ -19,11 +19,10 @@ package placerT.io
 
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue
-import placerT.metadata.MappingGoal._
 import placerT.metadata.hw._
 import placerT.metadata.sw.TransmissionTiming._
 import placerT.metadata.sw._
-import placerT.metadata.{Formula, MappingProblem}
+import placerT.metadata._
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
@@ -38,17 +37,41 @@ object Extractor {
 
 case class EMappingProblem(softwareModel: ESoftwareModel,
                            hardwareModel: EHardwareModel,
-                           goal: String) {
+                           goal: EGoal) {
 
   def extract = {
     val hw = hardwareModel.extract
     val sw = softwareModel.extract(hw)
-    MappingProblem(sw, hw, goal match {
-      case "MinEnergy" => MinEnergy
-      case "MinMakeSpan" => MinMakeSpan
-      case "ParetoMakeSpanEnergy" => ParetoMakeSpanEnergy
-    })
+
+     MappingProblem(sw, hw, goal.extract)
+    }
+}
+
+case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
+  def extract:MappingGoal = {
+    (simpleObjective,multiObjective) match{
+      case (None,None) => throw new Error("no mapping goal defined")
+      case (Some(s),None) => EGoal.extractSimple(s)
+      case (None,Some(p)) => p.extract
+      case _ => throw new Error("mapping goal defined twice")
+    }
+
   }
+}
+
+object EGoal{
+  def extractSimple(name:String):SimpleMappingGoal = {
+    name match{
+      case "minEnergy" => MinEnergy()
+      case "minMakeSpan" => MinMakeSpan()
+      case "minFrame" => MinFrame()
+      case _ => throw new Error("unknown simple mapping goal:" + name)
+    }
+  }
+}
+
+case class EPareto(a:String,b:String){
+  def extract:Pareto = Pareto(EGoal.extractSimple(a), EGoal.extractSimple(b))
 }
 
 case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
@@ -63,15 +86,22 @@ case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
   }
 }
 
-case class ESoftwareClass(oneShotSoftware: Option[EOneShotSoftware]) {
-  def extract = oneShotSoftware match {
-    case Some(s) => s.extract
-    case None => throw new Error("software class not defined")
+case class ESoftwareClass(oneShotSoftware: Option[EOneShotSoftware],
+                          iterativeSoftware:Option[EITerativeSoftware]) {
+  def extract = (oneShotSoftware,iterativeSoftware) match {
+    case (Some(s),None) => s.extract
+    case (None,Some(i)) => i.extract
+    case (None,None) => throw new Error("software class not defined")
+    case _ =>  throw new Error("software class defined twice")
   }
 }
 
 case class EOneShotSoftware(maxDelay: Option[Int]) {
   def extract = OneShotSoftware(maxDelay)
+}
+
+case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int]){
+  def extract = IterativeSoftware(maxMakespan,maxFrameDelay)
 }
 
 case class EAtomicTask(name: String,

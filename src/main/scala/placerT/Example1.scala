@@ -18,8 +18,7 @@
 package placerT
 
 import placerT.algo.Mapper
-import placerT.metadata.Dim
-import placerT.metadata.MappingGoal._
+import placerT.metadata.{MinMakeSpan, Dim}
 import placerT.metadata.hw._
 import placerT.metadata.sw.TransmissionTiming._
 import placerT.metadata.sw._
@@ -140,7 +139,7 @@ object Example1 extends App {
 
   println(softwareModel)
 
-  val goal = ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
+  val goal = MinMakeSpan() // ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
   val mappingSet = Mapper.findMapping(softwareModel, hardwareModel, goal)
 

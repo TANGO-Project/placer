@@ -277,8 +277,8 @@
       }
     ],
     "softwareClass":{
-      "oneShotSoftware":{
-        "maxDelay":20000
+      "iterativeSoftware":{
+        "maxModulo":1
       }
     }
   },
@@ -460,5 +460,10 @@
       }
     ]
   },
-  "goal":"ParetoMakeSpanEnergy"
+  "goal":{
+    "multiObjective":{
+      "a":"minFrame",
+      "b":"minEnergy"
+    }
+  }
 }

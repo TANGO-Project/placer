@@ -17,6 +17,7 @@
 
 package placerT.algo.hw
 
+import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
@@ -50,6 +51,9 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
         isTaskExecutedHere) :: allSimpleTasksPotentiallyExecutingHere
     }
   }
+
+  override def timeWidth: CPIntVar =
+    SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
 
   override def close() {
     SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay)

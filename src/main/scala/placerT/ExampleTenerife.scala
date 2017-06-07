@@ -20,11 +20,10 @@ package placerT
 import net.liftweb.json._
 import placerT.algo.Mapper
 import placerT.io.Extractor
-import placerT.metadata.MappingGoal._
 import placerT.metadata.hw._
 import placerT.metadata.sw.TransmissionTiming._
 import placerT.metadata.sw._
-import placerT.metadata.{Dim, MappingProblem}
+import placerT.metadata._
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
@@ -43,6 +42,7 @@ object GenerateJSon extends App {
 
   val problem = ExampleTenerifeData.problem
   println(problem)
+  println(problem.toJSon)
   val json = prettyRender(parse(problem.toJSon))
 
 
@@ -164,12 +164,12 @@ object ExampleTenerifeData {
   val softwareModel = SoftwareModel(
     Array(inputting, decoding, transforming, transforming2, watermarking, encoding),
     Array(inputToDecode, decodeToTransform, transformToWatermark, decodeToTransform2, transform2ToWatermark, watermarkToEncode, sideComm),
-    IterativeSoftware(endToEndDelay = Some(300),frameDelay = Some(100),maxModulo = 1)) //OneShotSoftware(Some(20000)))
+    IterativeSoftware(maxMakespan = None,maxFrameDelay = None)) //OneShotSoftware(Some(20000)))
 
 //  OneShotSoftware(Some(20000)))
 
 
-  val goal = ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
+  val goal = Pareto(MinFrame(),MinEnergy()) //ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
   val problem = new MappingProblem(softwareModel, hardwareModel, goal)
 

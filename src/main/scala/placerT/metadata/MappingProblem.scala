@@ -18,7 +18,6 @@
 package placerT.metadata
 
 import placerT.io.JSonHelper
-import placerT.metadata.MappingGoal.MappingGoal
 import placerT.metadata.hw.HardwareModel
 import placerT.metadata.sw.SoftwareModel
 
@@ -33,5 +32,5 @@ case class MappingProblem(softwareModel: SoftwareModel, hardwareModel: HardwareM
   def toJSon: String = "{" +
     JSonHelper.complex("softwareModel", softwareModel.toJSon) + "," +
     JSonHelper.complex("hardwareModel", hardwareModel.toJSon) + "," +
-    JSonHelper.string("goal", goal.toString) + "}"
+    JSonHelper.complex("goal", goal.toJSon) + "}"
 }

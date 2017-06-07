@@ -109,10 +109,3 @@ case class Mappings(mapping: Iterable[Mapping]) {
       mapping.map(_.toStringSortedLight).mkString("\n") + "\n)"
   }
 }
-
-
-object MappingGoal extends Enumeration {
-  type MappingGoal = Value
-  val MinEnergy, MinMakeSpan, ParetoMakeSpanEnergy = Value
-}
-

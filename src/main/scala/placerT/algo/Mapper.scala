@@ -21,7 +21,6 @@ import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import placerT.algo.hw._
 import placerT.algo.sw.{CPTask, CPTransmission}
-import placerT.metadata.MappingGoal.{MappingGoal, _}
 import placerT.metadata.hw._
 import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
@@ -102,11 +101,14 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     val widthVar:Option[CPIntVar] =
       softwareModel.softwareClass match {
         case i:IterativeSoftware =>
-          i.frameDelay match {
+          i.maxFrameDelay match {
             case Some(d) => Some(CPIntVar(0,d))
-            case _ => None
+            case _ if goal.needsWidth => Some(CPIntVar(0,summedMaxTaskDurations))
+            case _ =>  None
           }
-        case _ => None
+        case _ =>
+          require(!goal.needsWidth,"you cannot ask for width related objective if not in an interative software")
+          None
       }
 
     var widthVarList:List[CPIntVar] = List.empty
@@ -152,6 +154,11 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     //deadline
     softwareModel.softwareClass match {
       case OneShotSoftware(Some(deadline)) => add(makeSpan <= deadline)
+      case i:IterativeSoftware =>
+        i.maxMakespan match{
+          case Some(deadline) => add(makeSpan <= deadline)
+          case None => ;
+        }
       case _ => ;
     }
 
@@ -185,10 +192,20 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
 
   def searchMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
 
+    def simpleVarFinder(a:SimpleMappingGoal):CPIntVar = {
+      a match{
+        case MinEnergy() => problem.energy
+        case MinMakeSpan() => problem.makeSpan
+        case MinFrame() => problem.widthVar match {
+          case Some(w) => w
+          case None => throw new Error("you want to minimize width, but this can only be done for iterative software")
+        }
+      }
+    }
+
     goal match {
-      case MinEnergy => minimize(problem.energy)
-      case MinMakeSpan => minimize(problem.makeSpan)
-      case ParetoMakeSpanEnergy => solver.paretoMinimize(problem.makeSpan, problem.energy)
+      case s:SimpleMappingGoal => minimize(simpleVarFinder(s))
+      case Pareto(a,b) => solver.paretoMinimize(simpleVarFinder(a), simpleVarFinder(b))
     }
 
     solver.addDecisionVariables(problem.varsToSave)
@@ -210,9 +227,9 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     println(stat)
 
     goal match {
-      case ParetoMakeSpanEnergy =>
-        solver.nonDominatedSolutions.sortBy(_.apply(problem.makeSpan)).map(cpSol => problem.getMapping(cpSol))
-      case MinEnergy | MinMakeSpan =>
+      case Pareto(a,b) =>
+        solver.nonDominatedSolutions.sortBy(_.apply( simpleVarFinder(a))).map(cpSol => problem.getMapping(cpSol))
+      case _:SimpleMappingGoal =>
         val lastSol = solver.lastSol
         if (lastSol.dict.isEmpty) {
           None
