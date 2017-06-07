@@ -242,4 +242,6 @@ case class IterativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int]) 
     (maxMakespan match{case None => "" ; case Some(t:Int) => JSonHelper.int("maxMakespan",t) + ","}) +
     (maxFrameDelay match{case None => "" ; case Some(t:Int) => JSonHelper.int("maxFrameDelay",t)}) +
     "}") + "}"
+
+  override def toString: String = "IterativeSoftware(maxMakespan:" + maxMakespan + " maxFrameDelay:" + maxFrameDelay + ")"
 }

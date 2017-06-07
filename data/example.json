@@ -278,7 +278,7 @@
     ],
     "softwareClass":{
       "iterativeSoftware":{
-        "maxModulo":1
+        "maxFrameDelay":200
       }
     }
   },
@@ -462,7 +462,7 @@
   },
   "goal":{
     "multiObjective":{
-      "a":"minFrame",
+      "a":"minMakeSpan",
       "b":"minEnergy"
     }
   }

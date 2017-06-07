@@ -133,7 +133,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       }
        widthVar match{
         case Some(w) =>
-          widthVarList = proc.timeWidth :: widthVarList
+          widthVarList = proc.timeWidth :: widthVarList //TODO: add proc.temporaryStorageWidth
         case _ => ;
       }
       proc.close()

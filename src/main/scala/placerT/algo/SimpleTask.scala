@@ -75,7 +75,7 @@ object SimpleTask extends Constraints {
 object CumulativeTask extends Constraints {
 
   /**
-   * posts a cumulative constraint and returns the wdth of the resource
+   * posts a cumulative constraint and returns the width of the resource
    * @param cumulativeTasks a set of cumulative tasks, which require a certain amount of resource (zero means that it does not use the resource, actually)
    * @param maxResource the maximal amount of available resources
    * @return the width of the resource, that is the spacing before the same usage pattern can be repeated
@@ -86,7 +86,7 @@ object CumulativeTask extends Constraints {
     val minimumStartTime:Int = (for (task <- relevantTasks) yield task.start.getMin).min
     val maximumEndTime:Int = (for (task <- relevantTasks) yield task.end.getMax).max
     val store = relevantTasks.head.start.store
-    val width = CPIntVar(minimumStartTime,maximumEndTime)(store)
+    val width = CPIntVar(0, maximumEndTime - minimumStartTime)(store)
 
     val mirrorTasks = relevantTasks.map(
     {case CumulativeTask(start, duration, end, amount, explanation) =>
