@@ -164,7 +164,9 @@ object ExampleTenerifeData {
   val softwareModel = SoftwareModel(
     Array(inputting, decoding, transforming, transforming2, watermarking, encoding),
     Array(inputToDecode, decodeToTransform, transformToWatermark, decodeToTransform2, transform2ToWatermark, watermarkToEncode, sideComm),
-    OneShotSoftware(Some(20000)))
+    IterativeSoftware(endToEndDelay = Some(300),frameDelay = Some(100),maxModulo = 1)) //OneShotSoftware(Some(20000)))
+
+//  OneShotSoftware(Some(20000)))
 
 
   val goal = ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()

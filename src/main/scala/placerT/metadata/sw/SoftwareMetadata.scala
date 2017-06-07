@@ -237,5 +237,10 @@ case class OneShotSoftware(maxDelayRequirement: Option[Int]) extends SoftwareCla
   }) + "}") + "}"
 }
 
-//case class StreamingSofttware(endToEndDelay:Option[Int],frameDelay:Option[Int]) extends SoftwareClass()
-
+case class IterativeSoftware(endToEndDelay:Option[Int],frameDelay:Option[Int],maxModulo:Int) extends SoftwareClass(){
+  override def toJSon: String = "{" + JSonHelper.complex("iterativeSoftware","{" +
+    (endToEndDelay match{case None => "" ; case Some(t:Int) => JSonHelper.int("maxDelay",t) + ","}) +
+    (frameDelay match{case None => "" ; case Some(t:Int) => JSonHelper.int("maxDelay",t) + ","}) +
+    JSonHelper.int("maxModulo",maxModulo) +
+    "}") + "}"
+}

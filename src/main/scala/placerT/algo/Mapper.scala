@@ -38,6 +38,8 @@ object Mapper {
 
 class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel, goal: MappingGoal) extends CPModel with Constraints {
 
+  val store:CPStore = this.solver
+
   val cpProblem = postProblem(softwareModel, hardwareModel)
   val mapping = searchMappingProblem(cpProblem, goal)
 
@@ -50,16 +52,19 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       softwareModel.transmissions.map(flow => hardwareModel.busses.map(bus => bus.transmissionDuration(flow.size)).max).sum
     val maxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes
 
+    //creating the CPTasks
     val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
       process => new CPTask(process.id, process, process.name, this, maxHorizon)
     )
 
+    //creating the CPPRocessors
     val cpProcessors = hardwareModel.processors.map(
       processor => processor.processorClass match {
         case m: MultiTaskPermanentTasks => new CPMultiTaskProcessor(processor.id, processor, processor.memSize, this)
         case m: MonoTaskSwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, m.switchingDelay, this)
       })
 
+    //instantiating constants about adjacency
     val processorToBusAdjacencyNoSelfLoop: Set[(Int, Int)] =
       hardwareModel.busses.flatMap(bus => bus.receivingFromProcessors.map(proc => (proc.id, bus.id))).toSet
 
@@ -79,10 +84,12 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.id, bus.processor.id, bus.id))
 
+    //creating the CPbusses
     val cpBusses: Array[CPBus] = (hardwareModel.busses.toList.map(
       bus => new CPRegularBus(bus.id, bus, this)
     ) ++ selfLoopBusses).toArray
 
+    //creating the CPtransmissions
     val cpTransmissions: Array[CPTransmission] = softwareModel.transmissions.map(
       flow => new CPTransmission(flow.id, flow,
         cpTasks(flow.source.id), cpTasks(flow.target.id),
@@ -91,18 +98,41 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
         this, maxHorizon, processorToBusToProcessorAdjacency)
     )
 
+    //creating the width var, in case needed for modulo scheduling
+    val widthVar:Option[CPIntVar] =
+      softwareModel.softwareClass match {
+        case i:IterativeSoftware =>
+          i.frameDelay match {
+            case Some(d) => Some(CPIntVar(0,d))
+            case _ => None
+          }
+        case _ => None
+      }
+
     //registering tasks and transmissions to processors and busses
     for (bus <- cpBusses) {
       for (transmission <- cpTransmissions) {
         bus.accumulatePotentialTransmissionOnBus(transmission)
       }
       bus.close()
+
+      widthVar match{
+        case Some(w) =>
+          add(bus.timeWidth <= w)
+        case _ => ;
+      }
     }
 
     for (proc <- cpProcessors) {
       for (task <- cpTasks) {
         proc.accumulateExecutionConstraintsOnTask(task)
       }
+      //TODO: width of processors
+      /*widthVar match{
+        case Some(w) =>
+          add(proc.timeWidth <= w)
+        case _ => ;
+      }*/
       proc.close()
     }
 
@@ -115,7 +145,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     //deadline
     softwareModel.softwareClass match {
       case OneShotSoftware(Some(deadline)) => add(makeSpan <= deadline)
-      case OneShotSoftware(None) => ;
+      case _ => ;
     }
 
     //powerCap
@@ -142,7 +172,8 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       cpBusses,
       cpTransmissions,
       makeSpan,
-      energy)
+      energy,
+      widthVar)
   }
 
   def searchMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {

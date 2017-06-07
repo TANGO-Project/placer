@@ -51,9 +51,63 @@ object SimpleTask extends Constraints {
     }
     cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))
   }
+
+  def resourceWidthOfUse(simpleTasks: List[SimpleTask]):CPIntVar = {
+    val simpleTasksArray = simpleTasks.filter(!_.isNeeded.isFalse).toArray
+    val startTimeArray = simpleTasksArray.map(_.start)
+    val endArray = simpleTasksArray.map(_.end)
+    val isNeededArray = simpleTasksArray.map(_.isNeeded)
+
+    val minimumStartTime:Int = (for (x <- startTimeArray) yield x.getMin).min
+    val maximumEndTime:Int = (for (x <- endArray) yield x.getMax).max
+
+    val store = startTimeArray(0).store
+
+    val startTimeArrayMaxIfNotNeeded = Array.tabulate(startTimeArray.length)(
+      filteredTaskID => elementVar(IndexedSeq(CPIntVar(maximumEndTime)(store),startTimeArray(filteredTaskID)),isNeededArray(filteredTaskID)))
+
+    val endTimeArrayMinIfNotNeeded = Array.tabulate(startTimeArray.length)(
+      filteredTaskID => elementVar(IndexedSeq(CPIntVar(minimumStartTime)(store),startTimeArray(filteredTaskID)),isNeededArray(filteredTaskID)))
+
+    maximum(endTimeArrayMinIfNotNeeded) - minimum(startTimeArrayMaxIfNotNeeded)
+  }
+
 }
 
 object CumulativeTask extends Constraints {
+
+  /**
+   * posts a cumulative constraint and returns the wdth of the resource
+   * @param cumulativeTasks a set of cumulative tasks, which require a certain amount of resource (zero means that it does not use the resource, actually)
+   * @param maxResource the maximal amount of available resources
+   * @return the width of the resource, that is the spacing before the same usage pattern can be repeated
+   */
+  def defineResourceWidth(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar):CPIntVar = {
+    val relevantTasks = cumulativeTasks.filter(!_.amount.isBoundTo(0))
+
+    val minimumStartTime:Int = (for (task <- relevantTasks) yield task.start.getMin).min
+    val maximumEndTime:Int = (for (task <- relevantTasks) yield task.end.getMax).max
+    val store = relevantTasks.head.start.store
+    val width = CPIntVar(minimumStartTime,maximumEndTime)(store)
+
+    val mirrorTasks = relevantTasks.map(
+    {case CumulativeTask(start, duration, end, amount, explanation) =>
+      CumulativeTask(start + width, duration, end + width, amount, explanation + " shifted by width")
+    })
+
+    val allRelevantTasks = relevantTasks ++ mirrorTasks
+
+    postCumulativeForSimpleCumulativeTasks(allRelevantTasks, maxResource)
+
+    width
+  }
+
+  /**
+   * posts a cumulative constraint.
+   * @param cumulativeTasks a set of cumulative tasks, which require a certain amount of resource (zero means that it does not use the resource, actually)
+   * @param maxResource the maximal amount of available resources
+   */
+
   def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar) {
     val simpleTasksArray = cumulativeTasks.filter(!_.amount.isBoundTo(0)).toArray
     if (simpleTasksArray.length != 0) {

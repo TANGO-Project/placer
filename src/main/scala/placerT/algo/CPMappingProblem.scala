@@ -32,7 +32,8 @@ case class CPMappingProblem(hardwareName: String,
                             cpBusses: Array[CPBus],
                             cpTransmissions: Array[CPTransmission],
                             makeSpan: CPIntVar,
-                            energy: CPIntVar) {
+                            energy: CPIntVar,
+                            widthVar:Option[CPIntVar]) {
 
   def getMapping(sol: CPSol): Mapping = {
 
@@ -50,6 +51,8 @@ case class CPMappingProblem(hardwareName: String,
     val transmissionMapping = cpTransmissions.map(trans =>
       (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), sol(trans.duration), sol(trans.end)))
 
+    println("width:" + (widthVar match{case None => "none" case Some(w) => ""+sol(w)}))
+
     new Mapping(hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy))
   }
 
@@ -59,6 +62,6 @@ case class CPMappingProblem(hardwareName: String,
       cpTransmissions.flatMap(_.variablesToDistribute)
   }
 
-  def varsToSave: List[CPIntVar] = makeSpan :: energy :: varsToDistribute
+  def varsToSave: List[CPIntVar] = makeSpan :: energy :: varsToDistribute ++ widthVar
 
 }

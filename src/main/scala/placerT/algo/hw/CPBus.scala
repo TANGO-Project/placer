@@ -17,6 +17,7 @@
 
 package placerT.algo.hw
 
+import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTransmission
 import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{Bus, ProcessingElement, SelfLoopBus}
@@ -30,6 +31,21 @@ abstract class CPBus(val id: Int, mapper: Mapper) {
   def transmissionDuration(size: Int): Int
 
   def close()
+
+  private var width:Option[CPIntVar] = None
+
+  protected def buildTimeWidth:CPIntVar
+
+  final def timeWidth:CPIntVar = {
+    width match{
+      case Some(w) => w
+      case None =>
+        val toReturn = buildTimeWidth
+        width = Some(toReturn)
+        toReturn
+    }
+  }
+
 }
 
 case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
@@ -58,6 +74,11 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
       SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere)
     }
   }
+
+  def buildTimeWidth:CPIntVar = {
+    SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
+  }
+
 }
 
 case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
@@ -69,4 +90,8 @@ case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, map
   override def close() {}
 
   def selfLoopBus = SelfLoopBus(processor)
+
+  override def buildTimeWidth: CPIntVar = CPIntVar(0)(mapper.store)
+
+
 }
