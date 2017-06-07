@@ -25,7 +25,8 @@ case class Mapping(hardwareName: String,
                    taskMapping: Array[(AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)],
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
                    makeSpan: Int,
-                   energy: Int) {
+                   energy: Int,
+                   width:Option[Int]) {
 
   private def padToLength(s: String, l: Int) = (s + nStrings(l, " ")).substring(0, l)
 
@@ -51,7 +52,7 @@ case class Mapping(hardwareName: String,
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 21) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
       })
-    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
+    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
   def toStringSortedLight: String = {
@@ -63,13 +64,14 @@ case class Mapping(hardwareName: String,
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 22) + " " + padToLength(bus.name, 25) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
       })
-    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
+    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
 
   def toJSon: String = "{" +
     JSonHelper.string("hardwareName", hardwareName) + "," +
     JSonHelper.int("makeSpan", makeSpan) + "," +
+    JSonHelper.optionIntComa("width", width) +
     JSonHelper.int("energy", energy) + "," +
     JSonHelper.multiples("taskMapping", taskMapping.map(taskMappingToJSon)) + "," +
     JSonHelper.multiples("transmissionMapping", transmissionMapping.map(transmissionMappingToJSon)) + "}"

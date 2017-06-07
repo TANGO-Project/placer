@@ -55,23 +55,21 @@ object SimpleTask extends Constraints {
   def resourceWidthOfUse(simpleTasks: List[SimpleTask]):CPIntVar = {
     val simpleTasksArray = simpleTasks.filter(!_.isNeeded.isFalse).toArray
     val startTimeArray = simpleTasksArray.map(_.start)
-    val endArray = simpleTasksArray.map(_.end)
+    val endTimeArray = simpleTasksArray.map(_.end)
     val isNeededArray = simpleTasksArray.map(_.isNeeded)
 
     val minimumStartTime:Int = (for (x <- startTimeArray) yield x.getMin).min
-    val maximumEndTime:Int = (for (x <- endArray) yield x.getMax).max
-
+    val maximumEndTime:Int = (for (x <- endTimeArray) yield x.getMax).max
     val store = startTimeArray(0).store
 
     val startTimeArrayMaxIfNotNeeded = Array.tabulate(startTimeArray.length)(
       filteredTaskID => elementVar(IndexedSeq(CPIntVar(maximumEndTime)(store),startTimeArray(filteredTaskID)),isNeededArray(filteredTaskID)))
 
     val endTimeArrayMinIfNotNeeded = Array.tabulate(startTimeArray.length)(
-      filteredTaskID => elementVar(IndexedSeq(CPIntVar(minimumStartTime)(store),startTimeArray(filteredTaskID)),isNeededArray(filteredTaskID)))
+      filteredTaskID => elementVar(IndexedSeq(CPIntVar(minimumStartTime)(store),endTimeArray(filteredTaskID)),isNeededArray(filteredTaskID)))
 
     maximum(endTimeArrayMinIfNotNeeded) - minimum(startTimeArrayMaxIfNotNeeded)
   }
-
 }
 
 object CumulativeTask extends Constraints {

@@ -53,7 +53,7 @@ case class CPMappingProblem(hardwareName: String,
 
     println("width:" + (widthVar match{case None => "none" case Some(w) => ""+sol(w)}))
 
-    new Mapping(hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy))
+    new Mapping(hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy),(widthVar match{case None => None case Some(w) => Some(sol(w))}))
   }
 
   def varsToDistribute: List[CPIntVar] = {

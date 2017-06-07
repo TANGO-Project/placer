@@ -113,5 +113,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     }
   }
 
+
+  def timeWidth:CPIntVar = CPIntVar(0)
+
   def close()
 }

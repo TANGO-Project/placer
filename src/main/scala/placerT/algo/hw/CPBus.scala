@@ -45,7 +45,6 @@ abstract class CPBus(val id: Int, mapper: Mapper) {
         toReturn
     }
   }
-
 }
 
 case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {

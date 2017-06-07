@@ -109,6 +109,8 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
         case _ => None
       }
 
+    var widthVarList:List[CPIntVar] = List.empty
+
     //registering tasks and transmissions to processors and busses
     for (bus <- cpBusses) {
       for (transmission <- cpTransmissions) {
@@ -118,7 +120,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
 
       widthVar match{
         case Some(w) =>
-          add(bus.timeWidth <= w)
+          widthVarList = bus.timeWidth :: widthVarList
         case _ => ;
       }
     }
@@ -127,13 +129,18 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       for (task <- cpTasks) {
         proc.accumulateExecutionConstraintsOnTask(task)
       }
-      //TODO: width of processors
-      /*widthVar match{
+       widthVar match{
         case Some(w) =>
-          add(proc.timeWidth <= w)
+          widthVarList = proc.timeWidth :: widthVarList
         case _ => ;
-      }*/
+      }
       proc.close()
+    }
+
+    widthVar match{
+      case Some(w) =>
+        add(maximum(widthVarList.toArray,w))
+      case _ => ;
     }
 
     val energyForEachTask = cpTasks.map(task => task.energy)
