@@ -67,7 +67,6 @@ case class Mapping(hardwareName: String,
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
-
   def toJSon: String = "{" +
     JSonHelper.string("hardwareName", hardwareName) + "," +
     JSonHelper.int("makeSpan", makeSpan) + "," +
@@ -76,7 +75,7 @@ case class Mapping(hardwareName: String,
     JSonHelper.multiples("taskMapping", taskMapping.map(taskMappingToJSon)) + "," +
     JSonHelper.multiples("transmissionMapping", transmissionMapping.map(transmissionMappingToJSon)) + "}"
 
-  def taskMappingToJSon(m: (AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)): String = {
+  private def taskMappingToJSon(m: (AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)): String = {
     "{" + JSonHelper.string("task", m._1.name) + "," +
       JSonHelper.string("processingElement", m._2.name) + "," +
       JSonHelper.string("implementation", m._3.name) +
@@ -84,14 +83,14 @@ case class Mapping(hardwareName: String,
       sdetoJSon(m._4, m._5, m._6) + "}"
   }
 
-  def transmissionMappingToJSon(m: (Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)): String = {
+  private def transmissionMappingToJSon(m: (Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)): String = {
     "{" +
       JSonHelper.string("transmission", m._1.name) + "," +
       JSonHelper.string("bus", m._4.name) + "," +
       sdetoJSon(m._5, m._6, m._7) + "}"
   }
 
-  def sdetoJSon(s: Int, d: Int, e: Int): String = {
+  private def sdetoJSon(s: Int, d: Int, e: Int): String = {
     JSonHelper.int("start", s) + "," +
       JSonHelper.int("duration", d) + "," +
       JSonHelper.int("end", e)
