@@ -20,7 +20,7 @@ import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.{SimpleTask, Mapper}
-import placerT.algo.sw.CPTask
+import placerT.algo.sw.{CPTaskSet, CPAbstractTask, CPTask}
 import placerT.metadata.hw.{MultiTaskPermanentTasks, ProcessingElement}
 
 import scala.collection.immutable.SortedMap
@@ -31,32 +31,41 @@ import scala.collection.immutable.SortedMap
  * @param p
  * @param memSize
  */
-class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: Mapper) extends CPProcessor(id, p, memSize, mapper) {
+class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: Mapper)
+  extends CPProcessor(id, p, memSize, mapper) {
   require(p.processorClass.isInstanceOf[MultiTaskPermanentTasks])
 
-  var tasksPotentiallyExecutingHere: List[CPTask] = List.empty
+  var tasksPotentiallyExecutingHere: List[CPAbstractTask] = List.empty
 
   val resourceToUsage: SortedMap[String, CPIntVar] = p.resources.mapValues(maxValue => CPIntVar(0, maxValue))
 
-  override def accumulateExecutionConstraintsOnTask(task: CPTask) {
-    accumulateTransmissionStorageOnTask(task)
-    val isTaskExecutedHere = task.isRunningOnProcessor(id)
-    if (!isTaskExecutedHere.isFalse) {
-      tasksPotentiallyExecutingHere = task :: tasksPotentiallyExecutingHere
+  override def accumulateExecutionConstraintsOnTask(aTask: CPAbstractTask) {
+    aTask match{
+      case task:CPTask =>
+        accumulateTransmissionStorageOnTask(task)
+
+        if (task.couldBeExecutingOnProcessor(id)) {
+          tasksPotentiallyExecutingHere = task :: tasksPotentiallyExecutingHere
+        }
+      case sTask:CPTaskSet =>
+
     }
   }
 
   override def close() {
-    val x: List[(Array[CPBoolVar], SortedMap[String, Array[Int]])] =
+
+    //collects value for the bin-packing
+    val x: List[(Array[CPIntVar], SortedMap[String, Array[Int]])] =
       tasksPotentiallyExecutingHere.flatMap(t => t.buildArrayImplemAndMetricUsage(this))
 
-    val isImplemSelectedSubArray = x.flatMap(_._1).toArray.asInstanceOf[Array[CPIntVar]]
+    val isImplemSelectedSubArray = x.flatMap(_._1).toArray
 
+    //do not put more tasks than allowed by resources (there is no precedence whatsowever here
     for ((resource, maxSize) <- p.resources) {
       val metricsForThisDimensionSubArray = x.flatMap(_._2.get(resource).get).toArray
       solver.add(weightedSum(metricsForThisDimensionSubArray, isImplemSelectedSubArray, resourceToUsage(resource)))
     }
-
+    //manage memory
     closeTransmissionAndComputationMemory()
   }
 

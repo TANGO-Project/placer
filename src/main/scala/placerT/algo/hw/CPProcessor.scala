@@ -19,7 +19,7 @@ package placerT.algo.hw
 
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.sw.CPTask
+import placerT.algo.sw.{CPAbstractTask, CPTask}
 import placerT.algo.{CumulativeTask, Mapper}
 import placerT.metadata.hw.ProcessingElement
 import placerT.metadata.sw.TransmissionTiming._
@@ -40,7 +40,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     temporaryStorages = CumulativeTask(from, duration, to, amount, explanation) :: temporaryStorages
   }
 
-  def accumulateExecutionConstraintsOnTask(task: CPTask)
+  def accumulateExecutionConstraintsOnTask(aTask: CPAbstractTask)
 
   def accumulateComputationMemoryOnProcessor(task: CPTask) {
     val isTaskExecutedHere = task.isRunningOnProcessor(this.id)
@@ -57,7 +57,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
   protected def accumulateTransmissionStorageOnTask(task: CPTask) {
     val isTaskExecutedHere = task.isRunningOnProcessor(this.id)
 
-    if (!isTaskExecutedHere.isFalse) {
+    if (task.couldBeExecutingOnProcessor(this.id)) {
       //true or not decided yet; if false, we have nothing to do
 
       // the code here  ensures that the storage is maintained during the execution of the task.

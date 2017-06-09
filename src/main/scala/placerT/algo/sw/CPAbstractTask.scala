@@ -19,6 +19,9 @@ package placerT.algo.sw
 
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
+import placerT.algo.hw.CPMultiTaskProcessor
+
+import scala.collection.immutable.SortedMap
 
 abstract class CPAbstractTask(mapper: Mapper) {
   def start: CPIntVar
@@ -28,4 +31,8 @@ abstract class CPAbstractTask(mapper: Mapper) {
   def duration: CPIntVar
 
   def variablesToDistribute: Iterable[CPIntVar]
+
+  def buildArrayImplemAndMetricUsage(target: CPMultiTaskProcessor): Option[(Array[CPIntVar], SortedMap[String, Array[Int]])]
+
+  def couldBeExecutingOnProcessor(procID:Int):Boolean
 }

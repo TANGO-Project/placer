@@ -21,14 +21,13 @@ import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
-import placerT.algo.hw.CPProcessor
+import placerT.algo.hw.{CPMultiTaskProcessor, CPProcessor}
 import placerT.metadata.Formula
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation}
 
 import scala.collection.immutable.SortedMap
 
-case class CPTask(id: Int,
-                  task: AtomicTask,
+case class CPTask(task: AtomicTask,
                   explanation: String,
                   mapper: Mapper,
                   maxHorizon: Int)
@@ -70,6 +69,7 @@ case class CPTask(id: Int,
   val power: CPIntVar = CPIntVar.sparse(possiblePowers)
 
   add(table(implementationID, processorID, duration, energy, power, implemAndProcessorAndDurationAndEnergyAndPower))
+  //TODO: if duration is 2, start is 1, we get that end is 3 this sounds strange since task was executing at time 1, 2, and 3
   add(end == (start + duration))
 
   def addIncomingTransmission(cPTransmission: CPTransmission): Unit = {
@@ -95,7 +95,7 @@ case class CPTask(id: Int,
    *
    * @param target
    */
-  def buildArrayImplemAndMetricUsage(target: CPProcessor): Option[(Array[CPBoolVar], SortedMap[String, Array[Int]])] = {
+  def buildArrayImplemAndMetricUsage(target: CPMultiTaskProcessor): Option[(Array[CPIntVar], SortedMap[String, Array[Int]])] = {
     val processor = target.p
     val processorClass = processor.processorClass
     task.computingHardwareToImplementations.get(processorClass) match {
@@ -103,7 +103,7 @@ case class CPTask(id: Int,
       case Some(Nil) => None
       case Some(implementations: List[FlattenedImplementation]) =>
         val implementationSubArray = implementations.toArray
-        val isThisImpementationSelectedSubArray = implementationSubArray.map(implementation => isImplementationSelected(implementation.id))
+        val isThisImpementationSelectedSubArray:Array[CPIntVar] = implementationSubArray.map(implementation => isImplementationSelected(implementation.id))
 
         val dimAndSizePerImplemSubArray: List[(String, Array[Int])] = processorClass.resources.toList.map((dimension: String) =>
           (dimension, implementationSubArray.map(implementation => implementation.resourceUsage(dimension))))
@@ -115,4 +115,7 @@ case class CPTask(id: Int,
   }
 
   override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, end, duration, implementationID, processorID)
+
+  override def couldBeExecutingOnProcessor(procID: Int): Boolean = !this.isRunningOnProcessor(procID).isFalse
+
 }

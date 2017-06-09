@@ -53,7 +53,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
 
     //creating the CPTasks
     val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
-      process => new CPTask(process.id, process, process.name, this, maxHorizon)
+      process => new CPTask(process, process.name, this, maxHorizon)
     )
 
     //creating the CPPRocessors
@@ -91,7 +91,8 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     //creating the CPtransmissions
     val cpTransmissions: Array[CPTransmission] = softwareModel.transmissions.map(
       flow => new CPTransmission(flow.id, flow,
-        cpTasks(flow.source.id), cpTasks(flow.target.id),
+        cpTasks(flow.source.id),
+        cpTasks(flow.target.id),
         cpBusses,
         flow.size, flow.name, flow.timing,
         this, maxHorizon, processorToBusToProcessorAdjacency)

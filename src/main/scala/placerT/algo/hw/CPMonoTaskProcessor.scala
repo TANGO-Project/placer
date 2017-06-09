@@ -18,7 +18,7 @@
 package placerT.algo.hw
 
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.sw.CPTask
+import placerT.algo.sw.{CPTaskSet, CPAbstractTask, CPTask}
 import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
 
@@ -35,20 +35,24 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
   var allSimpleTasksPotentiallyExecutingHere: List[SimpleTask] = List.empty
   var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
 
-  override def accumulateExecutionConstraintsOnTask(task: CPTask) {
-    accumulateTransmissionStorageOnTask(task)
-    val isTaskExecutedHere = task.isRunningOnProcessor(id)
+  override def accumulateExecutionConstraintsOnTask(aTask: CPAbstractTask) {
+    aTask match{
+      case task:CPTask =>
+        accumulateTransmissionStorageOnTask(task)
 
-    if (!isTaskExecutedHere.isFalse) {
-      //could be true, or unbound yet
+        if (task.couldBeExecutingOnProcessor(id)) {
+          //could be true, or unbound yet
 
-      allTasksPotentiallyExecutingHere = task :: allTasksPotentiallyExecutingHere
+          allTasksPotentiallyExecutingHere = task :: allTasksPotentiallyExecutingHere
 
-      allSimpleTasksPotentiallyExecutingHere = SimpleTask(
-        task.start,
-        task.duration,
-        task.end,
-        isTaskExecutedHere) :: allSimpleTasksPotentiallyExecutingHere
+          allSimpleTasksPotentiallyExecutingHere = SimpleTask(
+            task.start,
+            task.duration,
+            task.end,
+            task.isRunningOnProcessor(id)) :: allSimpleTasksPotentiallyExecutingHere
+        }
+      case s:CPTaskSet =>
+
     }
   }
 
