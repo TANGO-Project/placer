@@ -98,24 +98,28 @@ case class CPTask(task: AtomicTask,
   def buildArrayImplemAndMetricUsage(target: CPMultiTaskProcessor): Option[(Array[CPIntVar], SortedMap[String, Array[Int]])] = {
     val processor = target.p
     val processorClass = processor.processorClass
+    val isThisProcessorSelected:CPBoolVar = isRunningOnProcessor(target.id)
+
     task.computingHardwareToImplementations.get(processorClass) match {
       case None => None
       case Some(Nil) => None
       case Some(implementations: List[FlattenedImplementation]) =>
         val implementationSubArray = implementations.toArray
-        val isThisImpementationSelectedSubArray:Array[CPIntVar] = implementationSubArray.map(implementation => isImplementationSelected(implementation.id))
+        val isThisImplementationSelectedSubArray:Array[CPIntVar] = implementationSubArray.map(
+          implementation => isThisProcessorSelected && isImplementationSelected(implementation.id))
 
         val dimAndSizePerImplemSubArray: List[(String, Array[Int])] = processorClass.resources.toList.map((dimension: String) =>
           (dimension, implementationSubArray.map(implementation => implementation.resourceUsage(dimension))))
 
         val dimToSizesPerImplemSubArrays: SortedMap[String, Array[Int]] = SortedMap.empty[String, Array[Int]] ++ dimAndSizePerImplemSubArray
 
-        Some((isThisImpementationSelectedSubArray, dimToSizesPerImplemSubArrays))
+        Some((isThisImplementationSelectedSubArray, dimToSizesPerImplemSubArrays))
     }
   }
 
   override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, end, duration, implementationID, processorID)
 
+  //given the constraint posted in the CP engine, could it run on this processor?
   override def couldBeExecutingOnProcessor(procID: Int): Boolean = !this.isRunningOnProcessor(procID).isFalse
 
 }

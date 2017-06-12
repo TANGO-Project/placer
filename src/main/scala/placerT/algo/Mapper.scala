@@ -45,16 +45,14 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
   def postProblem(softwareModel: SoftwareModel,
                   hardwareModel: HardwareModel): CPMappingProblem = {
 
+    //time bounds for instantiating variables
     val summedMaxTaskDurations =
       softwareModel.simpleProcesses.map(_.maxDuration(hardwareModel.processors, hardwareModel.properties)).sum
     val summedMaxTransmissionTimes =
       softwareModel.transmissions.map(flow => hardwareModel.busses.map(bus => bus.transmissionDuration(flow.size)).max).sum
     val maxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes
 
-    //creating the CPTasks
-    val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
-      process => new CPTask(process, process.name, this, maxHorizon)
-    )
+    //HARDWARE MODEL
 
     //creating the CPPRocessors
     val cpProcessors = hardwareModel.processors.map(
@@ -88,6 +86,13 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       bus => new CPRegularBus(bus.id, bus, this)
     ) ++ selfLoopBusses).toArray
 
+    //SOFTWARE MODEL
+
+    //creating the CPTasks
+    val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
+      process => new CPTask(process, process.name, this, maxHorizon)
+    )
+
     //creating the CPtransmissions
     val cpTransmissions: Array[CPTransmission] = softwareModel.transmissions.map(
       flow => new CPTransmission(flow.id, flow,
@@ -97,6 +102,8 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
         flow.size, flow.name, flow.timing,
         this, maxHorizon, processorToBusToProcessorAdjacency)
     )
+
+    //BINDING HW AND SW
 
     //creating the width var, in case needed for modulo scheduling
     val widthVar:Option[CPIntVar] =
@@ -140,17 +147,14 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       proc.close()
     }
 
-    widthVar match{
-      case Some(w) =>
-        add(maximum(widthVarList.toArray,w))
-      case _ => ;
-    }
-
+    //energy
     val energyForEachTask = cpTasks.map(task => task.energy)
     val taskEnds = cpTasks.map(task => task.end)
     val backgroundPower: Int = cpProcessors.map(p => p.p.constantPower.value).sum
     val makeSpan = maximum(taskEnds)
     val energy = sum(energyForEachTask) + makeSpan * backgroundPower
+
+    //DEADLINE AND OTHER GLOBAL CONSTRAINT
 
     //deadline
     softwareModel.softwareClass match {
@@ -179,6 +183,14 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       case Some(cap) =>
         add(energy <= cap)
     }
+
+    //width cap
+    widthVar match{
+      case Some(w) =>
+        add(maximum(widthVarList.toArray,w))
+      case _ => ;
+    }
+
 
     CPMappingProblem(
       hardwareModel.name,

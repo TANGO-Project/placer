@@ -60,7 +60,7 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
 
     val isImplemSelectedSubArray = x.flatMap(_._1).toArray
 
-    //do not put more tasks than allowed by resources (there is no precedence whatsowever here
+    //do not put more tasks than allowed by resources (there is no precedence here)
     for ((resource, maxSize) <- p.resources) {
       val metricsForThisDimensionSubArray = x.flatMap(_._2.get(resource).get).toArray
       solver.add(weightedSum(metricsForThisDimensionSubArray, isImplemSelectedSubArray, resourceToUsage(resource)))
