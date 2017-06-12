@@ -95,7 +95,7 @@ case class CPTask(id: Int,
    *
    * @param target
    */
-  def buildArrayImplemAndMetricUsage(target: CPProcessor): Option[(Array[CPIntVar], SortedMap[String, Array[Int]])] = {
+  def buildArrayImplemAndMetricUsage(target: CPProcessor): Option[(Array[CPBoolVar], SortedMap[String, Array[Int]])] = {
     val processor = target.p
     val processorClass = processor.processorClass
     val isThisProcessorSelected:CPBoolVar = isRunningOnProcessor(target.id)
@@ -105,7 +105,7 @@ case class CPTask(id: Int,
       case Some(Nil) => None
       case Some(implementations: List[FlattenedImplementation]) =>
         val implementationSubArray = implementations.toArray
-        val isThisImplementationSelectedSubArray:Array[CPIntVar] = implementationSubArray.map(
+        val isThisImplementationSelectedSubArray:Array[CPBoolVar] = implementationSubArray.map(
           implementation => isThisProcessorSelected && isImplementationSelected(implementation.id))
 
         val dimAndSizePerImplemSubArray: List[(String, Array[Int])] = processorClass.resources.toList.map((dimension: String) =>
