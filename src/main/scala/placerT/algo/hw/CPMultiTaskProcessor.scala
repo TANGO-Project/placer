@@ -19,9 +19,10 @@ package placerT.algo.hw
 import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.{SimpleTask, Mapper}
+import placerT.algo.{CumulativeTask, SimpleTask, Mapper}
 import placerT.algo.sw.{CPTaskSet, CPAbstractTask, CPTask}
 import placerT.metadata.hw.{MultiTaskPermanentTasks, ProcessingElement}
+import placerT.metadata.sw.{TaskSet, AtomicTask}
 
 import scala.collection.immutable.SortedMap
 
@@ -65,13 +66,46 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
       val metricsForThisDimensionSubArray = x.flatMap(_._2.get(resource).get).toArray
       solver.add(weightedSum(metricsForThisDimensionSubArray, isImplemSelectedSubArray, resourceToUsage(resource)))
     }
+
+    //precedence constraints for subtasks of taskSets
+    for(aTask <- tasksPotentiallyExecutingHere){
+      aTask match{
+        case c:CPTask => ; //we are looking for task set only
+        case s:CPTaskSet =>
+          val (subTasks,implemsAndNbInstances) = s.cpTasksAndNbInstancesForMultiProcessor(this)
+          for((implem,nbInstances) <- implemsAndNbInstances){
+            var taskAcc:List[CumulativeTask] = List.empty
+            for(subTask <- subTasks){
+              if(!subTask.isRunningOnProcessor(id).isFalse && !subTask.isImplementationSelected(implem.id).isFalse) {
+                val simpleTask = CumulativeTask(
+                  subTask.start,
+                  subTask.duration,
+                  subTask.end,
+                  subTask.isRunningOnProcessor(id) && subTask.isImplementationSelected(implem.id),
+                  "subtask of:" + s.explanation + " implem:" + implem)
+                taskAcc = simpleTask :: taskAcc
+              }
+            }
+            if(taskAcc.isEmpty){
+              add(nbInstances == 0)
+            }else{
+              CumulativeTask.postCumulativeForSimpleCumulativeTasks(taskAcc,nbInstances)
+            }
+          }
+      }
+    }
+
+
     //manage memory
     closeTransmissionAndComputationMemory()
   }
 
   override def timeWidth: cp.CPIntVar = {
-    val simpleTasks = tasksPotentiallyExecutingHere.map(cpTask =>
-      new SimpleTask(cpTask.start,cpTask.duration,cpTask.end,cpTask.isRunningOnProcessor(id))
+    val simpleTasks = tasksPotentiallyExecutingHere.map({
+        case a:CPTask => new SimpleTask(a.start,a.duration,a.end,a.isRunningOnProcessor(id))
+        case s:CPTaskSet => ???
+      }
+
     )
     SimpleTask.resourceWidthOfUse(simpleTasks)
   }

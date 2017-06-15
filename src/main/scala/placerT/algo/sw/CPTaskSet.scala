@@ -30,10 +30,10 @@ case class CPTaskSet(taskSet:TaskSet,
                      explanation: String,
                      mapper: Mapper,
                      maxHorizon: Int,
+                     processors:Array[CPProcessor],
                      multiTaskProcessors:Array[CPMultiTaskProcessor],
                      monoTaskProcessors:Array[CPMonoTaskProcessor])
   extends CPAbstractTask(mapper) {
-
 
   implicit val solver = mapper.solver
 
@@ -48,17 +48,24 @@ case class CPTaskSet(taskSet:TaskSet,
   val prototypeTask = taskSet.task
 
   //for each multiTaskprocessor, lists all implementation that can run on it, and defines a variable telling how many of these instance run of it in parallel
-  val multiTaskProcessorAndBundles:Array[List[(FlattenedImplementation,CPIntVar)]] =
-    multiTaskProcessors.map((multiTaskProcessor:CPMultiTaskProcessor) => {
-      val implemsForThisTarget = flattenedImplems.toList.filter(i => i.target == multiTaskProcessor.p.processorClass)
-      val numberOfInstancesInParallel = CPIntVar(0 to numberOfTasks)
+  val multiTaskProcessorAndBundles:Array[Array[Option[(FlattenedImplementation,CPIntVar)]]] =
+    processors.map((pr:CPProcessor) =>
+      pr match{
+        case m:CPMonoTaskProcessor => null
+        case multiTaskProcessor:CPMultiTaskProcessor => {
+          val implemsForThisTarget = flattenedImplems.toList.filter(i => i.target == multiTaskProcessor.p.processorClass)
+          val implemsAndNumberOfInstancesInParallell = implemsForThisTarget.map(i => (i,CPIntVar(0 to numberOfTasks)))
 
-      //the number of instance in parallel on a given multiTask processor should anyway be smaller or equal to the number of instances running on it, actually
-      add(numberOfInstancesInParallel <= sum(subTasks.map((c:CPTask) => c.isRunningOnProcessor(multiTaskProcessor.id))))
+          val toReturn:Array[Option[(FlattenedImplementation,CPIntVar)]] = Array.fill(flattenedImplems.length)(None)
 
-      implemsForThisTarget.map((f:FlattenedImplementation) => (f,numberOfInstancesInParallel))
-    }
-  )
+          for((implem,numberOfInstancesInParallell) <- implemsAndNumberOfInstancesInParallell) {
+            //the number of instance in parallel on a given multiTask processor should anyway be smaller or equal to the number of instances running on it, actually
+            add(numberOfInstancesInParallell <= sum(subTasks.map((c: CPTask) => c.isRunningOnProcessor(multiTaskProcessor.id))))
+
+            toReturn(implem.id) = Some((implem,numberOfInstancesInParallell))
+          }
+          toReturn
+        }})
 
   override val start:CPIntVar = minimum(subTasks.map(_.start))
   override val end:CPIntVar = maximum(subTasks.map(_.end))
@@ -74,22 +81,36 @@ case class CPTaskSet(taskSet:TaskSet,
       case Some(implementations: List[FlattenedImplementation]) =>
         val implementationSubArray = implementations.toArray
 
-        val howManyInstanceOfThisImplementation:Array[CPIntVar] = implementationSubArray.map(implementation => {
-          val isImplementationSelected = subTasks.map(subTask => subTask.isImplementationSelected(implementation.id))
-          sum(isImplementationSelected)
-        })
+        val howManyInstantiatedInstanceOfThisImplementationOnThisProcessor =
+          implementationSubArray.map(i => multiTaskProcessorAndBundles(target.id)(i.id) match{
+            case None => CPIntVar(0)
+            case Some((_,v)) => v
+          })
 
         val dimAndSizePerImplemSubArray: List[(String, Array[Int])] = processorClass.resources.toList.map((dimension: String) =>
           (dimension, implementationSubArray.map(implementation => implementation.resourceUsage(dimension))))
 
         val dimToSizesPerImplemSubArrays: SortedMap[String, Array[Int]] = SortedMap.empty[String, Array[Int]] ++ dimAndSizePerImplemSubArray
 
-        Some((howManyInstanceOfThisImplementation, dimToSizesPerImplemSubArrays))
+        Some((howManyInstantiatedInstanceOfThisImplementationOnThisProcessor, dimToSizesPerImplemSubArrays))
     }
+  }
+
+  def cpTasksAndNbInstancesForMultiProcessor(m:CPMultiTaskProcessor):(Iterable[CPTask],Iterable[(FlattenedImplementation,CPIntVar)]) = {
+    //for each multiTaskprocessor, lists all implementation that can run on it, and defines a variable telling how many of these instance run of it in parallel
+    //multiTaskProcessorAndBundles:Array[Array[Option[(FlattenedImplementation,CPIntVar)]]] =
+
+    //lists all implementation that can run on m, and defines a variable telling how many of these instance run of it in parallel
+    val implemAndNbInstances:Iterable[(FlattenedImplementation,CPIntVar)] = multiTaskProcessorAndBundles(m.id).toList.flatten
+
+    (subTasks,implemAndNbInstances)
   }
 
   override def variablesToDistribute: Iterable[CPIntVar] = subTasks.flatMap(_.variablesToDistribute)
 
-  override def couldBeExecutingOnProcessor(procID: Int): Boolean = ???
-
+  override def couldBeExecutingOnProcessor(procID: Int): Boolean = {
+    //we check all tasks because there will be symmetry elimination, and this might prevent the first task to be a good representative of all of them.
+    //TODO: memoïze this because it is costly
+    subTasks.exists(_.couldBeExecutingOnProcessor(procID))
+  }
 }

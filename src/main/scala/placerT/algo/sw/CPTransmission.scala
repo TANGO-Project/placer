@@ -20,9 +20,11 @@ package placerT.algo.sw
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
-import placerT.algo.hw.CPBus
+import placerT.algo.hw.{CPMultiTaskProcessor, CPBus}
 import placerT.metadata.sw.Transmission
 import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
+
+import scala.collection.immutable.SortedMap
 
 case class CPTransmission(id: Int,
                           transmission: Transmission,
@@ -64,4 +66,7 @@ case class CPTransmission(id: Int,
   add(end < to.start)
 
   override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, duration, busID)
+
+  def buildArrayImplemAndMetricUsage(target: CPMultiTaskProcessor): Option[(Array[CPIntVar], SortedMap[String, Array[Int]])] = ???
+  def couldBeExecutingOnProcessor(procID:Int):Boolean = ???
 }
