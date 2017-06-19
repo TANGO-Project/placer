@@ -49,7 +49,9 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
           tasksPotentiallyExecutingHere = task :: tasksPotentiallyExecutingHere
         }
       case sTask:CPTaskSet =>
-
+        if (sTask.couldBeExecutingOnProcessor(id)) {
+          tasksPotentiallyExecutingHere = sTask :: tasksPotentiallyExecutingHere
+        }
     }
   }
 
@@ -73,6 +75,7 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
         case c:CPTask => ; //we are looking for task set only
         case s:CPTaskSet =>
           val (subTasks,implemsAndNbInstances) = s.cpTasksAndNbInstancesForMultiProcessor(this)
+          //implemsAndNbInstances is also called nbIsntanceOfFunction in the FPGA business
           for((implem,nbInstances) <- implemsAndNbInstances){
             var taskAcc:List[CumulativeTask] = List.empty
             for(subTask <- subTasks){
@@ -95,7 +98,6 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
       }
     }
 
-
     //manage memory
     closeTransmissionAndComputationMemory()
   }
@@ -110,3 +112,4 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
     SimpleTask.resourceWidthOfUse(simpleTasks)
   }
 }
+

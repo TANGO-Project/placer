@@ -208,6 +208,7 @@ case class Transmission(source: AtomicTask,
  * @param softwareClass the class of software, and its time requirements
  */
 case class SoftwareModel(simpleProcesses: Array[AtomicTask],
+                         tasksSets:Array[TaskSet],
                          transmissions: Array[Transmission],
                          softwareClass: SoftwareClass) extends IndiceMaker {
   setIndices(simpleProcesses)

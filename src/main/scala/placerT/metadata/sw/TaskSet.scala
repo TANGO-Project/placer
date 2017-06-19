@@ -16,10 +16,15 @@
 
 package placerT.metadata.sw
 
+import placerT.io.JSonHelper
 import placerT.metadata.Indiced
 
 //TODO: dialogs and transmission
 case class TaskSet(task:AtomicTask,
                    numberOfTasks:Int) extends Indiced {
 
+  def toJSon: String = "{" +
+    JSonHelper.complex("prototypeTask", task.toJSon) + "," +
+    JSonHelper.int("nbTasks", numberOfTasks) +
+    "}"
 }

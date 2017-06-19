@@ -138,10 +138,16 @@ object ExampleTenerifeData {
     FlattenedImplementation("cpu_standard", cpu, SortedMap.empty, 10, 110 / Dim("mflops") + 1000 / Dim("mips")).toParam,
     FlattenedImplementation("gpgpu_standard", gpgpu, SortedMap("core" -> 1), 10, 10).toParam),
     "Transforming")
-  val transforming2 = AtomicTask(List(
+  //  val transforming2 = AtomicTask(List(
+  //    FlattenedImplementation("cpu_standard", cpu, SortedMap.empty, 10, 110 / Dim("mflops") + 1000 / Dim("mips")).toParam,
+  //    FlattenedImplementation("gpgpu_standard", gpgpu, SortedMap("core" -> 1), 10, 10).toParam),
+  //    "Transforming2")
+
+  val transforming2 = TaskSet(AtomicTask(List(
     FlattenedImplementation("cpu_standard", cpu, SortedMap.empty, 10, 110 / Dim("mflops") + 1000 / Dim("mips")).toParam,
     FlattenedImplementation("gpgpu_standard", gpgpu, SortedMap("core" -> 1), 10, 10).toParam),
-    "Transforming2")
+    "Transforming2"),10)
+
   val watermarking = AtomicTask(List(
     FlattenedImplementation("cpu_standard", cpu, SortedMap.empty, 0, 100 / Dim("mflops") + 1000 / Dim("mips")).toParam,
     FlattenedImplementation("PI_fpga_supplier1", fpga, SortedMap("kgate" -> 20, "multiplier" -> 30), 10, 100 / Dim("frequency")).toParam,
@@ -156,14 +162,15 @@ object ExampleTenerifeData {
   val inputToDecode = Transmission(inputting, decoding, 50, timing = Free, "inputToDecode")
   val decodeToTransform = Transmission(decoding, transforming, 2, timing = Asap, "decodeToTransform")
   val transformToWatermark = Transmission(transforming, watermarking, 2, timing = Asap, "transformToWatermark")
-  val decodeToTransform2 = Transmission(decoding, transforming2, 2, timing = Asap, "decodeToTransform2")
-  val transform2ToWatermark = Transmission(transforming2, watermarking, 2, timing = Asap, "transform2ToWatermark")
+  //  val decodeToTransform2 = Transmission(decoding, transforming2, 2, timing = Asap, "decodeToTransform2")
+  //  val transform2ToWatermark = Transmission(transforming2, watermarking, 2, timing = Asap, "transform2ToWatermark")
   val watermarkToEncode = Transmission(watermarking, encoding, 20, timing = Asap, "watermarkToEncode")
   val sideComm = Transmission(inputting, encoding, 5, timing = Free, "side_comm")
 
   val softwareModel = SoftwareModel(
-    Array(inputting, decoding, transforming, transforming2, watermarking, encoding),
-    Array(inputToDecode, decodeToTransform, transformToWatermark, decodeToTransform2, transform2ToWatermark, watermarkToEncode, sideComm),
+    Array(inputting, decoding, transforming, watermarking, encoding),
+    Array(transforming2),
+    Array(inputToDecode, decodeToTransform, transformToWatermark, watermarkToEncode, sideComm), //decodeToTransform2, transform2ToWatermark
     OneShotSoftware(Some(20000))) //IterativeSoftware(maxMakespan = None,maxFrameDelay = None /*Some(500)*/)) //OneShotSoftware(Some(20000)))
 
   val goal = Pareto(MinMakeSpan(),MinEnergy()) //ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
