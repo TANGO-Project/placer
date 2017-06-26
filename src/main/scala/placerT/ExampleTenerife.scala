@@ -112,7 +112,7 @@ object ExampleTenerifeData {
     3,
     "busAToFPGA")
 
-  val hardwareModel = HardwareModel("TenerifeHW",
+  val hardwareModel = HardwareModel("ExampleHardware1",
     Array(cpu, gpgpu, fpga),
     Array(processorA, processorB, processorC, processorD),
     Array(globalBus, busAB, busBC, busAD, globalBus2),

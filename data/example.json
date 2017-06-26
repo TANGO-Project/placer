@@ -283,7 +283,7 @@
     }
   },
   "hardwareModel":{
-    "name":"TenerifeHW",
+    "name":"ExampleHardware1",
     "powerCap":700,
     "energyCap":500000,
     "processingElementClasses":[
