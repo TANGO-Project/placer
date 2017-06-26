@@ -1,0 +1,131 @@
+@import finitio/data
+
+HardwareModel = {
+    name:String
+    powerCap:?Integer
+    energyCap:?Integer
+    classes:[ProcessingElementClass]
+    processors:[ProcessingElement]
+    busses:[Bus]
+}
+
+ProcessingElement = {
+    processorClass:ProcessingElementClassRef
+    name:String
+    memSize:Integer
+    resources:[NameValue]
+    properties:[NameValue]
+    powerModel:Formula
+    properties:[NameValue]
+}
+
+Bus = {halfDuplexBus:HalfDuplexBus}
+
+HalfDuplexBus={
+    name:String
+    relatedProcessors:[ProcessingElementRef]
+    timeUnitPerBit:Integer
+    latency:Integer
+}
+
+ProcessingElementRef=String
+
+NameValue = {
+    name:String
+    value:Integer
+}
+
+ProcessingElementClass =
+    {monoTaskSwitchingTask:MonoTaskSwitchingTaskClass}
+    | {multiTaskPermanentTasks:MultiTaskPermanentTasksClass}
+
+MonoTaskSwitchingTaskClass={
+    name:String
+    resources:[String]
+    properties:[String]
+    switchingDelay:?Integer
+}
+
+MultiTaskPermanentTasksClass={
+    name:String
+    resources:[String]
+    properties:[String]
+}
+
+SoftwareModel =  {
+    simpleProcesses:[SimpleProcess]
+    transmissions:[Transmission]
+    softwareClass:SoftwareClass
+}
+
+SimpleProcess = {
+    name:String
+    implementations:[Implementation]
+}
+
+Implementation = {
+    name:String
+    target:ProcessingElementClassRef
+    parameters:[ParameterDefinition]
+    resourceUsage:[NameFormula]
+    computationMemory:Formula
+    duration:Formula
+}
+
+NameFormula = {
+    name:String
+    formula:Formula
+}
+
+ProcessingElementClassRef = String
+
+Formula = String
+
+ParameterDefinition = {
+    name:String
+    values:[Integer]
+}
+
+Transmission = {
+    name:String
+    source:SimpleProcessRef
+    target:SimpleProcessRef
+    size:Integer
+    timing:TransmissionTimingConstraint
+}
+
+#Asap,Free,Alap
+TransmissionTimingConstraint = String
+
+SimpleProcessRef = String
+
+SoftwareClass =
+    {iterativeSoftware:IterativeSoftware}
+    | {oneShotSoftware:OneShotSoftware}
+
+IterativeSoftware={
+    maxFrameDelay:?Integer
+    maxMakespan:?Integer
+}
+
+OneShotSoftware = {
+    maxDelay:?Integer
+}
+
+MappingGoal =
+    {multiObjective:MultiObjectiveGoal}
+    | {simpleObjective:SimpleGoal}
+
+#minMakeSpan,minEnergy,minFrame
+SimpleGoal = String
+
+MultiObjectiveGoal={
+    a:SimpleGoal
+    b:SimpleGoal
+}
+
+Main = {
+    hardwareModel:HardwareModel
+    softwareModel:SoftwareModel
+    goal:MappingGoal
+}
