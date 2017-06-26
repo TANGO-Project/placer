@@ -235,15 +235,15 @@ case class ESingleWayBus(from: List[String],
 }
 
 case class EHardwareModel(name: String,
-                          classes: Array[EProcessingElementClass],
-                          processors: Array[EProcessingElement],
+                          processingElementClasses: Array[EProcessingElementClass],
+                          processingElements: Array[EProcessingElement],
                           busses: Array[EBus],
                           properties: List[ENameValue],
                           powerCap: Option[Int],
                           energyCap: Option[Int]) {
   def extract = {
-    val pc = classes.map(_.extract)
-    val p = processors.map(_.extract(pc))
+    val pc = processingElementClasses.map(_.extract)
+    val p = processingElements.map(_.extract(pc))
     val b = busses.map(_.extract(p))
     HardwareModel(
       name,

@@ -1,11 +1,12 @@
 @import finitio/data
+#definition of the JSon input format in finitio: http://www.finitio.io/
 
 HardwareModel = {
     name:String
     powerCap:?Integer
     energyCap:?Integer
-    classes:[ProcessingElementClass]
-    processors:[ProcessingElement]
+    processingElementClasses:[ProcessingElementClass]
+    processingElements:[ProcessingElement]
     busses:[Bus]
     properties:[NameValue]
 }
@@ -28,6 +29,7 @@ HalfDuplexBus = {
     latency:Integer
 }
 
+#referencing a processing element that is declared in HardwareModel/processingElements
 ProcessingElementRef = String
 
 NameValue = {
@@ -77,6 +79,7 @@ NameFormula = {
     formula:Formula
 }
 
+#referencing a processing element class that is declared in HardwareModel/processingElementClasses
 ProcessingElementClassRef = String
 
 Formula = String

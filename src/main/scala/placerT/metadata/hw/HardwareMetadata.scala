@@ -312,8 +312,8 @@ case class HardwareModel(name: String,
       case None => "";
       case Some(cap) => "\tenergyCap:" + cap + "\n"
     }) +
-    "\tclasses:{\n\t\t" + processorClasses.mkString("\n\t\t") + "}\n" +
-    "\tprocessors:{\n\t\t" + processors.mkString("\n\t\t") + "} \n" +
+    "\processingElementClasses:{\n\t\t" + processorClasses.mkString("\n\t\t") + "}\n" +
+    "\processingElements:{\n\t\t" + processors.mkString("\n\t\t") + "} \n" +
     "\tbusses:{\n\t\t" + busses.mkString("\n\t\t") + "}\n" +
     "\tproperties:{" + properties.toList.map({ case (propertyName, value) => propertyName + ":" + value }).mkString(",") + "}\n" +
     ")"
