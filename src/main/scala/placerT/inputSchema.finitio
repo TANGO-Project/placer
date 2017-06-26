@@ -96,6 +96,12 @@ NameFormula = {
 #referencing a processing element class that is declared in HardwareModel/processingElementClasses
 ProcessingElementClassRef = String
 
+#example: buzy*mflops*30+5
+#Formulas are built on identifiers, and operators
+#identifiers are all identifiers in the scope of the formula:
+#if the formula is defined in an implementation, it can refer to attribute of the implementation, attribute of the target processing element class global properties of the hardware
+#if the formula is defined in a ProcessingElement, it can refer to resources and properties of teh processing element, including memSize (a default system attribute) and buzy for MonoTaskSwitchingTask processing elements
+#operators include: + - * / () and integer literals
 Formula = String
 
 ParameterDefinition = {
