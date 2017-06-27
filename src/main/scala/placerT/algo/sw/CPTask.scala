@@ -21,7 +21,7 @@ import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
-import placerT.algo.hw.CPProcessor
+import placerT.algo.hw.{CPMultiTaskProcessor, CPProcessor}
 import placerT.metadata.Formula
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation}
 
@@ -96,7 +96,7 @@ case class CPTask(id: Int,
    *
    * @param target
    */
-  def buildArrayImplemAndMetricUsage(target: CPProcessor): Option[(Array[CPBoolVar], SortedMap[String, Array[Int]])] = {
+  def buildArrayImplemAndMetricUsage(target: CPMultiTaskProcessor): Option[(Array[cp.CPIntVar], SortedMap[String, Array[Int]])] = {
     val processor = target.p
     val processorClass = processor.processorClass
     val isThisProcessorSelected:CPBoolVar = isRunningOnProcessor(target.id)
@@ -106,8 +106,7 @@ case class CPTask(id: Int,
       case Some(Nil) => None
       case Some(implementations: List[FlattenedImplementation]) =>
         val implementationSubArray = implementations.toArray
-        val isThisImplementationSelectedSubArray:Array[CPBoolVar] = implementationSubArray.map(
-          implementation => isThisProcessorSelected && isImplementationSelected(implementation.id))
+
         val isThisImplementationSelectedSubArray:Array[CPIntVar] = implementationSubArray.map(
           implementation => isThisProcessorSelected && isImplementationSelected(implementation.id))
 
