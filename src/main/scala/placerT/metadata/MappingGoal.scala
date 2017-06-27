@@ -40,8 +40,10 @@ case class MinFrame() extends SimpleMappingGoal{
   override def simpleJSonName: String = "minFrame"
 }
 case class Pareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingGoal{
-  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
 
+  require(a ne b,"cannot define multi objective twice the same basic objective:" + a)
+
+  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
 
   override def toJSon: String = "{" +
     JSonHelper.complex("multiObjective","{" +
