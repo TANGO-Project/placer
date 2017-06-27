@@ -1,3 +1,19 @@
+/*
+ * Placer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Placer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with Placer.
+ * If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ */
+
 package placerT.metadata
 
 import placerT.io.JSonHelper
@@ -24,8 +40,10 @@ case class MinFrame() extends SimpleMappingGoal{
   override def simpleJSonName: String = "minFrame"
 }
 case class Pareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingGoal{
-  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
 
+  require(a ne b,"cannot define multi objective twice the same basic objective:" + a)
+
+  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
 
   override def toJSon: String = "{" +
     JSonHelper.complex("multiObjective","{" +

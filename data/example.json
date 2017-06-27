@@ -283,10 +283,10 @@
     }
   },
   "hardwareModel":{
-    "name":"TenerifeHW",
+    "name":"ExampleHardware1",
     "powerCap":700,
     "energyCap":500000,
-    "classes":[
+    "processingElementClasses":[
       {
         "monoTaskSwitchingTask":{
           "name":"cpu",
@@ -321,7 +321,7 @@
         }
       }
     ],
-    "processors":[
+    "processingElements":[
       {
         "processorClass":"cpu",
         "name":"procA",

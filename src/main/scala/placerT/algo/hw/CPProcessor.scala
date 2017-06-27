@@ -14,7 +14,6 @@
  *
  */
 
-
 package placerT.algo.hw
 
 import oscar.cp._

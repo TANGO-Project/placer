@@ -1,0 +1,154 @@
+# Placer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Placer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License  for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along with Placer.
+# If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+
+@import finitio/data
+#definition of the JSon input format in finitio: http://www.finitio.io/
+
+HardwareModel = {
+    name:String
+    powerCap:?Integer
+    energyCap:?Integer
+    processingElementClasses:[ProcessingElementClass]
+    processingElements:[ProcessingElement]
+    busses:[Bus]
+    properties:[NameValue]
+}
+
+ProcessingElement = {
+    processorClass:ProcessingElementClassRef
+    name:String
+    memSize:Integer
+    resources:[NameValue]
+    properties:[NameValue]
+    powerModel:Formula
+}
+
+Bus = {halfDuplexBus:HalfDuplexBus}
+
+HalfDuplexBus = {
+    name:String
+    relatedProcessors:[ProcessingElementRef]
+    timeUnitPerBit:Integer
+    latency:Integer
+}
+
+#referencing a processing element that is declared in HardwareModel/processingElements
+ProcessingElementRef = String
+
+NameValue = {
+    name:String
+    value:Integer
+}
+
+ProcessingElementClass =
+    {monoTaskSwitchingTask:MonoTaskSwitchingTaskClass}
+    | {multiTaskPermanentTasks:MultiTaskPermanentTasksClass}
+
+MonoTaskSwitchingTaskClass = {
+    name:String
+    resources:[String]
+    properties:[String]
+    switchingDelay:?Integer
+}
+
+MultiTaskPermanentTasksClass ={
+    name:String
+    resources:[String]
+    properties:[String]
+}
+
+SoftwareModel =  {
+    simpleProcesses:[SimpleProcess]
+    transmissions:[Transmission]
+    softwareClass:SoftwareClass
+}
+
+SimpleProcess = {
+    name:String
+    implementations:[Implementation]
+}
+
+Implementation = {
+    name:String
+    target:ProcessingElementClassRef
+    parameters:[ParameterDefinition]
+    resourceUsage:[NameFormula]
+    computationMemory:Formula
+    duration:Formula
+}
+
+NameFormula = {
+    name:String
+    formula:Formula
+}
+
+#referencing a processing element class that is declared in HardwareModel/processingElementClasses
+ProcessingElementClassRef = String
+
+#example: buzy*mflops*30+5
+#Formulas are built on identifiers, and operators
+#identifiers are all identifiers in the scope of the formula:
+#if the formula is defined in an implementation, it can refer to attribute of the implementation, attribute of the target processing element class global properties of the hardware
+#if the formula is defined in a ProcessingElement, it can refer to resources and properties of teh processing element, including memSize (a default system attribute) and buzy for MonoTaskSwitchingTask processing elements
+#operators include: + - * / () and integer literals
+Formula = String
+
+ParameterDefinition = {
+    name:String
+    values:[Integer]
+}
+
+Transmission = {
+    name:String
+    source:SimpleProcessRef
+    target:SimpleProcessRef
+    size:Integer
+    timing:TransmissionTimingConstraint
+}
+
+#Asap,Free,Alap
+TransmissionTimingConstraint = String
+
+SimpleProcessRef = String
+
+SoftwareClass =
+    {iterativeSoftware:IterativeSoftware}
+    | {oneShotSoftware:OneShotSoftware}
+
+IterativeSoftware={
+    maxFrameDelay:?Integer
+    maxMakespan:?Integer
+}
+
+OneShotSoftware = {
+    maxDelay:?Integer
+}
+
+MappingGoal =
+    {multiObjective:MultiObjectiveGoal}
+    | {simpleObjective:SimpleGoal}
+
+#minMakeSpan,minEnergy,minFrame
+SimpleGoal = String
+
+MultiObjectiveGoal = {
+    a:SimpleGoal
+    b:SimpleGoal
+}
+
+Main = {
+    hardwareModel:HardwareModel
+    softwareModel:SoftwareModel
+    goal:MappingGoal
+}

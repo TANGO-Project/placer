@@ -26,9 +26,10 @@ import scala.collection.immutable.SortedMap
 
 
 /**
- * @param target
- * @param resourceUsage
- * @param computationMemory is the memory needed toperform the computation. We consider that the memory tat stores input and output data is allocated for the duration of the task.
+ * @param target the PE class that can run it
+ * @param resourceUsage the usage of resoruce, can only mention resources delared in the PE class
+ * @param computationMemory is the memory needed toperform the computation.
+ *                          We consider that the memory tat stores input and output data is allocated for the duration of the task.
  * @param duration
  */
 case class FlattenedImplementation(name: String,

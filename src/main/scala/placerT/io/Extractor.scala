@@ -14,7 +14,6 @@
  *
  */
 
-
 package placerT.io
 
 import net.liftweb.json.DefaultFormats
@@ -78,7 +77,11 @@ case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
                           transmissions: Array[ETransmission],
                           softwareClass: ESoftwareClass) {
   def extract(hw: HardwareModel) = {
-    val proc = simpleProcesses.map(_.extract(hw))
+
+    Checker.checkDuplicates(simpleProcesses.map(_.name),"task")
+    Checker.checkDuplicates(transmissions.map(_.name),"transmission")
+
+    val proc = simpleProcesses.map(task => task.extract(hw))
     SoftwareModel(
       proc,
       transmissions.map(_.extract(proc)),
@@ -106,9 +109,11 @@ case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int])
 
 case class EAtomicTask(name: String,
                        implementations: List[EParametricImplementation]) {
+  Checker.checkDuplicates(implementations.map(_.name),"implementation of task " + name)
+
   def extract(hw: HardwareModel) = {
-    AtomicTask(implementations.map(_.extract(hw)),
-      name)
+    val translatedImplems = implementations.map(_.extract(hw))
+    AtomicTask(translatedImplems, name)
   }
 }
 
@@ -158,17 +163,18 @@ case class ETransmission(source: String,
         case "Asap" => Asap
         case "Alap" => Alap
         case "Free" => Free
+        case _ => throw new Error("undefined timing constraint " + timing + " in transmission " + name)
       },
       name)
 }
 
 case class EProcessingElementClass(multiTaskPermanentTasks: Option[EMultiTaskPermanentTasks], monoTaskSwitchingTask: Option[EMonoTaskSwitchingTask]) {
-  def extract: ProcessingElementClass = {
+  def extract(): ProcessingElementClass = {
     (multiTaskPermanentTasks, monoTaskSwitchingTask) match {
-      case (None, None) => throw new Error("Processing element not specified")
+      case (None, None) => throw new Error("empty definition of processing element class")
       case (Some(a), None) => a.extract
       case (None, Some(a)) => a.extract
-      case (Some(_), Some(_)) => throw new Error("Processing element specified twice")
+      case (Some(m), Some(_)) => throw new Error("Double definition of processing element class:" + m.name)
     }
   }
 }
@@ -202,10 +208,10 @@ case class EProcessingElement(processorClass: String,
 case class EBus(halfDuplexBus: Option[EHalfDuplexBus], singleWayBus: Option[ESingleWayBus]) {
   def extract(p: Array[ProcessingElement]): Bus = {
     (halfDuplexBus, singleWayBus) match {
-      case (None, None) => throw new Error("Bus element not specified")
+      case (None, None) => throw new Error("Empty bus definition")
       case (Some(a), None) => a.extract(p)
       case (None, Some(a)) => a.extract(p)
-      case (Some(_), Some(_)) => throw new Error("Bus element specified twice")
+      case (Some(h), Some(_)) => throw new Error("Double definition of bus:" + h.name)
     }
   }
 }
@@ -235,16 +241,19 @@ case class ESingleWayBus(from: List[String],
 }
 
 case class EHardwareModel(name: String,
-                          classes: Array[EProcessingElementClass],
-                          processors: Array[EProcessingElement],
+                          processingElementClasses: Array[EProcessingElementClass],
+                          processingElements: Array[EProcessingElement],
                           busses: Array[EBus],
                           properties: List[ENameValue],
                           powerCap: Option[Int],
                           energyCap: Option[Int]) {
   def extract = {
-    val pc = classes.map(_.extract)
-    val p = processors.map(_.extract(pc))
+    val pc = processingElementClasses.map(_.extract)
+    Checker.checkDuplicates(pc.map(_.name),"processing element class")
+    val p = processingElements.map(_.extract(pc))
+    Checker.checkDuplicates(p.map(_.name),"processing element")
     val b = busses.map(_.extract(p))
+    Checker.checkDuplicates(p.map(_.name),"bus")
     HardwareModel(
       name,
       pc,
@@ -253,5 +262,15 @@ case class EHardwareModel(name: String,
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
       powerCap,
       energyCap)
+  }
+}
+
+object Checker{
+  def checkDuplicates(strings:Iterable[String],conceptClass:String = "definition"): Unit ={
+    var stringSet = SortedSet.empty[String]
+    for(s <- strings){
+      if(stringSet contains s) throw new Error("duplicate " + conceptClass + ":" + s)
+      stringSet += s
+    }
   }
 }

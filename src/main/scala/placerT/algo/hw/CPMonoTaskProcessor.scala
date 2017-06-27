@@ -24,9 +24,9 @@ import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
 
 /**
  * these are represented as unary resources. furthermore, only tasks that can fit on this processor are allowed, statically
- * @param id
- * @param p
- * @param memSize
+ * @param id the ID of the processor (unique, etc) inherited from p
+ * @param p the processing element, to get more info
+ * @param memSize the max mem size, taken from p
  */
 class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switchingDelay: Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
