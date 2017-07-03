@@ -31,9 +31,9 @@ object Mapper {
   }
 
   def findMapping(problem: MappingProblem): Mappings = {
-    //try {
+    try {
       Mappings(new Mapper(problem.softwareModel, problem.hardwareModel, problem.goal: MappingGoal).mapping)
-    //} catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
+    } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 }
 
