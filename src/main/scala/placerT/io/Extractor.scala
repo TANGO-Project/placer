@@ -132,7 +132,7 @@ case class EParametricImplementation(name: String,
 
   def extract(hw: HardwareModel) =
     ParametricImplementation(name,
-      hw.processorClasses.find(_.name equals target).get,
+      hw.processorClasses.find(_.name equals target)match{case Some(x) => x ; case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)},
       SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract),
       parsedComputationMemory,
       parsedDuration,
@@ -156,8 +156,8 @@ case class ETransmission(source: String,
                          name: String) {
   def extract(a: Array[AtomicTask]) =
     Transmission(
-      a.find(t => t.name equals source).get,
-      a.find(t => t.name equals target).get,
+      a.find(t => t.name equals source) match{case Some(x) => x ; case None => throw new Error("cannot find process" + source + " used in transmission " + name)},
+      a.find(t => t.name equals target) match{case Some(x) => x ; case None => throw new Error("cannot find process " + target + " used in transmission " + name)},
       size,
       timing match {
         case "Asap" => Asap
@@ -196,7 +196,10 @@ case class EProcessingElement(processorClass: String,
   val parsedPowerModel = FormulaParser(powerModel)
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = ProcessingElement(
-    pc.find(_.name equals processorClass).get,
+    pc.find(_.name equals processorClass)match{
+      case None => throw new Error(("cannot find processing element class " + processorClass + " used in processing element" + name))
+      case Some(x) => x
+    },
     SortedMap.empty[String, Int] ++ resources.map(_.toCouple),
     SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
     name,
@@ -221,7 +224,7 @@ case class EHalfDuplexBus(relatedProcessors: List[String],
                           latency: Int,
                           name: String) {
   def extract(p: Array[ProcessingElement]) = HalfDuplexBus(
-    relatedProcessors.map(name => p.find(_.name equals name).get),
+    relatedProcessors.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
     timeUnitPerBit,
     latency,
     name)
@@ -233,8 +236,8 @@ case class ESingleWayBus(from: List[String],
                          latency: Int,
                          name: String) {
   def extract(p: Array[ProcessingElement]) = SingleWayBus(
-    from.map(name => p.find(_.name equals name).get),
-    to.map(name => p.find(_.name equals name).get),
+    from.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
+    to.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
     timeUnitPerBit,
     latency,
     name)
