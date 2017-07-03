@@ -83,7 +83,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, this))
 
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
-      processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
+      processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.id, bus.processor.id, bus.id))
 
     //creating the CPbusses
     val cpBusses: Array[CPBus] = (hardwareModel.busses.toList.map(
