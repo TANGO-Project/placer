@@ -30,9 +30,9 @@ import placerT.metadata._
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
-object ExampleTenerife extends App {
+object Example2 extends App {
 
-  val problem = ExampleTenerifeData.problem
+  val problem = Example2Data.problem
   println(problem)
 
   val mappingSet = Mapper.findMapping(problem)
@@ -43,7 +43,7 @@ object ExampleTenerife extends App {
 
 object GenerateJSon extends App {
 
-  val problem = ExampleTenerifeData.problem
+  val problem = Example2Data.problem
   println(problem)
   println(problem.toJSon)
   val json = prettyRender(parse(problem.toJSon))
@@ -56,7 +56,7 @@ object GenerateJSon extends App {
   println(extracted)
 }
 
-object ExampleTenerifeData {
+object Example2Data {
 
   //hardware metamodel
   val cpu = MonoTaskSwitchingTask("cpu", SortedSet.empty, SortedSet("mflops", "mips"), 1)
