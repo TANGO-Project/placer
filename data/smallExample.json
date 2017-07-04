@@ -113,7 +113,7 @@
               }
             ],
             "computationMemory":"100",
-            "duration":"500/frequency"
+            "duration":"50/frequency"
           }
         ]
       },
