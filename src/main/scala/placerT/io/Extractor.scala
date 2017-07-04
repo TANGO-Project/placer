@@ -172,7 +172,7 @@ case class ETransmission(source: String,
 }
 
 case class EProcessingElementClass(multiTaskPermanentTasks: Option[EMultiTaskPermanentTasks], monoTaskSwitchingTask: Option[EMonoTaskSwitchingTask]) {
-  def extract(): ProcessingElementClass = {
+  def extract: ProcessingElementClass = {
     (multiTaskPermanentTasks, monoTaskSwitchingTask) match {
       case (None, None) => throw new Error("empty definition of processing element class")
       case (Some(a), None) => a.extract
@@ -200,7 +200,7 @@ case class EProcessingElement(processorClass: String,
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = ProcessingElement(
     pc.find(_.name equals processorClass)match{
-      case None => throw new Error(("cannot find processing element class " + processorClass + " used in processing element" + name))
+      case None => throw new Error("cannot find processing element class " + processorClass + " used in processing element" + name)
       case Some(x) => x
     },
     SortedMap.empty[String, Int] ++ resources.map(_.toCouple),
