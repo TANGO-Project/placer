@@ -34,7 +34,7 @@ case class Config(in: File = new File("."), out: File = new File("."), verbose: 
 object Main extends App {
 
   val parser = new scopt.OptionParser[Config]("placer") {
-    head("placer", "0.1")
+    head("placer", "alpha")
 
     opt[File]('i', "in").required().valueName("<file>").
       action((x, c) => c.copy(in = x)).
@@ -60,7 +60,11 @@ object Main extends App {
     case Some(config) if config.license =>
       // do stuff
         println(
-          """Placer is free software: you can redistribute it and/or modify
+          """
+            |Copyright 2017 CETIC www.cetic.be
+            |This is being developed for the TANGO Project: http://tango-project.eu
+            |
+            |Placer is free software: you can redistribute it and/or modify
             |it under the terms of the GNU Lesser General Public License as published by
             |the Free Software Foundation, either version 3 of the License, or
             |(at your option) any later version.
