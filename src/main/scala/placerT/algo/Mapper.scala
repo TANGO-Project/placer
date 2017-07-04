@@ -34,9 +34,9 @@ object Mapper {
   }
 
   def findMapping(problem: MappingProblem): Mappings = {
-    try {
+    // try {
       Mappings(new Mapper(problem.softwareModel, problem.hardwareModel, problem.goal: MappingGoal).mapping)
-    } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
+    // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 }
 
@@ -86,7 +86,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, this))
 
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
-      processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.id, bus.processor.id, bus.id))
+      processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
     //creating the CPbusses
     val cpBusses: Array[CPBus] = (hardwareModel.busses.toList.map(
