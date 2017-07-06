@@ -117,7 +117,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
   def temporaryStorageWidth:CPIntVar = {
     //TODO: this is redundant with the "postCumulativeForSimpleCumulativeTasks" in closeTransmissionAndComputationMemory
-    CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize))
+    if(temporaryStorages.isEmpty) CPIntVar(0)
+    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize))
   }
 
   def timeWidth:CPIntVar

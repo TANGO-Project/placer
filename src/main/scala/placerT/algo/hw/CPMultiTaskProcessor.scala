@@ -67,6 +67,7 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
     val simpleTasks = tasksPotentiallyExecutingHere.map(cpTask =>
       new SimpleTask(cpTask.start,cpTask.duration,cpTask.end,cpTask.isRunningOnProcessor(id))
     )
-    SimpleTask.resourceWidthOfUse(simpleTasks)
+    if(simpleTasks.isEmpty) CPIntVar(0)
+    else SimpleTask.resourceWidthOfUse(simpleTasks)
   }
 }

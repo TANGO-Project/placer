@@ -55,8 +55,11 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
     }
   }
 
-  override def timeWidth: CPIntVar =
-    SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
+  override def timeWidth: CPIntVar = {
+    if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)
+    else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
+  }
+
 
   override def close() {
     SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay)

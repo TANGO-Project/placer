@@ -57,6 +57,7 @@ object SimpleTask extends Constraints {
 
   def resourceWidthOfUse(simpleTasks: List[SimpleTask]):CPIntVar = {
     val simpleTasksArray = simpleTasks.filter(!_.isNeeded.isFalse).toArray
+
     val startTimeArray = simpleTasksArray.map(_.start)
     val endTimeArray = simpleTasksArray.map(_.end)
     val isNeededArray = simpleTasksArray.map(_.isNeeded)

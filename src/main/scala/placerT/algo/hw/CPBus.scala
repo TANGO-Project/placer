@@ -78,7 +78,8 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
   }
 
   def buildTimeWidth:CPIntVar = {
-    SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
+    if(allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)(mapper.store)
+    else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
   }
 
 }
