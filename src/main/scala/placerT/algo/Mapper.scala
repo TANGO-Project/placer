@@ -219,10 +219,11 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       //binaryFirstFail(problem.varsToDistribute)
 
       //TODO: essayer cette stratégie-ci:
-      //search(conflictOrderingSearch(startsVar,startsVar(_).min,startsVar(_).min))
+      val allVars = problem.varsToDistribute.toArray
+      discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),5)
       //setTimes(startsVar, durationsVar, endsVar)
+      //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
 
-      discrepancy(binaryFirstFail(problem.varsToDistribute), 5)
     } onSolution {
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
