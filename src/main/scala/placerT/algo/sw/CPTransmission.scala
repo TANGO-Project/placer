@@ -65,14 +65,15 @@ case class CPTransmission(id: Int,
 
   val busAndDurationNZWithStub = busAndDurationNZ.toList ::: busWithTransmissionZ.toList.map(bus => (bus,stubValueForDurationNZ))
 
-  println("busAndDuration:"  + busAndDuration)
-  println("busAndDurationNZ:"  + busAndDurationNZ)
-  val transmissionDurationNZ: CPIntVar = CPIntVar(possibleDurationsNZ)
+  val transmissionDurationNZ2: CPIntVar = CPIntVar(possibleDurationsNZ)
 
-  add(table(busID, transmissionDurationNZ, busAndDurationNZWithStub))
+  add(table(busID, transmissionDurationNZ2, busAndDurationNZWithStub))
 
-  add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ))))
+  add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ2))))
   add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
+
+  val endNZ: CPIntVar = CPIntVar(0, maxHorizon)
+  add(endNZ isEq (start + transmissionDurationNZ2))
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
@@ -84,8 +85,8 @@ case class CPTransmission(id: Int,
   def transmissionDuration(sol:CPSol):Int = {
     val selectedBusID = sol(busID)
     if(busWithTransmissionZ contains selectedBusID) 0
-    else sol(transmissionDurationNZ)
+    else sol(transmissionDurationNZ2)
   }
 
-  override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, transmissionDurationNZ, busID)
+  override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, transmissionDurationNZ2, busID)
 }
