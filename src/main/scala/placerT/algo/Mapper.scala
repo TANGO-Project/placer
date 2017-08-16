@@ -29,18 +29,23 @@ import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
 object Mapper {
-  def findMapping(softwareModel: SoftwareModel, hardwareModel: HardwareModel, goal: MappingGoal): Iterable[Mapping] = {
-    new Mapper(softwareModel, hardwareModel, goal: MappingGoal).mapping
+  def findMapping(softwareModel: SoftwareModel, hardwareModel: HardwareModel, goal: MappingGoal,maxDiscrepancy:Int=20): Iterable[Mapping] = {
+    new Mapper(softwareModel, hardwareModel, goal: MappingGoal,maxDiscrepancy).mapping
   }
 
   def findMapping(problem: MappingProblem): Mappings = {
+    findMapping(problem: MappingProblem,20)
+  }
+
+  def findMapping(problem: MappingProblem,maxDiscrepancy:Int): Mappings = {
     // try {
-      Mappings(new Mapper(problem.softwareModel, problem.hardwareModel, problem.goal: MappingGoal).mapping)
+    Mappings(new Mapper(problem.softwareModel, problem.hardwareModel, problem.goal: MappingGoal,maxDiscrepancy:Int).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
+
 }
 
-class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel, goal: MappingGoal) extends CPModel with Constraints {
+class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel, goal: MappingGoal, maxDiscrepancy:Int) extends CPModel with Constraints {
 
   val store:CPStore = this.solver
 
@@ -220,7 +225,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
 
       //TODO: essayer cette stratégie-ci:
       val allVars = problem.varsToDistribute.toArray
-      discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),5)
+      discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy)
       //setTimes(startsVar, durationsVar, endsVar)
       //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
 

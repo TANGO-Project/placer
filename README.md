@@ -28,11 +28,14 @@ examples of usage:
 >java -jar Placer.jar --help
 placer alpha4
 Usage: placer [options]
-  -i, --in <file>   'in' is the JSon file representing the placement problem
-  -o, --out <file>  'out' is the file where the JSon representing the placements will be stored
-  --verbose         prints some verbosities
-  --license         prints license and stops
-  --help            prints this usage text
+
+  -i, --in <file>          'in' is the JSon file representing the placement problem
+  -o, --out <file>         'out' is the file where the JSon representing the placements will be stored
+  -d, --discrepancy <value>
+                           'd' the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is 20
+  --verbose                prints some verbosities
+  --license                prints license and stops
+  --help                   prints this usage text
 ```
 
 another example of usage: 
