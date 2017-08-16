@@ -177,7 +177,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
       case None => ;
       case Some(cap) =>
         val simpleCumulativeTasks = cpTasks.toList.map(
-          task => CumulativeTask(start = task.start, duration = task.duration, end = task.end, amount = task.power, explanation = "power of task " + task)
+          task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
         )
         CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(cap - backgroundPower))
     }

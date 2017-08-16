@@ -21,7 +21,9 @@
 package placerT.algo.sw
 
 import oscar.cp._
+import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
+import oscar.cp.modeling.Constraints
 import placerT.algo.Mapper
 import placerT.algo.hw.CPBus
 import placerT.metadata.sw.Transmission
@@ -38,7 +40,7 @@ case class CPTransmission(id: Int,
                           mapper: Mapper,
                           maxHorizon: Int,
                           processorToBusToProcessorAdjacency: Iterable[(Int, Int, Int)])
-  extends CPAbstractTask(mapper) {
+  extends CPAbstractTask(mapper) with Constraints{
   implicit val solver = mapper.solver
 
   val start: CPIntVar = CPIntVar(0, maxHorizon)
@@ -53,11 +55,24 @@ case class CPTransmission(id: Int,
   add(table(originProcessorID, busID, destinationProcessorID, processorToBusToProcessorAdjacency))
 
   val busAndDuration = busses.toList.map(bus => (bus.id, bus.transmissionDuration(transmission.size)))
-  val possibleDurations = busAndDuration.map(_._2)
-  val duration: CPIntVar = CPIntVar.sparse(possibleDurations)
-  add(table(busID, duration, busAndDuration))
+  val busAndDurationNZ = busAndDuration.filter(_._2!=0)
 
-  add(end isEq (start + duration))
+  val possibleDurationsNZ = busAndDurationNZ.map(_._2)
+  val stubValueForDurationNZ = possibleDurationsNZ.min
+
+  val busWithTransmissionNZ = busAndDurationNZ.map(_._2).toSet
+  val busWithTransmissionZ = busAndDuration.filter(_._2==0).map(_._1).toSet
+
+  val busAndDurationNZWithStub = busAndDurationNZ.toList ::: busWithTransmissionZ.toList.map(bus => (bus,stubValueForDurationNZ))
+
+  println("busAndDuration:"  + busAndDuration)
+  println("busAndDurationNZ:"  + busAndDurationNZ)
+  val transmissionDurationNZ: CPIntVar = CPIntVar(possibleDurationsNZ)
+
+  add(table(busID, transmissionDurationNZ, busAndDurationNZWithStub))
+
+  add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ))))
+  add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
@@ -66,5 +81,11 @@ case class CPTransmission(id: Int,
   add(from.end < start)
   add(end < to.start)
 
-  override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, duration, busID)
+  def transmissionDuration(sol:CPSol):Int = {
+    val selectedBusID = sol(busID)
+    if(busWithTransmissionZ contains selectedBusID) 0
+    else sol(transmissionDurationNZ)
+  }
+
+  override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, transmissionDurationNZ, busID)
 }

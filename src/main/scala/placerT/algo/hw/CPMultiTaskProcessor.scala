@@ -65,7 +65,7 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
 
   override def timeWidth: cp.CPIntVar = {
     val simpleTasks = tasksPotentiallyExecutingHere.map(cpTask =>
-      new SimpleTask(cpTask.start,cpTask.duration,cpTask.end,cpTask.isRunningOnProcessor(id))
+      new SimpleTask(cpTask.start,cpTask.taskDuration,cpTask.end,cpTask.isRunningOnProcessor(id))
     )
     if(simpleTasks.isEmpty) CPIntVar(0)
     else SimpleTask.resourceWidthOfUse(simpleTasks)

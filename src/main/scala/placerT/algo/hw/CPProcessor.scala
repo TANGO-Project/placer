@@ -49,7 +49,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (!isTaskExecutedHere.isFalse) {
       accumulateTemporaryStorage(
         task.start,
-        task.duration,
+        task.taskDuration,
         task.end,
         isTaskExecutedHere * task.computationMemory,
         "temporary storage of " + task.explanation)
@@ -111,7 +111,12 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (temporaryStorages.isEmpty) {
       println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(memSize))
+      val summedMems = temporaryStorages.map(_.amount.max).sum
+      val trimmedMemSize = Math.min(memSize, summedMems)
+      if(trimmedMemSize < memSize){
+        println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
+      }
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(trimmedMemSize))
     }
   }
 

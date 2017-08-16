@@ -49,7 +49,7 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
 
       allSimpleTasksPotentiallyExecutingHere = SimpleTask(
         task.start,
-        task.duration,
+        task.taskDuration,
         task.end,
         isTaskExecutedHere) :: allSimpleTasksPotentiallyExecutingHere
     }

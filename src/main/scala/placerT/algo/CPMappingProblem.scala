@@ -44,7 +44,7 @@ case class CPMappingProblem(hardwareName: String,
     def implem(task: CPTask): FlattenedImplementation = task.task.implementationArray(sol(task.implementationID))
 
     val taskMapping = cpTasks.map(cpTask => (cpTask.task, proc(cpTask.processorID), implem(cpTask),
-      sol(cpTask.start), sol(cpTask.duration), sol(cpTask.end)))
+      sol(cpTask.start), sol(cpTask.taskDuration), sol(cpTask.end)))
 
     def bus(cPTransmission: CPTransmission): Bus = cPTransmission.busses(sol(cPTransmission.busID)) match {
       case c: CPSelfLoopBus => c.selfLoopBus
@@ -52,7 +52,7 @@ case class CPMappingProblem(hardwareName: String,
     }
 
     val transmissionMapping = cpTransmissions.map(trans =>
-      (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), sol(trans.duration), sol(trans.end)))
+      (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), trans.transmissionDuration(sol), sol(trans.end)))
 
     new Mapping(hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
   }

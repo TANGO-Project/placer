@@ -64,7 +64,7 @@ case class CPTask(id: Int,
         }))
 
   val possibleDurations = implemAndProcessorAndDurationAndEnergyAndPower.map(_._3)
-  val duration: CPIntVar = CPIntVar.sparse(possibleDurations)
+  val taskDuration: CPIntVar = CPIntVar.sparse(possibleDurations)
 
   val possibleEnergies = implemAndProcessorAndDurationAndEnergyAndPower.map(_._4)
   val energy: CPIntVar = CPIntVar.sparse(possibleEnergies)
@@ -72,8 +72,8 @@ case class CPTask(id: Int,
   val possiblePowers = implemAndProcessorAndDurationAndEnergyAndPower.map(_._5)
   val power: CPIntVar = CPIntVar.sparse(possiblePowers)
 
-  add(table(implementationID, processorID, duration, energy, power, implemAndProcessorAndDurationAndEnergyAndPower))
-  add(end == (start + duration))
+  add(table(implementationID, processorID, taskDuration, energy, power, implemAndProcessorAndDurationAndEnergyAndPower))
+  add(end == (start + taskDuration))
 
   def addIncomingTransmission(cPTransmission: CPTransmission): Unit = {
     incomingCPTransmissions = cPTransmission :: incomingCPTransmissions
@@ -120,5 +120,5 @@ case class CPTask(id: Int,
     }
   }
 
-  override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, end, duration, implementationID, processorID)
+  override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, end, taskDuration, implementationID, processorID)
 }

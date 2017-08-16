@@ -61,7 +61,7 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
       //could be true, or unbound yet
       allSimpleTasksPotentiallyExecutingHere = SimpleTask(
         transmission.start,
-        transmission.duration,
+        transmission.transmissionDurationNZ,
         transmission.end,
         isTransmissionOccurringHere) :: allSimpleTasksPotentiallyExecutingHere
     }

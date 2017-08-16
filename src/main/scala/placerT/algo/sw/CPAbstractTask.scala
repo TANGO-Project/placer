@@ -28,7 +28,5 @@ abstract class CPAbstractTask(mapper: Mapper) {
 
   def end: CPIntVar
 
-  def duration: CPIntVar
-
   def variablesToDistribute: Iterable[CPIntVar]
 }
