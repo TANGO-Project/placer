@@ -55,7 +55,12 @@ case class CPTransmission(id: Int,
   val busAndDuration = busses.toList.map(bus => (bus.id, bus.transmissionDuration(transmission.size)))
   val possibleDurations = busAndDuration.map(_._2)
   val duration: CPIntVar = CPIntVar(possibleDurations.min,possibleDurations.max)
-  add(table(busID, duration, busAndDuration))
+  add(table2(busID, duration, busAndDuration))
+
+
+  def table2(x1: CPIntVar, x2: CPIntVar, tuples: Iterable[(Int, Int)]): Constraint = {
+    table(Array(x1, x2), tuples.map(t => Array(t._1, t._2)).toArray, oscar.cp.constraints.tables.TableAlgo.MDD4R) //this algo seems to be the fastest one for our kind of domain
+  }
 
   add(end isEq (start + duration))
 

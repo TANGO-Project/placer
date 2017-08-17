@@ -49,11 +49,11 @@ case class Mapping(hardwareName: String,
   def toStringSorted: String = {
     val stringAndStart = taskMapping.map(
     { case (task, pe, implem, start, dur, end) =>
-      (padToLength(task.name, 22) + "implem:" + padToLength(implem.description, 22) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
+      (padToLength(task.name, 40) + "implem:" + padToLength(implem.description, 40) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
     }).toList ++
       transmissionMapping.map(
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
-        (padToLength(trans.name, 21) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
+        (padToLength(trans.name, 31) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
       })
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
@@ -61,11 +61,11 @@ case class Mapping(hardwareName: String,
   def toStringSortedLight: String = {
     val stringAndStart = taskMapping.map(
     { case (task, pe, implem, start, dur, end) =>
-      (padToLength(task.name, 22) + " " + padToLength(pe.name + "(" + implem.description + ")", 25) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
+      (padToLength(task.name, 60) + " " + padToLength(pe.name + "(" + implem.description + ")", 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
     }).toList ++
       transmissionMapping.map(
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
-        (padToLength(trans.name, 22) + " " + padToLength(bus.name, 25) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
+        (padToLength(trans.name, 60) + " " + padToLength(bus.name, 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       })
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
