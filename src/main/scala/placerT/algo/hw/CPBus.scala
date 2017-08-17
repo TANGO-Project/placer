@@ -52,6 +52,7 @@ abstract class CPBus(val id: Int, mapper: Mapper) {
 
 case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
 
+  require(bus.timeUnitPerBit!=0)
   private var allSimpleTasksPotentiallyExecutingHere: List[SimpleTask] = List.empty
 
   override def accumulatePotentialTransmissionOnBus(transmission: CPTransmission) {

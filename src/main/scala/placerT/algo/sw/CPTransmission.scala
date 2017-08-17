@@ -60,7 +60,7 @@ case class CPTransmission(id: Int,
   val possibleDurationsNZ = busAndDurationNZ.map(_._2)
   val stubValueForDurationNZ = possibleDurationsNZ.min
 
-  val busWithTransmissionNZ = busAndDurationNZ.map(_._2).toSet
+  val busWithTransmissionNZ = busAndDurationNZ.map(_._1).toSet
   val busWithTransmissionZ = busAndDuration.filter(_._2==0).map(_._1).toSet
 
   val busAndDurationNZWithStub = busAndDurationNZ.toList ::: busWithTransmissionZ.toList.map(bus => (bus,stubValueForDurationNZ))
@@ -72,8 +72,7 @@ case class CPTransmission(id: Int,
   add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ2))))
   add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
 
-  val endNZ: CPIntVar = CPIntVar(0, maxHorizon)
-  add(endNZ isEq (start + transmissionDurationNZ2))
+  val endNZ: CPIntVar = start + transmissionDurationNZ2
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
