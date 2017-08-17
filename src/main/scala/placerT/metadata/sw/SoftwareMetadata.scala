@@ -27,8 +27,8 @@ import scala.collection.immutable.SortedMap
 
 /**
  * @param target the PE class that can run it
- * @param resourceUsage the usage of resoruce, can only mention resources delared in the PE class
- * @param computationMemory is the memory needed toperform the computation.
+ * @param resourceUsage the usage of resource, can only mention resources declared in the PE class
+ * @param computationMemory is the memory needed to perform the computation.
  *                          We consider that the memory tat stores input and output data is allocated for the duration of the task.
  * @param duration the duration of the implementation when executed on the specified target
  */

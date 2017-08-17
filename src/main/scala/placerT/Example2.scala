@@ -48,7 +48,6 @@ object GenerateJSon extends App {
   println(problem.toJSon)
   val json = prettyRender(parse(problem.toJSon))
 
-
   println(json)
 
   val parsed = parse(json)
@@ -115,7 +114,7 @@ object Example2Data {
     3,
     "busAToFPGA")
 
-  val hardwareModel = HardwareModel("ExampleHardware1",
+  val hardwareModel = HardwareModel("ExampleHardware2",
     Array(cpu, gpgpu, fpga),
     Array(processorA, processorB, processorC, processorD),
     Array(globalBus, busAB, busBC, busAD, globalBus2),
@@ -171,6 +170,6 @@ object Example2Data {
 
   val goal = Pareto(MinMakeSpan(),MinEnergy()) //ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val problem = new MappingProblem(softwareModel, hardwareModel, goal)
+  val problem = new MappingProblem("ms","bit",softwareModel, hardwareModel, goal)
 
 }

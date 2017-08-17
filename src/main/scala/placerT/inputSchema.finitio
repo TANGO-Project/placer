@@ -37,14 +37,23 @@ ProcessingElement = {
     powerModel:Formula
 }
 
-Bus = {halfDuplexBus:HalfDuplexBus}
+Bus = {halfDuplexBus:HalfDuplexBus}|{singleWayBus:SingleWayBus}
 
 HalfDuplexBus = {
     name:String
     relatedProcessors:[ProcessingElementRef]
-    timeUnitPerBit:Integer
+    timeUnitPerDataUnit:Integer
     latency:Integer
 }
+
+SingleWayBus = {
+    name:String
+    from:[ProcessingElementRef]
+    to:[ProcessingElementRef]
+    timeUnitPerDataUnit:Integer
+    latency:Integer
+}
+
 
 #referencing a processing element that is declared in HardwareModel/processingElements
 ProcessingElementRef = String
@@ -151,6 +160,8 @@ MultiObjectiveGoal = {
 }
 
 Main = {
+    timeUnit:String
+    dataUnit:String
     hardwareModel:HardwareModel
     softwareModel:SoftwareModel
     goal:MappingGoal

@@ -24,12 +24,13 @@ import oscar.cp._
 import oscar.cp.core.CPSol
 import placerT.algo.hw.{CPBus, CPProcessor, CPRegularBus, CPSelfLoopBus}
 import placerT.algo.sw.{CPTask, CPTransmission}
-import placerT.metadata.Mapping
+import placerT.metadata.{MappingProblem, Mapping}
 import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.FlattenedImplementation
 
 
-case class CPMappingProblem(hardwareName: String,
+case class CPMappingProblem(mappingProblem: MappingProblem,
+                            hardwareName: String,
                             cpTasks: Array[CPTask],
                             cpProcessors: Array[CPProcessor],
                             cpBusses: Array[CPBus],
@@ -54,7 +55,7 @@ case class CPMappingProblem(hardwareName: String,
     val transmissionMapping = cpTransmissions.map(trans =>
       (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), trans.transmissionDuration(sol), sol(trans.end)))
 
-    new Mapping(hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
+    new Mapping(mappingProblem.timeUnit,mappingProblem.dataUnit,hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
   }
 
   def varsToDistribute: List[CPIntVar] = {

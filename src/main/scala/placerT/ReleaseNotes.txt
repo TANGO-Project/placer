@@ -1,0 +1,18 @@
+
+alpha6 release:
+---------------
+modified the JSon input format.
+timeUnit and dataUnit have to be declared in the MappingProblem
+and fields timeUnitPerBit are renamed to timeUnitPerDataUnit
+
+alpha5 release:
+---------------
+Speed improvement
+uses a modified model for the CP engine where zero values for transmission delays are separated from other ones.
+This reduces the size of domains declared for CPIntVars
+
+alpha4 release:
+---------------
+Speed improvement
+uses a better search strategy
+also added a command line parameter to increase/decrease optimality

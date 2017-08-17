@@ -24,7 +24,9 @@ import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, Transmission}
 
 
-case class Mapping(hardwareName: String,
+case class Mapping(timeUnit:String,
+                   dataUnit:String,
+                   hardwareName: String,
                    taskMapping: Array[(AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)],
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
                    makeSpan: Int,
@@ -67,10 +69,12 @@ case class Mapping(hardwareName: String,
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 60) + " " + padToLength(bus.name, 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       })
-    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
+    "Mapping(timeUnit:" + timeUnit + " dataUnit:" + dataUnit + " hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
   def toJSon: String = "{" +
+    JSonHelper.string("timeUnit", timeUnit) + "," +
+    JSonHelper.string("dataUnit", dataUnit) + "," +
     JSonHelper.string("hardwareName", hardwareName) + "," +
     JSonHelper.int("makeSpan", makeSpan) + "," +
     JSonHelper.optionIntComa("width", width) +
@@ -110,4 +114,5 @@ case class Mappings(mapping: Iterable[Mapping]) {
     "Mappings(nbMapping:" + mapping.size + "\n" +
       mapping.map(_.toStringSortedLight).mkString("\n") + "\n)"
   }
+
 }

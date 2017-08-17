@@ -178,10 +178,9 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
 //do we share communications or not??
 //i propose to split all communication into chunks that are actual tasks, and prioritize on chunks
 //bus are therefore unaryResource
-sealed abstract class Bus(val name: String, val timeUnitPerBit: Int, val latency: Int) extends Indiced() {
-  require(timeUnitPerBit >= 0, "creating bus " + name + " with unauthorized timeUnitPerBit:" + timeUnitPerBit)
+sealed abstract class Bus(val name: String, val timeUnitPerDataUnit: Int, val latency: Int) extends Indiced() {
+  require(timeUnitPerDataUnit >= 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit)
   require(latency >= 0, "creating bus " + name + " with unauthorized delay:" + latency)
-
 
   def close()
 
@@ -199,20 +198,21 @@ sealed abstract class Bus(val name: String, val timeUnitPerBit: Int, val latency
    * @param size
    * @return
    */
-  def transmissionDuration(size: Int): Int = latency + size * timeUnitPerBit
+  def transmissionDuration(size: Int): Int = latency + size * timeUnitPerDataUnit
 
   def toJSon: String
 }
 
 case class HalfDuplexBus(relatedProcessors: List[ProcessingElement],
-                         override val timeUnitPerBit: Int,
+                         override val timeUnitPerDataUnit: Int,
                          override val latency: Int,
                          override val name: String)
-  extends Bus(name, timeUnitPerBit, latency) {
+  extends Bus(name, timeUnitPerDataUnit, latency) {
+  require(timeUnitPerDataUnit > 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit + "; should be >= 1")
 
   override def toString: String = "HalfDuplexBus(" +
-    name + " processors:{" + relatedProcessors.map(_.name).mkString(",") + "} timeUnitPerBit:" +
-    timeUnitPerBit + " latency:" + latency + ")"
+    name + " processors:{" + relatedProcessors.map(_.name).mkString(",") + "} timeUnitPerDataUnit:" +
+    timeUnitPerDataUnit + " latency:" + latency + ")"
 
   var relatedProcessorSet: SortedSet[ProcessingElement] = null
 
@@ -232,22 +232,23 @@ case class HalfDuplexBus(relatedProcessors: List[ProcessingElement],
     "{" + JSonHelper.complex("halfDuplexBus", "{" +
       JSonHelper.string("name", name) + "," +
       JSonHelper.strings("relatedProcessors", relatedProcessors.map(_.name)) + "," +
-      JSonHelper.int("timeUnitPerBit", timeUnitPerBit) + "," +
+      JSonHelper.int("timeUnitPerDataUnit", timeUnitPerDataUnit) + "," +
       JSonHelper.int("latency", latency) + "}") + "}"
   }
 }
 
 case class SingleWayBus(private val from: List[ProcessingElement],
                         to: List[ProcessingElement],
-                        override val timeUnitPerBit: Int,
+                        override val timeUnitPerDataUnit: Int,
                         override val latency: Int,
                         override val name: String)
-  extends Bus(name, timeUnitPerBit, latency) {
+  extends Bus(name, timeUnitPerDataUnit, latency) {
+  require(timeUnitPerDataUnit > 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit + "; should be >= 1")
 
   override def toString: String = "SingleWayBus(" + name +
     " from:{" + from.map(_.name).mkString(",") + "} to:{" +
-    to.map(_.name).mkString(",") + "} timeUnitPerBit:" +
-    timeUnitPerBit + " delay:" + latency + ")"
+    to.map(_.name).mkString(",") + "} timeUnitPerDataUnit:" +
+    timeUnitPerDataUnit + " delay:" + latency + ")"
 
   var fromProcessorSet: SortedSet[ProcessingElement] = null
   var toProcessorSet: SortedSet[ProcessingElement] = null
@@ -270,7 +271,7 @@ case class SingleWayBus(private val from: List[ProcessingElement],
       JSonHelper.string("name", name) + "," +
       JSonHelper.strings("from", from.map(_.name)) + "," +
       JSonHelper.strings("to", to.map(_.name)) + "," +
-      JSonHelper.int("timeUnitPerBit", timeUnitPerBit) + "," +
+      JSonHelper.int("timeUnitPerDataUnit", timeUnitPerDataUnit) + "," +
       JSonHelper.int("latency", latency) + "}") + "}"
   }
 }
@@ -331,8 +332,8 @@ case class HardwareModel(name: String,
       case None => "";
       case Some(cap) => """"energyCap":""" + cap + ","
     }) +
-    JSonHelper.multiples("classes", processorClasses.map(_.toJSon)) + "," +
-    JSonHelper.multiples("processors", processors.map(_.toJSon)) + "," +
+    JSonHelper.multiples("processingElementClasses", processorClasses.map(_.toJSon)) + "," +
+    JSonHelper.multiples("processingElements", processors.map(_.toJSon)) + "," +
     JSonHelper.multiples("busses", busses.map(_.toJSon)) + "," +
     JSonHelper.multiples("properties", properties.toList.map({ case (propertyName, value) => JSonHelper.nameIntValue(propertyName, value) })) +
     "}"

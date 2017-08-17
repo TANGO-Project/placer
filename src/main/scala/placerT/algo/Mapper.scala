@@ -29,23 +29,20 @@ import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
 object Mapper {
-  def findMapping(softwareModel: SoftwareModel, hardwareModel: HardwareModel, goal: MappingGoal,maxDiscrepancy:Int=20): Iterable[Mapping] = {
-    new Mapper(softwareModel, hardwareModel, goal: MappingGoal,maxDiscrepancy).mapping
-  }
 
-  def findMapping(problem: MappingProblem): Mappings = {
-    findMapping(problem: MappingProblem,20)
-  }
-
-  def findMapping(problem: MappingProblem,maxDiscrepancy:Int): Mappings = {
+  def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20): Mappings = {
     // try {
-    Mappings(new Mapper(problem.softwareModel, problem.hardwareModel, problem.goal: MappingGoal,maxDiscrepancy:Int).mapping)
+    Mappings(new Mapper(problem,maxDiscrepancy:Int).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 
 }
 
-class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel, goal: MappingGoal, maxDiscrepancy:Int) extends CPModel with Constraints {
+class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Constraints {
+
+  val softwareModel = problem.softwareModel
+  val hardwareModel = problem.hardwareModel
+  val goal = problem.goal
 
   val store:CPStore = this.solver
 
@@ -190,6 +187,7 @@ class Mapper(val softwareModel: SoftwareModel, val hardwareModel: HardwareModel,
     }
 
     CPMappingProblem(
+      problem,
       hardwareModel.name,
       cpTasks,
       cpProcessors,

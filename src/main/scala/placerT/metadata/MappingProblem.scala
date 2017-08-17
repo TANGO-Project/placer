@@ -30,9 +30,24 @@ import placerT.metadata.sw.SoftwareModel
  * @param hardwareModel the model of the hw (will evolve to list of hardware models)
  * @param goal the objective of the mapping
  */
-case class MappingProblem(softwareModel: SoftwareModel, hardwareModel: HardwareModel, goal: MappingGoal) {
+case class MappingProblem(timeUnit:String,
+                          dataUnit:String,
+                          softwareModel: SoftwareModel,
+                          hardwareModel: HardwareModel,
+                          goal: MappingGoal) {
+
+  for (task <- softwareModel.simpleProcesses)
+    for (implem <- task.implementationArray) {
+      val errorPE = hardwareModel.processors.filter(proc =>
+        implem.target == proc.processorClass && implem.duration(proc, hardwareModel.properties) ==0)
+      if (errorPE.nonEmpty){
+        println("WARNING: duration==0 for task " + task.name + " with implementation " + implem.name + " running on " + errorPE.toList.map(_.name).mkString(","))
+      }
+    }
 
   def toJSon: String = "{" +
+    JSonHelper.string("timeUnit",timeUnit) + "," +
+    JSonHelper.string("dataUnit",dataUnit) + "," +
     JSonHelper.complex("softwareModel", softwareModel.toJSon) + "," +
     JSonHelper.complex("hardwareModel", hardwareModel.toJSon) + "," +
     JSonHelper.complex("goal", goal.toJSon) + "}"

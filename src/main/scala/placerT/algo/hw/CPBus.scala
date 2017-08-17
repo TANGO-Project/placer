@@ -48,11 +48,17 @@ abstract class CPBus(val id: Int, mapper: Mapper) {
         toReturn
     }
   }
+
+  val isSelfLoop:Boolean
+  val name:String
 }
 
 case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
 
-  require(bus.timeUnitPerBit!=0)
+  val isSelfLoop:Boolean = false
+  val name= bus.name
+
+  require(bus.timeUnitPerDataUnit!=0)
   private var allSimpleTasksPotentiallyExecutingHere: List[SimpleTask] = List.empty
 
   override def accumulatePotentialTransmissionOnBus(transmission: CPTransmission) {
@@ -68,7 +74,7 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
     }
   }
 
-  override def transmissionDuration(size: Int): Int = bus.latency + size * bus.timeUnitPerBit
+  override def transmissionDuration(size: Int): Int = bus.latency + size * bus.timeUnitPerDataUnit
 
   override def close() {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) {
@@ -86,6 +92,9 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
 }
 
 case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
+
+  val isSelfLoop:Boolean = true
+  val name = "SelfLoopBus on " + processor.name
 
   override def transmissionDuration(size: Int): Int = 0
 

@@ -37,16 +37,18 @@ object Extractor {
   }
 }
 
-case class EMappingProblem(softwareModel: ESoftwareModel,
-                           hardwareModel: EHardwareModel,
-                           goal: EGoal) {
+case class EMappingProblem(timeUnit:String,
+                            dataUnit:String,
+                            softwareModel: ESoftwareModel,
+                            hardwareModel: EHardwareModel,
+                            goal: EGoal) {
 
   def extract = {
     val hw = hardwareModel.extract
     val sw = softwareModel.extract(hw)
 
-     MappingProblem(sw, hw, goal.extract)
-    }
+    MappingProblem(timeUnit,dataUnit, sw, hw, goal.extract)
+  }
 }
 
 case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
@@ -223,25 +225,28 @@ case class EBus(halfDuplexBus: Option[EHalfDuplexBus], singleWayBus: Option[ESin
 }
 
 case class EHalfDuplexBus(relatedProcessors: List[String],
-                          timeUnitPerBit: Int,
+                          timeUnitPerDataUnit: Int,
                           latency: Int,
                           name: String) {
   def extract(p: Array[ProcessingElement]) = HalfDuplexBus(
-    relatedProcessors.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
-    timeUnitPerBit,
+    relatedProcessors.map(name => p.find(_.name equals name)
+    match{
+      case Some(x) => x ;
+      case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name + " existing PE:" + p.map(_.name).toList)}),
+    timeUnitPerDataUnit,
     latency,
     name)
 }
 
 case class ESingleWayBus(from: List[String],
                          to: List[String],
-                         timeUnitPerBit: Int,
+                         timeUnitPerDataUnit: Int,
                          latency: Int,
                          name: String) {
   def extract(p: Array[ProcessingElement]) = SingleWayBus(
     from.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
     to.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
-    timeUnitPerBit,
+    timeUnitPerDataUnit,
     latency,
     name)
 }
