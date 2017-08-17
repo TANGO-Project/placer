@@ -54,7 +54,7 @@ case class CPTransmission(id: Int,
 
   val busAndDuration = busses.toList.map(bus => (bus.id, bus.transmissionDuration(transmission.size)))
   val possibleDurations = busAndDuration.map(_._2)
-  val duration: CPIntVar = CPIntVar.sparse(possibleDurations)
+  val duration: CPIntVar = CPIntVar(possibleDurations.min,possibleDurations.max)
   add(table(busID, duration, busAndDuration))
 
   add(end isEq (start + duration))
