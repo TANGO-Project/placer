@@ -34,7 +34,7 @@ case class Config(in: File = new File("."), out: File = new File("."), verbose: 
 object Main extends App {
 
   val parser = new scopt.OptionParser[Config]("placer") {
-    head("placer", "alpha4")
+    head("placer", "alpha5")
 
     opt[File]('i', "in").required().valueName("<file>").
       action((x, c) => c.copy(in = x)).
