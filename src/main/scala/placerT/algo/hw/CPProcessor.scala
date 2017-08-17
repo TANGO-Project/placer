@@ -113,9 +113,9 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     } else {
       val summedMems = temporaryStorages.map(_.amount.max).sum
       val trimmedMemSize = Math.min(memSize, summedMems)
-      if(trimmedMemSize < memSize){
-        println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
-      }
+      //if(trimmedMemSize < memSize){
+      //  println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
+      //}
       CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(trimmedMemSize))
     }
   }
