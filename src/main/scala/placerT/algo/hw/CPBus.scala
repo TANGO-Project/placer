@@ -78,7 +78,7 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
 
   override def close() {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) {
-      println("WARNING: no transmission will fit on bus " + bus.name)
+      System.err.println("WARNING: no transmission will fit on bus " + bus.name)
     } else {
       SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere)
     }

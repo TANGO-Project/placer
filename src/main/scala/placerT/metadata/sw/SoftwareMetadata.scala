@@ -24,6 +24,7 @@ import placerT.metadata._
 import placerT.metadata.hw._
 
 import scala.collection.immutable.SortedMap
+import scala.reflect.macros.whitebox
 
 /**
  * @param target the PE class that can run it
@@ -212,12 +213,16 @@ case class Transmission(source: AtomicTask,
  */
 case class SoftwareModel(simpleProcesses: Array[AtomicTask],
                          transmissions: Array[Transmission],
-                         softwareClass: SoftwareClass) extends IndiceMaker {
+                         softwareClass: SoftwareClass,
+                         verbose:Boolean = true) extends IndiceMaker {
   setIndices(simpleProcesses)
   setIndices(transmissions)
 
   val nbTransmissions = transmissions.length
+
+  if(verbose) println("checking for cycles in software model...")
   checkCycle
+  if(verbose) println("no cycle detected")
 
   require(transmissions.forall(f => f.source.id != -1 && f.target.id != -1), "some transmissions refer to non-registered tasks")
 
@@ -243,7 +248,10 @@ case class SoftwareModel(simpleProcesses: Array[AtomicTask],
 
     def checkCycleFrom(t:Transmission): Unit ={
       for(next <- transmissions if t precedes next){
-        if(isReached(next.id)) throw new Error("cycle in software model starting at " + next.name)
+        if(isReached(next.id)){
+          System.err.println("cycle in software model starting at " + next.name)
+          System.exit(-1)
+        }
         isReached(next.id) = true
         checkCycleFrom(next)
         isReached(next.id) = false

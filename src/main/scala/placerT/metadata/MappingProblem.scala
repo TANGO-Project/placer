@@ -41,7 +41,7 @@ case class MappingProblem(timeUnit:String,
       val errorPE = hardwareModel.processors.filter(proc =>
         implem.target == proc.processorClass && implem.duration(proc, hardwareModel.properties) ==0)
       if (errorPE.nonEmpty){
-        println("WARNING: duration==0 for task " + task.name + " with implementation " + implem.name + " running on " + errorPE.toList.map(_.name).mkString(","))
+        System.err.println("WARNING: duration==0 for task " + task.name + " with implementation " + implem.name + " running on " + errorPE.toList.map(_.name).mkString(","))
       }
     }
 

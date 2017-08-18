@@ -109,7 +109,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
   def closeTransmissionAndComputationMemory(): Unit = {
     if (temporaryStorages.isEmpty) {
-      println("WARNING: no temporary storage will ever be used on " + p.name)
+      System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
       val summedMems = temporaryStorages.map(_.amount.max).sum
       val trimmedMemSize = Math.min(memSize, summedMems)

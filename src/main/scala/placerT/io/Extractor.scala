@@ -32,8 +32,8 @@ object Extractor {
   implicit val formats = DefaultFormats
 
   // Brings in default date formats etc.
-  def extractProblem(jValue: JValue): MappingProblem = {
-    jValue.extract[EMappingProblem].extract
+  def extractProblem(jValue: JValue,verbose:Boolean = true): MappingProblem = {
+    jValue.extract[EMappingProblem].extract(verbose)
   }
 }
 
@@ -43,9 +43,9 @@ case class EMappingProblem(timeUnit:String,
                             hardwareModel: EHardwareModel,
                             goal: EGoal) {
 
-  def extract = {
+  def extract(verbose:Boolean) = {
     val hw = hardwareModel.extract
-    val sw = softwareModel.extract(hw)
+    val sw = softwareModel.extract(hw,verbose)
 
     MappingProblem(timeUnit,dataUnit, sw, hw, goal.extract)
   }
@@ -81,7 +81,7 @@ case class EPareto(a:String,b:String){
 case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
                           transmissions: Array[ETransmission],
                           softwareClass: ESoftwareClass) {
-  def extract(hw: HardwareModel) = {
+  def extract(hw: HardwareModel,verbose:Boolean) = {
 
     Checker.checkDuplicates(simpleProcesses.map(_.name),"task")
     Checker.checkDuplicates(transmissions.map(_.name),"transmission")
@@ -90,7 +90,8 @@ case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
     SoftwareModel(
       proc,
       transmissions.map(_.extract(proc)),
-      softwareClass.extract)
+      softwareClass.extract,
+      verbose)
   }
 }
 

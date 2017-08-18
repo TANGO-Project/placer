@@ -86,10 +86,11 @@ object Main extends App {
           |If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html""".stripMargin('|'))
       System.exit(0)
     case Some(config) =>
+      val verbose = config.verbose
 
       val problemFile = Source.fromFile(config.in)
       val parsed = parse(problemFile.mkString)
-      val problem: MappingProblem = Extractor.extractProblem(parsed)
+      val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
       if (config.verbose) println(problem)
       val mappingSet = Mapper.findMapping(problem,config.discrepancy)
