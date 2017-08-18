@@ -29,7 +29,7 @@ import placerT.metadata.hw.{MultiTaskPermanentTasks, ProcessingElement}
 import scala.collection.immutable.SortedMap
 
 /**
- * these processors are represented as bin-packing resoruces, pemanently allocated to the task, even if the only execute for a fraction of the time
+ * these processors are represented as bin-packing resources, permanently allocated to the task, even if the only execute for a fraction of the time
  * @param id
  * @param p
  * @param memSize

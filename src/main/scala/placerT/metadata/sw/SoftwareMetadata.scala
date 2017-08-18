@@ -192,6 +192,8 @@ case class Transmission(source: AtomicTask,
                         name: String) extends Indiced() {
   override def toString: String = "Transmission(" + name + " " + source.name + "->" + target.name + " size:" + size + " timing:" + timing + ")"
 
+  def precedes(that:Transmission):Boolean = this.target == that.source
+
   def shortString: String = "Transmission(" + name + " " + source.name + "->" + target.name + ")"
 
   def toJSon: String = "{" +
@@ -214,6 +216,9 @@ case class SoftwareModel(simpleProcesses: Array[AtomicTask],
   setIndices(simpleProcesses)
   setIndices(transmissions)
 
+  val nbTransmissions = transmissions.length
+  checkCycle
+
   require(transmissions.forall(f => f.source.id != -1 && f.target.id != -1), "some transmissions refer to non-registered tasks")
 
   override def toString: String = "SoftwareModel(\n" +
@@ -226,6 +231,25 @@ case class SoftwareModel(simpleProcesses: Array[AtomicTask],
     JSonHelper.multiples("transmissions", transmissions.map(_.toJSon)) + "," +
     JSonHelper.complex("softwareClass", softwareClass.toJSon) +
     "}"
+
+  def checkCycle{
+    val transmissionsNoPredecessors = transmissions.filter(t1 => !transmissions.exists(t2 => t2 precedes t1))
+    val isReached = Array.fill(nbTransmissions)(false)
+    for(t <- transmissionsNoPredecessors){
+      isReached(t.id) = true
+      checkCycleFrom(t)
+      isReached(t.id) = false
+    }
+
+    def checkCycleFrom(t:Transmission): Unit ={
+      for(next <- transmissions if t precedes next){
+        if(isReached(next.id)) throw new Error("cycle in software model starting at " + next.name)
+        isReached(next.id) = true
+        checkCycleFrom(next)
+        isReached(next.id) = false
+      }
+    }
+  }
 }
 
 abstract sealed class SoftwareClass() {

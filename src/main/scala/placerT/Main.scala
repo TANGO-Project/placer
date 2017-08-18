@@ -58,7 +58,7 @@ object Main extends App {
 
     note("""|Note: Placer is a java software so that all options taken by the JVM also apply.
         |Among them, you should consider the -Xmx and -Xms parameters to grant more memory to Placer:
-        |>java -Xms4G -Xmx15G -jar Placer.jar --in=...""".stripMargin('|'))
+        |example: java -Xms4G -Xmx15G -jar Placer.jar --in=...""".stripMargin('|'))
   }
 
   parser.parse(args, Config()) match {
