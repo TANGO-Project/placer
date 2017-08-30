@@ -84,6 +84,7 @@ SoftwareModel =  {
     simpleProcesses:[SimpleProcess]
     transmissions:[Transmission]
     softwareClass:SoftwareClass
+    properties:[NameValue]
 }
 
 SimpleProcess = {
@@ -165,4 +166,5 @@ Main = {
     hardwareModel:HardwareModel
     softwareModel:SoftwareModel
     goal:MappingGoal
+    properties:[NameValue]
 }

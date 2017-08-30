@@ -50,6 +50,9 @@ case class CPTask(id: Int,
   for (processor <- mapper.hardwareModel.processors) {
     if (!task.canRunOn(processor)) {
       isRunningOnProcessor.apply(processor.id).variable.assignFalse()
+      if(task.anyImplementationFor(processor)){
+        System.err.println("INFO: task" + task + " cannot run on processor " + processor.name + " for lack of resources although it has an available implementation")
+      }
     }
   }
 
@@ -58,9 +61,13 @@ case class CPTask(id: Int,
       implem => mapper.hardwareModel.processors.toList.
         filter(p => p.processorClass equals implem.target).
         map(p => {
-          val durationPI = implem.duration(p, mapper.hardwareModel.properties)
-          val power = Formula.eval(p.powerModelForTask, mapper.hardwareModel.properties ++ p.processorClass.zeroResources ++ implem.resourceUsage)
-          (implem.id, p.id, durationPI, durationPI * power, power)
+          val durationPI = implem.duration(p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
+          require(durationPI>0,"duration of implementation " + implem.name + " on processor " + p.name + " is null or negative:" + durationPI)
+          val power = Formula.eval(p.powerModelForTask, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties ++ p.processorClass.zeroResources ++ implem.resourceUsage)
+          require(power>=0,"power of implementation " + implem.name + " on processor " + p.name + " is negative:" + power)
+          val energy = durationPI * power
+            require(energy>=0,"energy usage of implementation " + implem.name + " on processor " + p.name + " is negative:" + energy)
+          (implem.id, p.id, durationPI, energy, power)
         }))
 
   val possibleDurations = implemAndProcessorAndDurationAndEnergyAndPower.map(_._3)

@@ -24,6 +24,8 @@ import placerT.io.JSonHelper
 import placerT.metadata.hw.HardwareModel
 import placerT.metadata.sw.SoftwareModel
 
+import scala.collection.immutable.SortedMap
+
 /**
  * defines a mapping problem
  * @param softwareModel the model of the sw
@@ -32,6 +34,7 @@ import placerT.metadata.sw.SoftwareModel
  */
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
+                          properties:SortedMap[String,Int],
                           softwareModel: SoftwareModel,
                           hardwareModel: HardwareModel,
                           goal: MappingGoal) {
@@ -39,7 +42,7 @@ case class MappingProblem(timeUnit:String,
   for (task <- softwareModel.simpleProcesses)
     for (implem <- task.implementationArray) {
       val errorPE = hardwareModel.processors.filter(proc =>
-        implem.target == proc.processorClass && implem.duration(proc, hardwareModel.properties) ==0)
+        implem.target == proc.processorClass && implem.duration(proc, properties ++ hardwareModel.properties ++ softwareModel.properties) ==0)
       if (errorPE.nonEmpty){
         System.err.println("WARNING: duration==0 for task " + task.name + " with implementation " + implem.name + " running on " + errorPE.toList.map(_.name).mkString(","))
       }

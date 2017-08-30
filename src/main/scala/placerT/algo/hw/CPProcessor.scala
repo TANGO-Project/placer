@@ -19,7 +19,9 @@
 
 package placerT.algo.hw
 
+import oscar.cp
 import oscar.cp._
+import oscar.cp.core.{CPOutcome, NoSolutionException}
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper}
@@ -35,6 +37,17 @@ import placerT.metadata.sw.TransmissionTiming._
 abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, mapper: Mapper) {
 
   implicit val solver = mapper.solver
+
+  def addDocumented(c: cp.core.Constraint,origin:String){
+    try {
+      add(c)
+    }catch{
+      case n:NoSolutionException =>
+        val exception = new NoSolutionException("error on constraint " + origin + "\n" + n)
+        //exception.setStackTrace(n.getStackTrace)
+        throw exception
+    }
+  }
 
   private var temporaryStorages: List[CumulativeTask] = List.empty
 
@@ -63,7 +76,6 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
       //true or not decided yet; if false, we have nothing to do
 
       // the code here  ensures that the storage is maintained during the execution of the task.
-
       //storage of incoming transmissions
       for (incomingTransmission <- task.incomingCPTransmissions) {
         val storageStart = incomingTransmission.start
@@ -79,10 +91,10 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
         incomingTransmission.timing match {
           case Alap => //we have to constraint the arrival time here
-            add(incomingTransmission.end === (task.start - 1))
+            addDocumented(new oscar.cp.constraints.Eq(incomingTransmission.end,task.start - 1),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
           case _ =>
             //we are on the other side, the simple constraint is enough
-            add(incomingTransmission.end < task.start)
+            addDocumented(incomingTransmission.end < task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)
         }
       }
 
@@ -98,10 +110,10 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
         outGoingTransmission.timing match {
           case Asap =>
             //we have to constraint the departure time here
-            add(outGoingTransmission.start === (task.end + 1))
+            addDocumented(new oscar.cp.constraints.Eq(outGoingTransmission.start,task.end + 1),"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
           case _ =>
             //we are on the other side, the simple constraint is enough
-            add(task.end < outGoingTransmission.start)
+            addDocumented(task.end < outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)
         }
       }
     }
@@ -111,19 +123,24 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (temporaryStorages.isEmpty) {
       System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
+
+      val trimmedMemSize = memSize
+/*
       val summedMems = temporaryStorages.map(_.amount.max).sum
-      val trimmedMemSize = Math.min(memSize, summedMems)
-      //if(trimmedMemSize < memSize){
-      //  println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
-      //}
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(trimmedMemSize))
+      if(trimmedMemSize < memSize){
+        System.err.println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
+      }else{
+        System.err.println("summedMems of " + p.name + ":" + summedMems)
+      }
+      */
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(trimmedMemSize),"temporary storage for processor " + p.name)
     }
   }
 
   def temporaryStorageWidth:CPIntVar = {
     //TODO: this is redundant with the "postCumulativeForSimpleCumulativeTasks" in closeTransmissionAndComputationMemory
     if(temporaryStorages.isEmpty) CPIntVar(0)
-    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize))
+    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize),"temporaryStorageWidth for processor " + p.name)
   }
 
   def timeWidth:CPIntVar

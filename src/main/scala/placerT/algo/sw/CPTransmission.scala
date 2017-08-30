@@ -72,6 +72,7 @@ case class CPTransmission(id: Int,
   add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ2))))
   add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
 
+  //This is to be used to represent usage of regular busses
   val endNZ: CPIntVar = start + transmissionDurationNZ2
 
   from.addOutgoingTransmission(this)

@@ -41,13 +41,14 @@ case class EMappingProblem(timeUnit:String,
                             dataUnit:String,
                             softwareModel: ESoftwareModel,
                             hardwareModel: EHardwareModel,
+                            properties: List[ENameValue] = List.empty,
                             goal: EGoal) {
 
   def extract(verbose:Boolean) = {
     val hw = hardwareModel.extract
     val sw = softwareModel.extract(hw,verbose)
 
-    MappingProblem(timeUnit,dataUnit, sw, hw, goal.extract)
+    MappingProblem(timeUnit,dataUnit,SortedMap.empty[String, Int] ++ properties.map(_.toCouple),sw, hw, goal.extract)
   }
 }
 
@@ -80,6 +81,7 @@ case class EPareto(a:String,b:String){
 
 case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
                           transmissions: Array[ETransmission],
+                          properties:List[ENameValue] = List.empty,
                           softwareClass: ESoftwareClass) {
   def extract(hw: HardwareModel,verbose:Boolean) = {
 
@@ -91,6 +93,7 @@ case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
       proc,
       transmissions.map(_.extract(proc)),
       softwareClass.extract,
+      SortedMap.empty[String,Int] ++ properties.map(_.toCouple),
       verbose)
   }
 }

@@ -138,13 +138,14 @@ object Example1 extends App {
   val softwareModel = SoftwareModel(
     Array(inputting, decoding, transforming, transforming2, watermarking, encoding),
     Array(inputToDecode, decodeToTransform, transformToWatermark, decodeToTransform2, transform2ToWatermark, watermarkToEncode, sideComm),
-    OneShotSoftware(Some(20000)))
+    OneShotSoftware(Some(20000)),
+    SortedMap.empty[String,Int])
 
   println(softwareModel)
 
   val goal = MinMakeSpan() // ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val mappingSet = Mapper.findMapping(new MappingProblem("ms","bit",softwareModel, hardwareModel, goal)).mapping
+  val mappingSet = Mapper.findMapping(new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, goal)).mapping
 
   if (mappingSet.isEmpty) {
     println("no mapping found")

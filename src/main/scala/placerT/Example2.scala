@@ -166,10 +166,11 @@ object Example2Data {
   val softwareModel = SoftwareModel(
     Array(inputting, decoding, transforming, transforming2, watermarking, encoding),
     Array(inputToDecode, decodeToTransform, transformToWatermark, decodeToTransform2, transform2ToWatermark, watermarkToEncode, sideComm),
-    OneShotSoftware(Some(20000))) //IterativeSoftware(maxMakespan = None,maxFrameDelay = None /*Some(500)*/)) //OneShotSoftware(Some(20000)))
+    OneShotSoftware(Some(20000)),
+    SortedMap.empty[String,Int]) //IterativeSoftware(maxMakespan = None,maxFrameDelay = None /*Some(500)*/)) //OneShotSoftware(Some(20000)))
 
   val goal = Pareto(MinMakeSpan(),MinEnergy()) //ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val problem = new MappingProblem("ms","bit",softwareModel, hardwareModel, goal)
+  val problem = new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, goal)
 
 }

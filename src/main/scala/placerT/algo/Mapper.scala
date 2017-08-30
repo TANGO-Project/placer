@@ -35,10 +35,19 @@ object Mapper {
     Mappings(new Mapper(problem,maxDiscrepancy:Int).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
-
 }
 
-class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Constraints {
+class Mapper(val problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Constraints {
+
+
+  def addDocumented(c: Constraint,origin: =>String){
+    try {
+      add(c)
+    }catch{
+      case n:NoSolutionException =>
+        throw new NoSolutionException("error on constraint " + origin + "\n" + n)
+    }
+  }
 
   val softwareModel = problem.softwareModel
   val hardwareModel = problem.hardwareModel
@@ -49,19 +58,37 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
   val cpProblem = postProblem(softwareModel, hardwareModel)
   val mapping = searchMappingProblem(cpProblem, goal)
 
+  def reportProgress(startedUpTask:String): Unit ={
+    this.solver.propagate()
+    if(this.solver.isFailed()) throw new Error("solver trivially concluded to no solution or overflowed during latest modeling step")
+    println(startedUpTask)
+  }
+
   def postProblem(softwareModel: SoftwareModel,
                   hardwareModel: HardwareModel): CPMappingProblem = {
 
     val summedMaxTaskDurations =
-      softwareModel.simpleProcesses.map(_.maxDuration(hardwareModel.processors, hardwareModel.properties)).sum
+      softwareModel.simpleProcesses.map(_.maxDuration(hardwareModel.processors, problem.properties ++ hardwareModel.properties ++ softwareModel.properties)).sum
+
     val summedMaxTransmissionTimes =
       softwareModel.transmissions.map(flow => hardwareModel.busses.map(bus => bus.transmissionDuration(flow.size)).max).sum
-    val maxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes
+
+    val summedMaxSwitchingTimes = hardwareModel.processorClasses.map(_ match {
+      case m: MultiTaskPermanentTasks => 0
+      case m: MonoTaskSwitchingTask => m.switchingDelay
+    }).max * softwareModel.simpleProcesses.length
+
+    val maxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes + summedMaxSwitchingTimes
+    println("maxHorizon:" + maxHorizon)
+
+    reportProgress("creating tasks")
 
     //creating the CPTasks
     val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
       process => new CPTask(process.id, process, process.name, this, maxHorizon)
     )
+
+    reportProgress("creating processors")
 
     //creating the CPPRocessors
     val cpProcessors = hardwareModel.processors.map(
@@ -69,6 +96,8 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
         case m: MultiTaskPermanentTasks => new CPMultiTaskProcessor(processor.id, processor, processor.memSize, this)
         case m: MonoTaskSwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, m.switchingDelay, this)
       })
+
+    reportProgress("constants about adjacency")
 
     //instantiating constants about adjacency
     val processorToBusAdjacencyNoSelfLoop: Set[(Int, Int)] =
@@ -90,11 +119,14 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
+
+    reportProgress("creating busses")
     //creating the CPbusses
     val cpBusses: Array[CPBus] = (hardwareModel.busses.toList.map(
       bus => new CPRegularBus(bus.id, bus, this)
     ) ++ selfLoopBusses).toArray
 
+    reportProgress("creating transmissions")
     //creating the CPtransmissions
     val cpTransmissions: Array[CPTransmission] = softwareModel.transmissions.map(
       flow => new CPTransmission(flow.id, flow,
@@ -109,8 +141,12 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
       softwareModel.softwareClass match {
         case i:IterativeSoftware =>
           i.maxFrameDelay match {
-            case Some(d) => Some(CPIntVar(0,d))
-            case _ if goal.needsWidth => Some(CPIntVar(0,summedMaxTaskDurations))
+            case Some(d) =>
+              reportProgress("creating width var")
+              Some(CPIntVar(0,d))
+            case _ if goal.needsWidth =>
+              reportProgress("creating width var")
+              Some(CPIntVar(0,Int.MaxValue))
             case _ =>  None
           }
         case _ =>
@@ -120,6 +156,7 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
 
     var widthVarList:List[CPIntVar] = List.empty
 
+    reportProgress("registering tasks and transmissions to processors and busses")
     //registering tasks and transmissions to processors and busses
     for (bus <- cpBusses) {
       for (transmission <- cpTransmissions) {
@@ -134,11 +171,15 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
       }
     }
 
+    reportProgress("registering execution constraints per processors and task")
+
     for (proc <- cpProcessors) {
+      //reportProgress("registering execution constraints on processor " + proc.p.name)
       for (task <- cpTasks) {
+        //reportProgress("registering execution constraints processor " + proc.p.name + " for task " + task.task.name)
         proc.accumulateExecutionConstraintsOnTask(task)
       }
-       widthVar match{
+      widthVar match{
         case Some(w) =>
           widthVarList = proc.timeWidth :: widthVarList //TODO: add proc.temporaryStorageWidth
         case _ => ;
@@ -148,22 +189,30 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
 
     widthVar match{
       case Some(w) =>
-        add(maximum(widthVarList.toArray,w))
+        reportProgress("posting maxFrameDelay")
+        addDocumented(maximum(widthVarList.toArray,w),"iterativeSoftware.maxFrameDelay")
       case _ => ;
     }
 
-    val energyForEachTask = cpTasks.map(task => task.energy)
+    reportProgress("computing makeSpan")
     val taskEnds = cpTasks.map(task => task.end)
-    val backgroundPower: Int = cpProcessors.map(p => p.p.constantPower.value).sum
     val makeSpan = maximum(taskEnds)
+
+    reportProgress("computing total energy consumption")
+    val energyForEachTask = cpTasks.map(task => task.energy)
+    val backgroundPower: Int = cpProcessors.map(p => p.p.constantPower.value).sum
     val energy = sum(energyForEachTask) + makeSpan * backgroundPower
 
     //deadline
     softwareModel.softwareClass match {
-      case OneShotSoftware(Some(deadline)) => add(makeSpan <= deadline)
+      case OneShotSoftware(Some(deadline)) =>
+        reportProgress("posting deadline")
+        add(makeSpan <= deadline)
       case i:IterativeSoftware =>
         i.maxMakespan match{
-          case Some(deadline) => add(makeSpan <= deadline)
+          case Some(deadline) =>
+            reportProgress("posting deadline")
+            add(makeSpan <= deadline)
           case None => ;
         }
       case _ => ;
@@ -173,19 +222,22 @@ class Mapper(problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Co
     hardwareModel.powerCap match {
       case None => ;
       case Some(cap) =>
+        reportProgress("posting powerCap")
         val simpleCumulativeTasks = cpTasks.toList.map(
           task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
         )
-        CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(cap - backgroundPower))
+        CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(cap - backgroundPower),"powerCap")
     }
 
     //energyCap
     hardwareModel.energyCap match {
       case None => ;
       case Some(cap) =>
-        add(energy <= cap)
+        reportProgress("posting energyCap")
+        addDocumented(energy <= cap,"energyCap")
     }
 
+    reportProgress("starting search")
     CPMappingProblem(
       problem,
       hardwareModel.name,

@@ -154,8 +154,19 @@ case class AtomicTask(implementations: List[ParametricImplementation],
             return true
           }
         }
+      case _ => throw new Error("internal error")
     }
-    true
+    throw new Error("internal error")
+    false
+  }
+
+  def anyImplementationFor(p: ProcessingElement): Boolean = {
+    computingHardwareToImplementations.get(p.processorClass) match {
+      case None => false
+      case Some(Nil) => false
+      case Some(implementationList) => true
+      case _ => throw new Error("internal error")
+    }
   }
 
   def maxDuration(procs: Iterable[ProcessingElement], properties: SortedMap[String, Int]): Int = {
@@ -214,6 +225,7 @@ case class Transmission(source: AtomicTask,
 case class SoftwareModel(simpleProcesses: Array[AtomicTask],
                          transmissions: Array[Transmission],
                          softwareClass: SoftwareClass,
+                         properties:SortedMap[String,Int],
                          verbose:Boolean = true) extends IndiceMaker {
   setIndices(simpleProcesses)
   setIndices(transmissions)

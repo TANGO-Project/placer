@@ -25,8 +25,6 @@ import placerT.algo.sw.CPTransmission
 import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{Bus, ProcessingElement, SelfLoopBus}
 
-
-
 abstract class CPBus(val id: Int, mapper: Mapper) {
 
   def accumulatePotentialTransmissionOnBus(transmission: CPTransmission)
@@ -78,9 +76,9 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
 
   override def close() {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) {
-      System.err.println("WARNING: no transmission will fit on bus " + bus.name)
+      println("WARNING: no transmission will fit on bus " + bus.name)
     } else {
-      SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere)
+      SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere,origin="bus " + bus.name)
     }
   }
 
@@ -88,7 +86,6 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
     if(allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)(mapper.store)
     else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
   }
-
 }
 
 case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
@@ -105,6 +102,4 @@ case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, map
   def selfLoopBus = SelfLoopBus(processor)
 
   override def buildTimeWidth: CPIntVar = CPIntVar(0)(mapper.store)
-
-
 }

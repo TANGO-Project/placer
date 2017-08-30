@@ -62,7 +62,7 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
 
 
   override def close() {
-    SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay)
+    SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay,origin="usage of CPMonoTaskProcessor" + p.name)
     closeTransmissionAndComputationMemory()
   }
 }
