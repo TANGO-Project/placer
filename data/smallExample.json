@@ -1,4 +1,6 @@
 {
+  "timeUnit":"ms",
+  "dataUnit":"bit",
   "hardwareModel":{
     "name":"ExampleHardware1",
     "powerCap":70000,
@@ -77,7 +79,7 @@
             "procA",
             "FPGA1"
           ],
-          "timeUnitPerBit":3,
+          "timeUnitPerDataUnit":3,
           "latency":1
         }
 

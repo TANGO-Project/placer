@@ -62,7 +62,7 @@ case class CPTask(id: Int,
         filter(p => p.processorClass equals implem.target).
         map(p => {
           val durationPI = implem.duration(p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
-          require(durationPI>0,"duration of implementation " + implem.name + " on processor " + p.name + " is null or negative:" + durationPI)
+          require(durationPI>=0,"duration of implementation " + implem.name + " on processor " + p.name + " is negative:" + durationPI)
           val power = Formula.eval(p.powerModelForTask, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties ++ p.processorClass.zeroResources ++ implem.resourceUsage)
           require(power>=0,"power of implementation " + implem.name + " on processor " + p.name + " is negative:" + power)
           val energy = durationPI * power

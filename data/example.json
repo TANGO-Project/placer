@@ -1,4 +1,6 @@
 {
+  "timeUnit":"ms",
+  "dataUnit":"bit",
   "hardwareModel":{
     "name":"ExampleHardware1",
     "powerCap":700,
@@ -119,7 +121,7 @@
             "procB",
             "FPGA1"
           ],
-          "timeUnitPerBit":3,
+          "timeUnitPerDataUnit":3,
           "latency":1
         }
       },
@@ -130,7 +132,7 @@
             "procA",
             "GPGPU1"
           ],
-          "timeUnitPerBit":1,
+          "timeUnitPerDataUnit":1,
           "latency":1
         }
       },
@@ -141,7 +143,7 @@
             "GPGPU1",
             "procB"
           ],
-          "timeUnitPerBit":2,
+          "timeUnitPerDataUnit":2,
           "latency":1
         }
       },
@@ -152,7 +154,7 @@
             "procA",
             "FPGA1"
           ],
-          "timeUnitPerBit":1,
+          "timeUnitPerDataUnit":1,
           "latency":3
         }
       },
@@ -165,7 +167,7 @@
             "procB",
             "FPGA1"
           ],
-          "timeUnitPerBit":4,
+          "timeUnitPerDataUnit":4,
           "latency":1
         }
       }
