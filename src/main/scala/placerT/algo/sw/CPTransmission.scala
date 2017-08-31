@@ -20,6 +20,7 @@
 
 package placerT.algo.sw
 
+import oscar.cp
 import oscar.cp._
 import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
@@ -88,5 +89,7 @@ case class CPTransmission(id: Int,
     else sol(transmissionDurationNZ2)
   }
 
-  override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, transmissionDurationNZ2, busID)
+  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
+
+  override def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, transmissionDurationNZ2, busID)
 }

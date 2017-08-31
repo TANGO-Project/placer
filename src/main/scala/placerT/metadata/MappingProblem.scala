@@ -21,8 +21,8 @@
 package placerT.metadata
 
 import placerT.io.JSonHelper
-import placerT.metadata.hw.HardwareModel
-import placerT.metadata.sw.SoftwareModel
+import placerT.metadata.hw.{HardwareModel, ProcessingElement}
+import placerT.metadata.sw.{AtomicTask, SoftwareModel}
 
 import scala.collection.immutable.SortedMap
 
@@ -37,6 +37,7 @@ case class MappingProblem(timeUnit:String,
                           properties:SortedMap[String,Int],
                           softwareModel: SoftwareModel,
                           hardwareModel: HardwareModel,
+                          constraints:List[MappingConstraint],
                           goal: MappingGoal) {
 
   for (task <- softwareModel.simpleProcesses)
@@ -54,4 +55,19 @@ case class MappingProblem(timeUnit:String,
     JSonHelper.complex("softwareModel", softwareModel.toJSon) + "," +
     JSonHelper.complex("hardwareModel", hardwareModel.toJSon) + "," +
     JSonHelper.complex("goal", goal.toJSon) + "}"
+}
+
+abstract sealed class MappingConstraint
+case class RunOnConstraint(processor:ProcessingElement,
+                             process:AtomicTask,
+                             value:Boolean) extends MappingConstraint{
+  override def toString: String = {
+    (if (value) "MustRunOn(" else "MustNotRunOn(") + process.name + "," + processor.name + ")"
+  }
+}
+case class CoreSharingConstraint(processes:List[AtomicTask],
+                                 value:Boolean) extends MappingConstraint{
+  override def toString: String = {
+    (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
+  }
 }

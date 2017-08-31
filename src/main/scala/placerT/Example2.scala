@@ -171,6 +171,6 @@ object Example2Data {
 
   val goal = Pareto(MinMakeSpan(),MinEnergy()) //ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val problem = new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, goal)
+  val problem = new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, List.empty, goal)
 
 }

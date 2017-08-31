@@ -29,7 +29,12 @@ import placerT.metadata.MappingProblem
 import scala.io.Source
 
 
-case class Config(in: File = new File("."), out: File = new File("."), verbose: Boolean = false, license:Boolean = false,discrepancy:Int=20)
+case class Config(in: File = new File("."),
+                  out: File = new File("."),
+                  verbose: Boolean = false,
+                  license:Boolean = false,
+                  discrepancy:Int=20,
+                  timeLimit:Int = Int.MaxValue)
 
 object Main extends App {
 
@@ -47,6 +52,10 @@ object Main extends App {
     opt[Int]('d', "discrepancy").
       action((x, c) => c.copy(discrepancy = x)).
       text("'d' the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is 20")
+
+    opt[Int]('t', "timeLimit").
+      action((x, c) => c.copy(timeLimit= x)).
+      text("'t' the maximal run time for Placer in seconds, default is MaxInt")
 
     opt[Unit]("verbose").action((_, c) =>
       c.copy(verbose = true)).text("prints some verbosities")
@@ -93,7 +102,7 @@ object Main extends App {
       val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
       if (config.verbose) println(problem)
-      val mappingSet = Mapper.findMapping(problem,config.discrepancy)
+      val mappingSet = Mapper.findMapping(problem,config.discrepancy,config.timeLimit)
 
       if (config.verbose) println(mappingSet)
 

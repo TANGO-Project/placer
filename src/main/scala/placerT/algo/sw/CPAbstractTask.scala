@@ -29,4 +29,6 @@ abstract class CPAbstractTask(mapper: Mapper) {
   def end: CPIntVar
 
   def variablesToDistribute: Iterable[CPIntVar]
+
+  def variablesToSave: Iterable[CPIntVar]
 }

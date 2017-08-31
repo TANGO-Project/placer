@@ -30,14 +30,14 @@ import placerT.metadata.{MappingProblem, _}
 
 object Mapper {
 
-  def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20): Mappings = {
+  def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue): Mappings = {
     // try {
-    Mappings(new Mapper(problem,maxDiscrepancy:Int).mapping)
+    Mappings(new Mapper(problem,maxDiscrepancy:Int,timeLimit).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 }
 
-class Mapper(val problem: MappingProblem,maxDiscrepancy:Int) extends CPModel with Constraints {
+class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) extends CPModel with Constraints {
 
 
   def addDocumented(c: Constraint,origin: =>String){
@@ -237,6 +237,33 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int) extends CPModel wit
         addDocumented(energy <= cap,"energyCap")
     }
 
+    reportProgress("posting mapping constraints")
+
+    for(constraint <- problem.constraints){
+      constraint match {
+        case RunOnConstraint(processor, process, value) =>
+          if (value) {
+            add(cpTasks(process.id).processorID === processor.id)
+          } else {
+            add(cpTasks(process.id).processorID !== processor.id)
+          }
+        case c@CoreSharingConstraint(processes, value) =>
+          if (value) {
+            //same cores all
+            if(! processes.isEmpty){
+              val processorID = cpTasks(processes.head.id).processorID
+              for(process <- processes){
+                add(cpTasks(process.id).processorID === processorID)
+              }
+            }
+          } else {
+            //different cores all
+            val processesVars = processes.map(p => cpTasks(p.id).processorID)
+            addDocumented(allDifferent(processesVars),c.toString)
+          }
+      }
+    }
+
     reportProgress("starting search")
     CPMappingProblem(
       problem,
@@ -276,6 +303,17 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int) extends CPModel wit
       //TODO: essayer cette stratégie-ci:
       val allVars = problem.varsToDistribute.toArray
       discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy)
+
+      /*val allVars = problem.varsToDistribute.toArray
+      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+*/
+      /*
+         val taskPriorities = problem.generateTaskPriorityValues.toArray.asInstanceOf[Array[CPIntVar]]
+         val taskAlternatives
+         (conflictOrderingSearch(taskPriorities,taskPriorities(_).min,taskPriorities(_).min)
+           ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
+   */
+
       //setTimes(startsVar, durationsVar, endsVar)
       //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
 
@@ -283,7 +321,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int) extends CPModel wit
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
 
-    val stat = start()
+    val stat = start(timeLimit = timeLimit)
 
     println(stat)
 

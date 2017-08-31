@@ -127,5 +127,6 @@ case class CPTask(id: Int,
     }
   }
 
-  override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, end, taskDuration, implementationID, processorID)
+  override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, end, /*taskDuration,*/ implementationID, processorID)
+  def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, taskDuration, implementationID, processorID)
 }

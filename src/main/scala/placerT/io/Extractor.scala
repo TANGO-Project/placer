@@ -38,19 +38,67 @@ object Extractor {
 }
 
 case class EMappingProblem(timeUnit:String,
-                            dataUnit:String,
-                            softwareModel: ESoftwareModel,
-                            hardwareModel: EHardwareModel,
-                            properties: List[ENameValue] = List.empty,
-                            goal: EGoal) {
+                           dataUnit:String,
+                           softwareModel: ESoftwareModel,
+                           hardwareModel: EHardwareModel,
+                           constraints:List[EMappingConstraint],
+                           properties: List[ENameValue] = List.empty,
+                           goal: EGoal) {
 
   def extract(verbose:Boolean) = {
     val hw = hardwareModel.extract
     val sw = softwareModel.extract(hw,verbose)
 
-    MappingProblem(timeUnit,dataUnit,SortedMap.empty[String, Int] ++ properties.map(_.toCouple),sw, hw, goal.extract)
+    MappingProblem(
+      timeUnit,
+      dataUnit,
+      SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
+      sw,
+      hw,
+      constraints.map(_.extract(hw,sw)),
+      goal.extract)
   }
 }
+
+case class EMappingConstraint(runOn:Option[ERunOn],notRunOn:Option[ERunOn],samePE:Option[List[String]],notSamePE:Option[List[String]]){
+  def extract(hw:HardwareModel,sw:SoftwareModel):MappingConstraint = {
+
+    def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
+      val processor = hw.processors.find(p => p.name equals c.processingElement) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find processor" + c.processingElement + " used in mappingConstraint " + c)}
+
+      val process = sw.simpleProcesses.find(p => p.name equals c.task) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find process " + c.task + " used in mappingConstraint " + c)}
+
+      RunOnConstraint(processor,process,value)
+    }
+
+    def extractSameCore(c:List[String],value:Boolean):MappingConstraint = {
+      val processes = c.map(process => sw.simpleProcesses.find(p => p.name equals process) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find process " + process + " used in mappingConstraint " + c)})
+
+      CoreSharingConstraint(processes,value)
+    }
+
+    (runOn,notRunOn,samePE,notSamePE) match {
+      case (Some(s),None,None,None) =>
+        extractRunOn(s,true)
+      case (None,Some(s),None,None) =>
+        extractRunOn(s,false)
+      case (None,None,Some(s),None) =>
+        extractSameCore(s,true)
+      case (None,None,None,Some(s)) =>
+        extractSameCore(s,false)
+
+      case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)
+    }
+  }
+}
+
+case class ERunOn(task:String,processingElement:String)
 
 case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
   def extract:MappingGoal = {
