@@ -213,13 +213,27 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
     reportProgress("redundant bin-packing constraint on makeSpan per processor")
+
+    //this one assumes adjusted minDuration per processor
     for (processorID <- cpProcessors.indices) {
-      //TODO: a real bin packing with all tasks in it could prune more here.
       val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
       val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID))
       val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
       add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
       add(processorLoadVariable <== makeSpan)
+    }
+
+    //this one assumes minDuration for all task on any processor
+    val processorLoadArrayUnderApprox2 = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
+    add(binPacking(cpTasks.map(_.processorID),cpTasks.map(_.taskDuration.min),processorLoadArrayUnderApprox2))
+    for(load <- processorLoadArrayUnderApprox2) add(load <== makeSpan)
+
+    for(cpBus <- cpBusses){
+      cpBus match{
+        case r:CPRegularBus =>
+          add(r.busOccupancy <== makeSpan)
+        case _ => ;
+      }
     }
 
     reportProgress("computing total energy consumption")
@@ -338,8 +352,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
-        processorIDChoices(_).iterator.toList.minBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-        ++conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min))
+        processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
+        ++discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
 
 
       /*val allVars = problem.varsToDistribute.toArray
@@ -359,7 +373,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
 
-    val stat = start(timeLimit = timeLimit,maxDiscrepancy = maxDiscrepancy)
+    val stat = start(timeLimit = timeLimit) //,maxDiscrepancy = maxDiscrepancy)
 
     println(stat)
 

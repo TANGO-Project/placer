@@ -24,6 +24,7 @@ import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTransmission
 import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{Bus, ProcessingElement, SelfLoopBus}
+import oscar.cp.modeling.Constraints
 
 abstract class CPBus(val id: Int, mapper: Mapper) {
 
@@ -51,7 +52,7 @@ abstract class CPBus(val id: Int, mapper: Mapper) {
   val name:String
 }
 
-case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
+case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) with Constraints {
 
   val isSelfLoop:Boolean = false
   val name= bus.name
@@ -85,6 +86,10 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
   def buildTimeWidth:CPIntVar = {
     if(allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)(mapper.store)
     else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
+  }
+
+  def busOccupancy:CPIntVar = {
+    sum(allSimpleTasksPotentiallyExecutingHere.map(task => mul(task.duration,task.isNeeded)))
   }
 }
 
