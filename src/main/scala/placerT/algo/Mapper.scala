@@ -29,6 +29,8 @@ import placerT.metadata.hw._
 import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
+import scala.collection.immutable.SortedSet
+
 object Mapper {
 
   def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue): Mappings = {
@@ -122,6 +124,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     val selfLoopBusses = hardwareModel.processors.toList.map(
       proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, this))
 
+    val selfLoopBussesID = SortedSet.empty ++ selfLoopBusses.map(_.id)
+
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
@@ -139,7 +143,10 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         cpTasks(flow.source.id), cpTasks(flow.target.id),
         cpBusses,
         flow.size, flow.name, flow.timing,
-        this, maxHorizon, processorToBusToProcessorAdjacency)
+        this,
+        maxHorizon,
+        processorToBusToProcessorAdjacency,
+        selfLoopBussesID)
     )
 
     //creating the width var, in case needed for modulo scheduling
@@ -203,6 +210,17 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     reportProgress("computing makeSpan")
     val taskEnds = cpTasks.map(task => task.end)
     val makeSpan = maximum(taskEnds)
+
+    val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
+    reportProgress("redundant bin-packing constraint on makeSpan per processor")
+    for (processorID <- cpProcessors.indices) {
+      //TODO: a real bin packing with all tasks in it could prune more here.
+      val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
+      val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID))
+      val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
+      add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
+      add(processorLoadVariable <== makeSpan)
+    }
 
     reportProgress("computing total energy consumption")
     val energyForEachTask = cpTasks.map(task => task.energy)
@@ -283,7 +301,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       cpTransmissions,
       makeSpan,
       energy,
-      widthVar)
+      widthVar,
+      processorLoadArrayUnderApprox)
   }
 
   def searchMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
@@ -310,7 +329,18 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       //binaryFirstFail(problem.varsToDistribute)
 
       val allVars = problem.varsToDistribute.toArray
-      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+
+
+      val processorIDChoices = problem.cpTasks.map(task => task.processorID)
+      val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
+
+
+      (conflictOrderingSearch(
+        processorIDChoices,
+        taskMaxDurations(_),
+        processorIDChoices(_).iterator.toList.minBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
+        ++conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min))
+
 
       /*val allVars = problem.varsToDistribute.toArray
       conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)

@@ -82,6 +82,14 @@ case class CPTask(id: Int,
   add(table(implementationID, processorID, taskDuration, energy, power, implemAndProcessorAndDurationAndEnergyAndPower))
   add(end == (start + taskDuration))
 
+  val possibleProcessorAndDuration = implemAndProcessorAndDurationAndEnergyAndPower.map(possible => (possible._2,possible._3))
+  val possibleProcessorToMinDuration = possibleProcessorAndDuration.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
+
+  def minTaskDurationOnProcessor(processorID:Int):Int = {
+    possibleProcessorToMinDuration.getOrElse(processorID,0)
+  }
+
+
   def addIncomingTransmission(cPTransmission: CPTransmission): Unit = {
     incomingCPTransmissions = cPTransmission :: incomingCPTransmissions
   }

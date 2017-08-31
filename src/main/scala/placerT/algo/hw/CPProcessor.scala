@@ -99,7 +99,6 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
                 incomingTransmission.end === task.start - 1,
                 incomingTransmission.start === incomingTransmission.from.end + 1))
               ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
-
           case _ =>
             //we are on the other side, the simple constraint is enough
             addDocumented(incomingTransmission.end < task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)

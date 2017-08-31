@@ -27,7 +27,8 @@ import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import placerT.algo.Mapper
 import placerT.algo.hw.CPBus
-import placerT.metadata.sw.Transmission
+import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
+import placerT.metadata.sw.{TransmissionTiming, Transmission}
 import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
 
 case class CPTransmission(id: Int,
@@ -40,7 +41,8 @@ case class CPTransmission(id: Int,
                           timing: TransmissionTiming,
                           mapper: Mapper,
                           maxHorizon: Int,
-                          processorToBusToProcessorAdjacency: Iterable[(Int, Int, Int)])
+                          processorToBusToProcessorAdjacency: Iterable[(Int, Int, Int)],
+                          localLoopBusses:Set[Int])
   extends CPAbstractTask(mapper) with Constraints{
   implicit val solver = mapper.solver
 
@@ -82,6 +84,13 @@ case class CPTransmission(id: Int,
   //these are redundant, since the timing is also constrained by the storage task on both side of the transmission
   add(from.end < start)
   add(end < to.start)
+
+
+  timing match{
+    case TransmissionTiming.Free | TransmissionTiming.Sticky =>
+      //if globalBus then Asap
+      add((busID isIn localLoopBusses) implies (start === from.end+1))
+  }
 
   def transmissionDuration(sol:CPSol):Int = {
     val selectedBusID = sol(busID)

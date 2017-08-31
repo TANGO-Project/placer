@@ -39,9 +39,9 @@ case class Mapping(timeUnit:String,
 
 
   def coreToUsage:String = {
-    val coreAndTask = taskMapping.map({case (task:AtomicTask,pe:ProcessingElement,i,s,d,e) => (pe.name,task.name)}).toList
-    val coreToTask = coreAndTask.groupBy(_._1).toList.sortBy(_._1)
-    coreToTask.map({case (core,tasks) => "usage of " + core +":" + tasks.map(_._2)}).mkString("\n")
+    val coreAndTaskAndDuration = taskMapping.map({case (task:AtomicTask,pe:ProcessingElement,i,s,d,e) => (pe.name,task.name + "(dur:" + d + ")",d)}).toList
+    val coreToTask = coreAndTaskAndDuration.groupBy(_._1).toList.sortBy(_._1)
+    coreToTask.map({case (core,tasks) => "usage of " + core +":" + tasks.map(_._3).sum + " tasks:" + tasks.map(_._2)}).mkString("\n")
   }
 
 
@@ -76,7 +76,7 @@ case class Mapping(timeUnit:String,
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 60) + " " + padToLength(bus.name, 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       })
-    "Mapping(timeUnit:" + timeUnit + " dataUnit:" + dataUnit + " hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}" + coreToUsage
+    "Mapping(timeUnit:" + timeUnit + " dataUnit:" + dataUnit + " hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
   def toJSon: String = "{" +
@@ -119,7 +119,7 @@ case class Mappings(mapping: Iterable[Mapping]) {
 
   override def toString: String = {
     "Mappings(nbMapping:" + mapping.size + "\n" +
-      mapping.map(_.toStringSortedLight).mkString("\n") + "\n)"
+      mapping.map(l => l.toStringSortedLight + "\n" + l.coreToUsage).mkString("\n") + "\n)"
   }
 
 }

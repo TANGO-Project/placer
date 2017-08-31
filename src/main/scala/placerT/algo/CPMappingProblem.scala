@@ -37,7 +37,8 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
                             cpTransmissions: Array[CPTransmission],
                             makeSpan: CPIntVar,
                             energy: CPIntVar,
-                            widthVar:Option[CPIntVar]) {
+                            widthVar:Option[CPIntVar],
+                            processorLoadArrayUnderApprox:Array[CPIntVar]) {
 
   def getMapping(sol: CPSol): Mapping = {
 
