@@ -60,7 +60,7 @@ case class EMappingProblem(timeUnit:String,
   }
 }
 
-case class EMappingConstraint(runOn:Option[ERunOn],notRunOn:Option[ERunOn],samePE:Option[List[String]],notSamePE:Option[List[String]]){
+case class EMappingConstraint(runOn:Option[ERunOn],notRunOn:Option[ERunOn],samePE:Option[List[String]],notSamePE:Option[List[String]],mustBeUsed:Option[String]){
   def extract(hw:HardwareModel,sw:SoftwareModel):MappingConstraint = {
 
     def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
@@ -83,15 +83,25 @@ case class EMappingConstraint(runOn:Option[ERunOn],notRunOn:Option[ERunOn],sameP
       CoreSharingConstraint(processes,value)
     }
 
-    (runOn,notRunOn,samePE,notSamePE) match {
-      case (Some(s),None,None,None) =>
+    def extractMustBeUsed(processorName:String):MustBeUsedConstraint = {
+      val processor = hw.processors.find(p => p.name equals processorName) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")}
+      MustBeUsedConstraint(processor)
+    }
+
+
+    (runOn,notRunOn,samePE,notSamePE,mustBeUsed) match {
+      case (Some(s),None,None,None,None) =>
         extractRunOn(s,true)
-      case (None,Some(s),None,None) =>
+      case (None,Some(s),None,None,None) =>
         extractRunOn(s,false)
-      case (None,None,Some(s),None) =>
+      case (None,None,Some(s),None,None) =>
         extractSameCore(s,true)
-      case (None,None,None,Some(s)) =>
+      case (None,None,None,Some(s),None) =>
         extractSameCore(s,false)
+      case (None,None,None,None,Some(s)) =>
+        extractMustBeUsed(s)
 
       case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)
     }
@@ -220,6 +230,7 @@ case class ETransmission(source: String,
         case "Asap" => Asap
         case "Alap" => Alap
         case "Free" => Free
+        case "Sticky" => Sticky
         case _ => throw new Error("undefined timing constraint " + timing + " in transmission " + name)
       },
       name)

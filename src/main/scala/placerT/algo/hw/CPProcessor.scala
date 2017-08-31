@@ -21,6 +21,7 @@ package placerT.algo.hw
 
 import oscar.cp
 import oscar.cp._
+import oscar.cp.constraints.Or
 import oscar.cp.core.{CPOutcome, NoSolutionException}
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
@@ -92,6 +93,13 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
         incomingTransmission.timing match {
           case Alap => //we have to constraint the arrival time here
             addDocumented(new oscar.cp.constraints.Eq(incomingTransmission.end,task.start - 1),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
+          case Sticky =>
+            addDocumented(
+              new Or(Array(
+                incomingTransmission.end === task.start - 1,
+                incomingTransmission.start === incomingTransmission.from.end + 1))
+              ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
+
           case _ =>
             //we are on the other side, the simple constraint is enough
             addDocumented(incomingTransmission.end < task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)
@@ -110,7 +118,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
         outGoingTransmission.timing match {
           case Asap =>
             //we have to constraint the departure time here
-            addDocumented(new oscar.cp.constraints.Eq(outGoingTransmission.start,task.end + 1),"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
+            addDocumented(new oscar.cp.constraints.Eq(task.end + 1,outGoingTransmission.start),"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
           case _ =>
             //we are on the other side, the simple constraint is enough
             addDocumented(task.end < outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)

@@ -19,6 +19,7 @@
 
 package placerT.algo
 
+import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
@@ -79,7 +80,12 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     }).max * softwareModel.simpleProcesses.length
 
     val maxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes + summedMaxSwitchingTimes
+
+
     println("maxHorizon:" + maxHorizon)
+
+    println("nbTasks:" + softwareModel.simpleProcesses.length)
+    println("nbTransmissions:" + softwareModel.transmissions.length)
 
     reportProgress("creating tasks")
 
@@ -261,6 +267,9 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
             val processesVars = processes.map(p => cpTasks(p.id).processorID)
             addDocumented(allDifferent(processesVars),c.toString)
           }
+        case MustBeUsedConstraint(processor) =>
+          val isRunningOnProcessor:Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
+          add(new cp.constraints.Or(isRunningOnProcessor))
       }
     }
 
@@ -300,9 +309,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     search {
       //binaryFirstFail(problem.varsToDistribute)
 
-      //TODO: essayer cette stratégie-ci:
       val allVars = problem.varsToDistribute.toArray
-      discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy)
+      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
 
       /*val allVars = problem.varsToDistribute.toArray
       conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
@@ -321,7 +329,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
 
-    val stat = start(timeLimit = timeLimit)
+    val stat = start(timeLimit = timeLimit,maxDiscrepancy = maxDiscrepancy)
 
     println(stat)
 

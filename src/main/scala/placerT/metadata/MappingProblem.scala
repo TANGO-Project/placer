@@ -71,3 +71,4 @@ case class CoreSharingConstraint(processes:List[AtomicTask],
     (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
   }
 }
+case class MustBeUsedConstraint(processor:ProcessingElement) extends MappingConstraint

@@ -188,7 +188,7 @@ case class AtomicTask(implementations: List[ParametricImplementation],
 
 object TransmissionTiming extends Enumeration {
   type TransmissionTiming = Value
-  val Asap, Alap, Free = Value
+  val Asap, Alap, Free, Sticky = Value
 }
 
 import placerT.metadata.sw.TransmissionTiming._
