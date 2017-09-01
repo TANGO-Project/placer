@@ -369,18 +369,15 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
       val allVars = problem.varsToDistribute.toArray
 
-
       val processorIDChoices = problem.cpTasks.map(task => task.processorID)
       val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
       val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
-      println("taskMinDurations:" + taskMinDurations.toList)
 
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
         processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
         ++discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
-
 
       /*val allVars = problem.varsToDistribute.toArray
       conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)

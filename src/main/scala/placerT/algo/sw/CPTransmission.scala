@@ -90,6 +90,7 @@ case class CPTransmission(id: Int,
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>
       //if globalBus then Asap
       add((busID isIn localLoopBusses) implies (start === from.end+1))
+    case _ => ;
   }
 
   def transmissionDuration(sol:CPSol):Int = {
