@@ -74,3 +74,7 @@ case class CoreSharingConstraint(processes:List[AtomicTask],
 case class MustBeUsedConstraint(processor:ProcessingElement) extends MappingConstraint {
   override def toString: String = "MustBeUsed(" + processor.name + ")"
 }
+
+case class SymmetricPEConstraint(processors:List[ProcessingElement]) extends MappingConstraint {
+  override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
+}

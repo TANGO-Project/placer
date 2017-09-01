@@ -89,7 +89,6 @@ case class CPTask(id: Int,
     possibleProcessorToMinDuration.getOrElse(processorID,0)
   }
 
-
   def addIncomingTransmission(cPTransmission: CPTransmission): Unit = {
     incomingCPTransmissions = cPTransmission :: incomingCPTransmissions
   }

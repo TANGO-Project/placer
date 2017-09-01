@@ -31,7 +31,7 @@ import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
  * @param p the processing element, to get more info
  * @param memSize the max mem size, taken from p
  */
-class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switchingDelay: Int, mapper: Mapper)
+class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
   require(p.processorClass.isInstanceOf[MonoTaskSwitchingTask])
 

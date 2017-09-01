@@ -43,7 +43,7 @@ case class EMappingProblem(timeUnit:String,
                            hardwareModel: EHardwareModel,
                            constraints:List[EMappingConstraint],
                            properties: List[ENameValue] = List.empty,
-                           goal: EGoal) {
+                           goal:EGoal) {
 
   def extract(verbose:Boolean) = {
     val hw = hardwareModel.extract
@@ -60,7 +60,12 @@ case class EMappingProblem(timeUnit:String,
   }
 }
 
-case class EMappingConstraint(runOn:Option[ERunOn],notRunOn:Option[ERunOn],samePE:Option[List[String]],notSamePE:Option[List[String]],mustBeUsed:Option[String]){
+case class EMappingConstraint(runOn:Option[ERunOn],
+                              notRunOn:Option[ERunOn],
+                              samePE:Option[List[String]],
+                              notSamePE:Option[List[String]],
+                              mustBeUsed:Option[String],
+                              symmetricPE:Option[List[String]]){
   def extract(hw:HardwareModel,sw:SoftwareModel):MappingConstraint = {
 
     def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
@@ -90,18 +95,28 @@ case class EMappingConstraint(runOn:Option[ERunOn],notRunOn:Option[ERunOn],sameP
       MustBeUsedConstraint(processor)
     }
 
+    def extractPESymmetry(symmetricPENames:List[String]):SymmetricPEConstraint = {
+      val processors = symmetricPENames.map(processorName => hw.processors.find(p => p.name equals processorName) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")})
 
-    (runOn,notRunOn,samePE,notSamePE,mustBeUsed) match {
-      case (Some(s),None,None,None,None) =>
+      SymmetricPEConstraint(processors)
+    }
+
+
+    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,symmetricPE) match {
+      case (Some(s),None,None,None,None,None) =>
         extractRunOn(s,true)
-      case (None,Some(s),None,None,None) =>
+      case (None,Some(s),None,None,None,None) =>
         extractRunOn(s,false)
-      case (None,None,Some(s),None,None) =>
+      case (None,None,Some(s),None,None,None) =>
         extractSameCore(s,true)
-      case (None,None,None,Some(s),None) =>
+      case (None,None,None,Some(s),None,None) =>
         extractSameCore(s,false)
-      case (None,None,None,None,Some(s)) =>
+      case (None,None,None,None,Some(s),None) =>
         extractMustBeUsed(s)
+      case (None,None,None,None,None,Some(s)) =>
+        extractPESymmetry(s)
 
       case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)
     }
@@ -123,18 +138,26 @@ case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
 }
 
 object EGoal{
-  def extractSimple(name:String):SimpleMappingGoal = {
+  def extractSimple(name:String):MappingGoal = {
     name match{
       case "minEnergy" => MinEnergy()
       case "minMakeSpan" => MinMakeSpan()
       case "minFrame" => MinFrame()
+      case "sat" => Sat()
       case _ => throw new Error("unknown simple mapping goal:" + name)
+    }
+  }
+
+  def extractSimpleExpectSimple(name:String):SimpleMappingGoal = {
+    extractSimple(name:String) match{
+      case s:SimpleMappingGoal => s
+      case x => throw new Error("expected simple mappinggoal, got " + x)
     }
   }
 }
 
 case class EPareto(a:String,b:String){
-  def extract:Pareto = Pareto(EGoal.extractSimple(a), EGoal.extractSimple(b))
+  def extract:Pareto = Pareto(EGoal.extractSimpleExpectSimple(a), EGoal.extractSimpleExpectSimple(b))
 }
 
 case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],

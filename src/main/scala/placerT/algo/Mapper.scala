@@ -216,17 +216,23 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
     //this one assumes adjusted minDuration per processor
     for (processorID <- cpProcessors.indices) {
-      val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
-      val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID))
-      val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
-      add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
-      add(processorLoadVariable <== makeSpan)
+      cpProcessors(processorID) match{
+        case m:CPMonoTaskProcessor =>
+          val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
+          val switchingDelay = m.switchingDelay
+          val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
+          val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
+          add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
+          add(processorLoadVariable <== makeSpan + switchingDelay)
+        case _ => ;
+      }
     }
 
     //this one assumes minDuration for all task on any processor
-    val processorLoadArrayUnderApprox2 = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
-    add(binPacking(cpTasks.map(_.processorID),cpTasks.map(_.taskDuration.min),processorLoadArrayUnderApprox2))
-    for(load <- processorLoadArrayUnderApprox2) add(load <== makeSpan)
+    //it only works if all processors are CPMonoTaskProcessor
+    //val processorLoadArrayUnderApprox2 = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
+    //add(binPacking(cpTasks.map(_.processorID),cpTasks.map(_.taskDuration.min),processorLoadArrayUnderApprox2))
+    //for(load <- processorLoadArrayUnderApprox2) add(load <== makeSpan)
 
     for(cpBus <- cpBusses){
       cpBus match{
@@ -302,6 +308,21 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         case MustBeUsedConstraint(processor) =>
           val isRunningOnProcessor:Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
           add(new cp.constraints.Or(isRunningOnProcessor))
+
+        case SymmetricPEConstraint(processors:List[ProcessingElement]) =>
+
+          val processorIDs = processors.map(_.id)
+          val loadVariables = processorIDs.map(processorLoadArrayUnderApprox(_))
+
+          def makeSorted(varList:List[CPIntVar]): Unit ={
+            varList match{
+              case a :: b :: tail =>
+                add(a <== b)
+                makeSorted(b::tail)
+              case _ => ;
+            }
+            makeSorted(loadVariables)
+          }
       }
     }
 
@@ -332,9 +353,13 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       }
     }
 
-    goal match {
-      case s:SimpleMappingGoal => minimize(simpleVarFinder(s))
+    val searchOnlyOne = goal match {
+      case s:SimpleMappingGoal =>
+        minimize(simpleVarFinder(s))
+        false
       case Pareto(a,b) => solver.paretoMinimize(simpleVarFinder(a), simpleVarFinder(b))
+        false
+        case Sat() => true
     }
 
     solver.addDecisionVariables(problem.varsToSave)
@@ -347,7 +372,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
       val processorIDChoices = problem.cpTasks.map(task => task.processorID)
       val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
-
+      val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
+      println("taskMinDurations:" + taskMinDurations.toList)
 
       (conflictOrderingSearch(
         processorIDChoices,
@@ -371,16 +397,17 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
     } onSolution {
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
+
     }
 
-    val stat = start(timeLimit = timeLimit) //,maxDiscrepancy = maxDiscrepancy)
+    val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = timeLimit) //,maxDiscrepancy = maxDiscrepancy)
 
     println(stat)
 
     goal match {
       case Pareto(a,b) =>
         solver.nonDominatedSolutions.sortBy(_.apply( simpleVarFinder(a))).map(cpSol => problem.getMapping(cpSol))
-      case _:SimpleMappingGoal =>
+      case _:SimpleMappingGoal | _:Sat =>
         val lastSol = solver.lastSol
         if (lastSol.dict.isEmpty) {
           None

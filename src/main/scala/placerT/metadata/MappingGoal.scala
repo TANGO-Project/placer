@@ -26,6 +26,12 @@ sealed abstract class MappingGoal{
   def needsWidth:Boolean
   def toJSon:String
 }
+
+case class Sat() extends MappingGoal{
+  override def needsWidth:Boolean = false
+  final override def toJSon: String = "sat"
+}
+
 sealed abstract class SimpleMappingGoal extends MappingGoal{
   override def needsWidth:Boolean = false
   final override def toJSon: String = "{" + JSonHelper.string("singleObjective",simpleJSonName) + "}"
