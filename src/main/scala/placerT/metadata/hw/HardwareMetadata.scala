@@ -208,7 +208,7 @@ case class HalfDuplexBus(relatedProcessors: List[ProcessingElement],
                          override val latency: Int,
                          override val name: String)
   extends Bus(name, timeUnitPerDataUnit, latency) {
-  require(timeUnitPerDataUnit > 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit + "; should be >= 1")
+  require(timeUnitPerDataUnit >= 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit + "; should be >= 1")
 
   override def toString: String = "HalfDuplexBus(" +
     name + " processors:{" + relatedProcessors.map(_.name).mkString(",") + "} timeUnitPerDataUnit:" +

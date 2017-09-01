@@ -26,7 +26,7 @@ import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
 import placerT.algo.hw.CPProcessor
 import placerT.metadata.Formula
-import placerT.metadata.sw.{AtomicTask, FlattenedImplementation}
+import placerT.metadata.sw.{TransmissionTiming, AtomicTask, FlattenedImplementation}
 
 import scala.collection.immutable.SortedMap
 
@@ -90,10 +90,22 @@ case class CPTask(id: Int,
   }
 
   def addIncomingTransmission(cPTransmission: CPTransmission): Unit = {
+    if(cPTransmission.timing == TransmissionTiming.Alap){
+      val otherAsap = incomingCPTransmissions.filter(_.timing == TransmissionTiming.Alap)
+      if(otherAsap.nonEmpty) {
+        System.err.println("Several Alap transmissions incoming a task can cause no solution; task: " + this.task.name + ":" + (cPTransmission :: otherAsap).map(_.transmission.name))
+      }
+    }
     incomingCPTransmissions = cPTransmission :: incomingCPTransmissions
   }
 
   def addOutgoingTransmission(cPTransmission: CPTransmission) {
+    if(cPTransmission.timing == TransmissionTiming.Asap){
+      val otherAsap = outgoingCPTransmissions.filter(_.timing == TransmissionTiming.Asap)
+      if(otherAsap.nonEmpty) {
+        System.err.println("Several Asap transmissions outgoing a task can cause no solution; task: " + this.task.name + ":" + (cPTransmission :: otherAsap).map(_.transmission.name))
+      }
+    }
     outgoingCPTransmissions = cPTransmission :: outgoingCPTransmissions
   }
 

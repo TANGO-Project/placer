@@ -57,7 +57,7 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
   val isSelfLoop:Boolean = false
   val name= bus.name
 
-  require(bus.timeUnitPerDataUnit!=0)
+  require(bus.timeUnitPerDataUnit>=0)
   private var allSimpleTasksPotentiallyExecutingHere: List[SimpleTask] = List.empty
 
   override def accumulatePotentialTransmissionOnBus(transmission: CPTransmission) {

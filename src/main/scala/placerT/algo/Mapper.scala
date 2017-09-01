@@ -81,10 +81,15 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       case m: MonoTaskSwitchingTask => m.switchingDelay
     }).max * softwareModel.simpleProcesses.length
 
-    val maxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes + summedMaxSwitchingTimes
+    val staticMaxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes + summedMaxSwitchingTimes
+    val maxHorizon = softwareModel.softwareClass.maxMakespan match{
+      case Some(x) =>
+        staticMaxHorizon min x
+      case None => staticMaxHorizon
+    }
 
-
-    println("maxHorizon:" + maxHorizon)
+    println("staticMaxHorizon:" + staticMaxHorizon)
+    println("maxHorizon:      " + maxHorizon)
 
     println("nbTasks:" + softwareModel.simpleProcesses.length)
     println("nbTransmissions:" + softwareModel.transmissions.length)
@@ -321,8 +326,9 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
                 makeSorted(b::tail)
               case _ => ;
             }
-            makeSorted(loadVariables)
           }
+          makeSorted(loadVariables)
+
       }
     }
 
@@ -359,10 +365,11 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         false
       case Pareto(a,b) => solver.paretoMinimize(simpleVarFinder(a), simpleVarFinder(b))
         false
-        case Sat() => true
+      case Sat() => true
     }
 
     solver.addDecisionVariables(problem.varsToSave)
+    var secondLevels = 0
 
     search {
       //binaryFirstFail(problem.varsToDistribute)
@@ -373,11 +380,13 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
       val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
 
+
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
         processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-        ++discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
+        ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+        ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
 
       /*val allVars = problem.varsToDistribute.toArray
       conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
@@ -399,7 +408,9 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
     val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = timeLimit) //,maxDiscrepancy = maxDiscrepancy)
 
-    println(stat)
+    print(stat)
+    println("secondLevels:" + secondLevels)
+    println
 
     goal match {
       case Pareto(a,b) =>

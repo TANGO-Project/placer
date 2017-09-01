@@ -274,12 +274,13 @@ case class SoftwareModel(simpleProcesses: Array[AtomicTask],
 
 abstract sealed class SoftwareClass() {
   def toJSon: String
+  def maxMakespan:Option[Int]
 }
 
-case class OneShotSoftware(maxDelayRequirement: Option[Int]) extends SoftwareClass() {
-  override def toString: String = "OneShotSoftware(maxDelayRequirement:" + maxDelayRequirement + ")"
+case class OneShotSoftware(maxMakespan: Option[Int]) extends SoftwareClass() {
+  override def toString: String = "OneShotSoftware(maxDelayRequirement:" + maxMakespan + ")"
 
-  override def toJSon: String = "{" + JSonHelper.complex("oneShotSoftware", "{" + (maxDelayRequirement match {
+  override def toJSon: String = "{" + JSonHelper.complex("oneShotSoftware", "{" + (maxMakespan match {
     case None => "";
     case Some(t: Int) => JSonHelper.int("maxDelay", t)
   }) + "}") + "}"

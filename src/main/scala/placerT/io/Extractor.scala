@@ -141,7 +141,7 @@ object EGoal{
   def extractSimple(name:String):MappingGoal = {
     name match{
       case "minEnergy" => MinEnergy()
-      case "minMakeSpan" => MinMakeSpan()
+      case "minMakespan" => MinMakeSpan()
       case "minFrame" => MinFrame()
       case "sat" => Sat()
       case _ => throw new Error("unknown simple mapping goal:" + name)
@@ -189,8 +189,8 @@ case class ESoftwareClass(oneShotSoftware: Option[EOneShotSoftware],
   }
 }
 
-case class EOneShotSoftware(maxDelay: Option[Int]) {
-  def extract = OneShotSoftware(maxDelay)
+case class EOneShotSoftware(maxMakespan: Option[Int]) {
+  def extract = OneShotSoftware(maxMakespan)
 }
 
 case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int]){
