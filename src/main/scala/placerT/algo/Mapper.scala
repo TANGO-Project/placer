@@ -439,7 +439,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
       //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
         ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
-        ++ oscar.algo.search.Branching({thirdLevels += 1; println("second level");Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+        ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
         ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),maxDiscrepancy))
 
       /*val allVars = problem.varsToDistribute.toArray
