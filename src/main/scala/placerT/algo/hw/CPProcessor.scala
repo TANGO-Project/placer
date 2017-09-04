@@ -52,7 +52,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
   private var temporaryStorages: List[CumulativeTask] = List.empty
 
-  private def accumulateTemporaryStorage(from: CPIntVar, duration: CPIntVar, to: CPIntVar, amount: CPIntVar, explanation: String) {
+  private def accumulateTemporaryStorage(from: CPIntVar, duration: Option[CPIntVar], to: CPIntVar, amount: CPIntVar, explanation: String) {
     temporaryStorages = CumulativeTask(from, duration, to, amount, explanation) :: temporaryStorages
   }
 
@@ -63,7 +63,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (!isTaskExecutedHere.isFalse) {
       accumulateTemporaryStorage(
         task.start,
-        task.taskDuration,
+        Some(task.taskDuration),
         task.end,
         isTaskExecutedHere * task.computationMemory,
         "temporary storage of " + task.explanation)
@@ -80,12 +80,11 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
       //storage of incoming transmissions
       for (incomingTransmission <- task.incomingCPTransmissions) {
         val storageStart = incomingTransmission.start
-        val storageDuration = task.start - 1 - incomingTransmission.start
         val storageEnd = task.start - 1
 
         accumulateTemporaryStorage(
           storageStart,
-          storageDuration,
+          None,
           storageEnd,
           isTaskExecutedHere * incomingTransmission.size,
           "incoming data from " + incomingTransmission.explanation + " before start of " + task.explanation)
@@ -109,7 +108,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
       for (outGoingTransmission <- task.outgoingCPTransmissions) {
         accumulateTemporaryStorage(
           task.end + 1,
-          duration = outGoingTransmission.end - task.end - 1,
+          None,
           outGoingTransmission.end,
           isTaskExecutedHere * outGoingTransmission.size,
           "outgoing data from " + task.explanation + " before transmission " + outGoingTransmission.explanation)
@@ -130,17 +129,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (temporaryStorages.isEmpty) {
       System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
-
-      val trimmedMemSize = memSize
-/*
-      val summedMems = temporaryStorages.map(_.amount.max).sum
-      if(trimmedMemSize < memSize){
-        System.err.println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
-      }else{
-        System.err.println("summedMems of " + p.name + ":" + summedMems)
-      }
-      */
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(trimmedMemSize),"temporary storage for processor " + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(memSize),"temporary storage for processor " + p.name)
     }
   }
 

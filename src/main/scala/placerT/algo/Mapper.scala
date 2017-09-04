@@ -129,7 +129,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     val selfLoopBusses = hardwareModel.processors.toList.map(
       proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, this))
 
-    val selfLoopBussesID = SortedSet.empty ++ selfLoopBusses.map(_.id)
+    val selfLoopBussesID = SortedSet.empty[Int] ++ selfLoopBusses.map(_.id)
 
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
@@ -217,7 +217,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     val makeSpan = maximum(taskEnds)
 
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
-    reportProgress("redundant bin-packing constraint on makeSpan per processor")
+    reportProgress("redundant bin-packing constraint on workload per processor")
 
     //this one assumes adjusted minDuration per processor
     for (processorID <- cpProcessors.indices) {
@@ -273,7 +273,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       case Some(cap) =>
         reportProgress("posting powerCap")
         val simpleCumulativeTasks = cpTasks.toList.map(
-          task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
+          task => CumulativeTask(start = task.start, durationOpt = Some(task.taskDuration), end = task.end, amount = task.power, explanation = "power of task " + task)
         )
         CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(cap - backgroundPower),"powerCap")
     }
@@ -314,21 +314,51 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
           val isRunningOnProcessor:Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
           add(new cp.constraints.Or(isRunningOnProcessor))
 
-        case SymmetricPEConstraint(processors:List[ProcessingElement]) =>
+        case SymmetricPEConstraint(processors:List[ProcessingElement],breaking) =>
 
-          val processorIDs = processors.map(_.id)
-          val loadVariables = processorIDs.map(processorLoadArrayUnderApprox(_))
+          //TODO: check that PE are indeed symmetric
+          breaking match {
+            case SymmetricPEConstraintType.Workload =>
+              println("breaking symmetry among " + processors.map(_.name)  + " by workload")
+              val processorIDs = processors.map(_.id)
+              val loadVariables = processorIDs.map(processorLoadArrayUnderApprox(_))
 
-          def makeSorted(varList:List[CPIntVar]): Unit ={
-            varList match{
-              case a :: b :: tail =>
-                add(a <== b)
-                makeSorted(b::tail)
-              case _ => ;
-            }
+              def makeSorted(varList: List[CPIntVar]): Unit = {
+                varList match {
+                  case a :: b :: tail =>
+                    add(a <== b)
+                    makeSorted(b :: tail)
+                  case _ => ;
+                }
+              }
+              makeSorted(loadVariables)
+
+            case SymmetricPEConstraintType.LongTask =>
+              println("breaking symmetry among " + processors.map(_.name)  + " by lognest tasks assignment")
+
+              val witnessProcessor = processors.head
+              val witnessCPProcessor = cpProcessors(witnessProcessor.id)
+              val witnessProcessorID = witnessProcessor.id
+              val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessor.id).isFalse)
+
+              def breakSymmetry(taskPotentiallyunningOnProcessors: List[CPTask], processorIDs: List[Int]) {
+                processorIDs match {
+                  case Nil => ;
+                  case currentProcessorID :: tail =>
+                    val longestTask = taskPotentiallyunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
+                    val otherTasks =
+
+                      for (p <- tail) {
+                        add(longestTask.isRunningOnProcessor(p) === 0)
+                      }
+                    if (tail.nonEmpty) {
+                      breakSymmetry(taskPotentiallyunningOnProcessors.filter(_.id != longestTask.id), tail)
+                    }
+                }
+              }
+
+              breakSymmetry(tasksPotentiallyRunningOnprocessors, processors.map(_.id))
           }
-          makeSorted(loadVariables)
-
       }
     }
 
@@ -370,23 +400,39 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
     solver.addDecisionVariables(problem.varsToSave)
     var secondLevels = 0
+    var thirdLevels = 0
 
     search {
       //binaryFirstFail(problem.varsToDistribute)
 
-      val allVars = problem.varsToDistribute.toArray
+      val allVars= (
+        List.empty ++
+          problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
+          problem.cpTransmissions.flatMap(transmission => List(transmission.start, transmission.busID))
+      ).toArray
+
+      val taskSchedulingVars = List.empty ++
+          problem.cpTasks.map(task => (task.start,task.taskDuration,task.end))
 
       val processorIDChoices = problem.cpTasks.map(task => task.processorID)
       val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
       val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
 
+      val taskStarts = (
+        List.empty ++
+          problem.cpTasks.map(task => task.start) ++
+          problem.cpTransmissions.map(transmission => transmission.start)
+        ).toArray
 
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
         processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
         ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-        ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
+      //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
+        ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
+        ++ oscar.algo.search.Branching({thirdLevels += 1; println("second level");Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+        ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),maxDiscrepancy))
 
       /*val allVars = problem.varsToDistribute.toArray
       conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
@@ -410,6 +456,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
     print(stat)
     println("secondLevels:" + secondLevels)
+    println("thirdLevels:" + thirdLevels)
     println
 
     goal match {

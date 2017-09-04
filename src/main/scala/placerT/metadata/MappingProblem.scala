@@ -75,6 +75,10 @@ case class MustBeUsedConstraint(processor:ProcessingElement) extends MappingCons
   override def toString: String = "MustBeUsed(" + processor.name + ")"
 }
 
-case class SymmetricPEConstraint(processors:List[ProcessingElement]) extends MappingConstraint {
+case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:SymmetricPEConstraintType.Value = SymmetricPEConstraintType.Workload) extends MappingConstraint {
   override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
+}
+
+object SymmetricPEConstraintType extends Enumeration {
+  val Workload,LongTask = Value
 }

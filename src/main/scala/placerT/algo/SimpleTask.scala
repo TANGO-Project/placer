@@ -25,7 +25,7 @@ import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 
 
-case class SimpleTask(start: CPIntVar, duration: CPIntVar, end: CPIntVar, isNeeded: CPBoolVar)
+case class SimpleTask(start:CPIntVar, duration: CPIntVar, end: CPIntVar, isNeeded: CPBoolVar)
 
 object SimpleTask extends Constraints {
 
@@ -117,6 +117,10 @@ object CumulativeTask extends Constraints {
    */
 
   def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String) {
+    val summedAmount = cumulativeTasks.map(_.duration.max).sum
+    if(summedAmount > maxResource.min){
+      println("INFO: skipping tautological cumulative constraint: " + origin)
+    }
     val simpleTasksArray = cumulativeTasks.filter(!_.amount.isBoundTo(0)).toArray
     if (simpleTasksArray.length != 0) {
       val startTimeArray = simpleTasksArray.map(_.start)
@@ -130,5 +134,7 @@ object CumulativeTask extends Constraints {
   }
 }
 
-case class CumulativeTask(start: CPIntVar, duration: CPIntVar, end: CPIntVar, amount: CPIntVar, explanation: String)
+case class CumulativeTask(start:CPIntVar, durationOpt: Option[CPIntVar], end: CPIntVar, amount: CPIntVar, explanation: String){
+  def duration = end - start
+}
 
