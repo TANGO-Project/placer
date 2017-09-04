@@ -33,14 +33,14 @@ import scala.collection.immutable.SortedSet
 
 object Mapper {
 
-  def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue): Mappings = {
+  def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue,searchApproach:SearchApproach.Value = SearchApproach.staged): Mappings = {
     // try {
-    Mappings(new Mapper(problem,maxDiscrepancy:Int,timeLimit).mapping)
+    Mappings(new Mapper(problem,maxDiscrepancy:Int,timeLimit,searchApproach).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 }
 
-class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) extends CPModel with Constraints {
+class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,searchApproach:SearchApproach.Value) extends CPModel with Constraints {
 
 
   def addDocumented(c: Constraint,origin: =>String){
@@ -411,50 +411,44 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     var thirdLevels = 0
 
     search {
-      //binaryFirstFail(problem.varsToDistribute)
 
-      val allVars= (
-        List.empty ++
-          problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
-          problem.cpTransmissions.flatMap(transmission => List(transmission.start, transmission.busID))
-      ).toArray
+      searchApproach match{
+        case SearchApproach.simple =>
+          val allVars2 = problem.varsToDistribute.toArray
+          conflictOrderingSearch(allVars2,allVars2(_).min,allVars2(_).min)
 
-      val taskSchedulingVars = List.empty ++
-          problem.cpTasks.map(task => (task.start,task.taskDuration,task.end))
+        case SearchApproach.staged =>
 
-      val processorIDChoices = problem.cpTasks.map(task => task.processorID)
-      val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
-      val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
+          val allVars= (
+            List.empty ++
+              problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
+              problem.cpTransmissions.flatMap(transmission => List(transmission.start, transmission.busID))
+            ).toArray
 
-      val taskStarts = (
-        List.empty ++
-          problem.cpTasks.map(task => task.start) ++
-          problem.cpTransmissions.map(transmission => transmission.start)
-        ).toArray
+          val taskSchedulingVars = List.empty ++
+            problem.cpTasks.map(task => (task.start,task.taskDuration,task.end))
 
-      (conflictOrderingSearch(
-        processorIDChoices,
-        taskMaxDurations(_),
-        processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-        ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-      //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
-        ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
-        ++ oscar.algo.search.Branching({thirdLevels += 1; println("second level");Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-        ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),maxDiscrepancy))
+          val processorIDChoices = problem.cpTasks.map(task => task.processorID)
+          val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
+          val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
 
-      /*val allVars = problem.varsToDistribute.toArray
-      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
-*/
-      /*
-         val taskPriorities = problem.generateTaskPriorityValues.toArray.asInstanceOf[Array[CPIntVar]]
-         val taskAlternatives
-         (conflictOrderingSearch(taskPriorities,taskPriorities(_).min,taskPriorities(_).min)
-           ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
-   */
+          val taskStarts = (
+            List.empty ++
+              problem.cpTasks.map(task => task.start) ++
+              problem.cpTransmissions.map(transmission => transmission.start)
+            ).toArray
 
-      //setTimes(startsVar, durationsVar, endsVar)
-      //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
+          (conflictOrderingSearch(
+            processorIDChoices,
+            taskMaxDurations(_),
+            processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
+            ++ oscar.algo.search.Branching({secondLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+            //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
+            ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
+            ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("third level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+            ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),maxDiscrepancy))
 
+      }
     } onSolution {
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
 
@@ -479,4 +473,9 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         }
     }
   }
+}
+
+
+object SearchApproach extends Enumeration{
+  val simple,staged = Value
 }
