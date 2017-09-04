@@ -20,7 +20,7 @@
 package placerT.metadata
 
 import placerT.io.JSonHelper
-import placerT.metadata.hw.{Bus, ProcessingElement}
+import placerT.metadata.hw.{SelfLoopBus, Bus, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, Transmission}
 
 
@@ -44,6 +44,18 @@ case class Mapping(timeUnit:String,
     coreToTask.map({case (core,tasks) => "usage of " + core +":" + tasks.map(_._3).sum + " tasks:" + tasks.map(_._2)}).mkString("\n")
   }
 
+  def busToUsage:String = {
+    val busAndDuration = transmissionMapping.toList.flatMap{
+      {case (trans,pr1,pe2,bus,s,d,e) =>
+        bus match{
+          case s:SelfLoopBus => None
+          case b:Bus => Some(b.name,d)
+        }
+      }
+    }
+    val busToDurations = busAndDuration.groupBy(_._1).toList.sortBy(_._1)
+    busToDurations.map({case(bus,durs) => "usage of bus " + bus + ":" + durs.map(_._2).sum }).mkString("\n")
+  }
 
   override def toString: String = "Mapping(\n\t" +
     taskMapping.map(
@@ -111,7 +123,6 @@ case class Mapping(timeUnit:String,
   }
 }
 
-
 case class Mappings(mapping: Iterable[Mapping]) {
   def toJSon: String = {
     "{" + JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
@@ -119,7 +130,7 @@ case class Mappings(mapping: Iterable[Mapping]) {
 
   override def toString: String = {
     "Mappings(nbMapping:" + mapping.size + "\n" +
-      mapping.map(l => l.toStringSortedLight + "\n" + l.coreToUsage).mkString("\n") + "\n)"
+      mapping.map(l => l.toStringSortedLight + "\n" + l.coreToUsage + "\n" + l.busToUsage).mkString("\n") + "\n)"
   }
 
 }

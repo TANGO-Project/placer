@@ -212,12 +212,12 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       case _ => ;
     }
 
-    reportProgress("computing makeSpan")
+    reportProgress("computing makeSpanon tasks")
     val taskEnds = cpTasks.map(task => task.end)
     val makeSpan = maximum(taskEnds)
 
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
-    reportProgress("redundant bin-packing constraint on workload per processor")
+    reportProgress("redundant bin-packing constraint on workload for mono task processors")
 
     //this one assumes adjusted minDuration per processor
     for (processorID <- cpProcessors.indices) {
@@ -239,9 +239,12 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     //add(binPacking(cpTasks.map(_.processorID),cpTasks.map(_.taskDuration.min),processorLoadArrayUnderApprox2))
     //for(load <- processorLoadArrayUnderApprox2) add(load <== makeSpan)
 
+    reportProgress("redundant bin-packing constraint on usage per bus")
+
     for(cpBus <- cpBusses){
       cpBus match{
         case r:CPRegularBus =>
+          //TODO: not sure with the endNZ and end, which one should be used?
           add(r.busOccupancy <== makeSpan)
         case _ => ;
       }
@@ -310,10 +313,15 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
             val processesVars = processes.map(p => cpTasks(p.id).processorID)
             addDocumented(allDifferent(processesVars),c.toString)
           }
-        case MustBeUsedConstraint(processor) =>
-          val isRunningOnProcessor:Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
-          add(new cp.constraints.Or(isRunningOnProcessor))
-
+        case MustBeUsedConstraint(processor,value) =>
+          if(value) {
+            val isRunningOnProcessor: Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
+            add(new cp.constraints.Or(isRunningOnProcessor))
+          }else{
+            for(task <- cpTasks){
+              add(task.isRunningOnProcessor(processor.id) === 0)
+            }
+          }
         case SymmetricPEConstraint(processors:List[ProcessingElement],breaking) =>
 
           //TODO: check that PE are indeed symmetric

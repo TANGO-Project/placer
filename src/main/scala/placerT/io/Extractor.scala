@@ -65,6 +65,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               samePE:Option[List[String]],
                               notSamePE:Option[List[String]],
                               mustBeUsed:Option[String],
+                              mustNotBeUsed:Option[String],
                               symmetricPE:Option[List[String]]){
   def extract(hw:HardwareModel,sw:SoftwareModel):MappingConstraint = {
 
@@ -88,11 +89,11 @@ case class EMappingConstraint(runOn:Option[ERunOn],
       CoreSharingConstraint(processes,value)
     }
 
-    def extractMustBeUsed(processorName:String):MustBeUsedConstraint = {
+    def extractMustBeUsed(processorName:String,value:Boolean):MustBeUsedConstraint = {
       val processor = hw.processors.find(p => p.name equals processorName) match{
         case Some(x) => x
         case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")}
-      MustBeUsedConstraint(processor)
+      MustBeUsedConstraint(processor,value)
     }
 
     def extractPESymmetry(symmetricPENames:List[String]):SymmetricPEConstraint = {
@@ -104,18 +105,20 @@ case class EMappingConstraint(runOn:Option[ERunOn],
     }
 
 
-    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,symmetricPE) match {
-      case (Some(s),None,None,None,None,None) =>
+    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,mustNotBeUsed,symmetricPE) match {
+      case (Some(s),None,None,None,None,None,None) =>
         extractRunOn(s,true)
-      case (None,Some(s),None,None,None,None) =>
+      case (None,Some(s),None,None,None,None,None) =>
         extractRunOn(s,false)
-      case (None,None,Some(s),None,None,None) =>
+      case (None,None,Some(s),None,None,None,None) =>
         extractSameCore(s,true)
-      case (None,None,None,Some(s),None,None) =>
+      case (None,None,None,Some(s),None,None,None) =>
         extractSameCore(s,false)
-      case (None,None,None,None,Some(s),None) =>
-        extractMustBeUsed(s)
-      case (None,None,None,None,None,Some(s)) =>
+      case (None,None,None,None,Some(s),None,None) =>
+        extractMustBeUsed(s,true)
+      case (None,None,None,None,None,Some(s),None) =>
+        extractMustBeUsed(s,false)
+      case (None,None,None,None,None,None,Some(s)) =>
         extractPESymmetry(s)
 
       case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)

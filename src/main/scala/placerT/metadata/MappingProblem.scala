@@ -71,8 +71,8 @@ case class CoreSharingConstraint(processes:List[AtomicTask],
     (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
   }
 }
-case class MustBeUsedConstraint(processor:ProcessingElement) extends MappingConstraint {
-  override def toString: String = "MustBeUsed(" + processor.name + ")"
+case class MustBeUsedConstraint(processor:ProcessingElement,value:Boolean) extends MappingConstraint {
+  override def toString: String = (if(value) "MustBeUsed(" else "MustNotBeUsed(") + processor.name + ")"
 }
 
 case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:SymmetricPEConstraintType.Value = SymmetricPEConstraintType.Workload) extends MappingConstraint {
