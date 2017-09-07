@@ -67,6 +67,7 @@ case class RunOnConstraint(processor:ProcessingElement,
 }
 case class CoreSharingConstraint(processes:List[AtomicTask],
                                  value:Boolean) extends MappingConstraint{
+  require(processes.size >=2,"constraint on same core or different core given with " + processes.size + " processes should be >1" + this)
   override def toString: String = {
     (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
   }

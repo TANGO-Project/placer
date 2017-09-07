@@ -26,7 +26,7 @@ import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import placerT.algo.Mapper
-import placerT.algo.hw.CPBus
+import placerT.algo.hw.{CPSelfLoopBus, CPRegularBus, CPBus}
 import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
 import placerT.metadata.sw.{TransmissionTiming, Transmission}
 import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
@@ -89,4 +89,14 @@ case class CPTransmission(id: Int,
   override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
 
   override def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, transmissionDuration, busID)
+
+  def setFromAndToProcessesOnSameCore(){
+    for(cpBus <- busses) {
+      cpBus match{
+        case r:CPRegularBus => busID.removeValue(cpBus.id)
+        case s:CPSelfLoopBus => ;
+      }
+    }
+  }
 }
+

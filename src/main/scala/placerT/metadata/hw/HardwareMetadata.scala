@@ -337,4 +337,8 @@ case class HardwareModel(name: String,
     JSonHelper.multiples("busses", busses.map(_.toJSon)) + "," +
     JSonHelper.multiples("properties", properties.toList.map({ case (propertyName, value) => JSonHelper.nameIntValue(propertyName, value) })) +
     "}"
+
+  val classesIDToProcessors = processors.toList.map(proc => (proc.processorClass.id,proc)).groupBy(_._1).mapValues(_.map(_._2))
+
+  def processingElementsOfClass(c:ProcessingElementClass):List[ProcessingElement] = classesIDToProcessors.getOrElse(c.id,List.empty[ProcessingElement])
 }

@@ -56,7 +56,18 @@ case class CPTask(id: Int,
     }
   }
 
-  val implemAndProcessorAndDurationAndEnergyAndPower: Iterable[(Int, Int, Int, Int, Int)] =
+  var indice = 0
+  object ImplemAndProcessorAndDurationAndEnergyAndPower{
+    def apply(implem:Int,processor:Int,duration:Int,energy:Int,power:Int):ImplemAndProcessorAndDurationAndEnergyAndPower = {
+      val curentIndice = indice
+      indice = indice+1
+      ImplemAndProcessorAndDurationAndEnergyAndPower(implem:Int,processor:Int,duration:Int,energy:Int,power:Int,curentIndice)
+    }
+  }
+
+  case class ImplemAndProcessorAndDurationAndEnergyAndPower(implem:Int,processor:Int,duration:Int,energy:Int,power:Int,indice:Int)
+
+  val implemAndProcessorAndDurationAndEnergyAndPower: Iterable[ImplemAndProcessorAndDurationAndEnergyAndPower] =
     task.implementationArray.flatMap(
       implem => mapper.hardwareModel.processors.toList.
         filter(p => p.processorClass equals implem.target).
@@ -67,23 +78,63 @@ case class CPTask(id: Int,
           require(power>=0,"power of implementation " + implem.name + " on processor " + p.name + " is negative:" + power)
           val energy = durationPI * power
             require(energy>=0,"energy usage of implementation " + implem.name + " on processor " + p.name + " is negative:" + energy)
-          (implem.id, p.id, durationPI, energy, power)
+          ImplemAndProcessorAndDurationAndEnergyAndPower(
+            implem=implem.id,
+            processor=p.id,
+            duration=durationPI,
+            energy=energy,
+            power=power
+          )
         }))
 
-  val possibleDurations = implemAndProcessorAndDurationAndEnergyAndPower.map(_._3)
-  val taskDuration: CPIntVar = CPIntVar.sparse(possibleDurations)
+  def couplesToArray(a:Iterable[(Int,Int)]):Array[Int] = {
+    val toReturn = Array.fill(a.size)(Int.MinValue)
+    for((indice,value) <- a){
+      toReturn(indice) = value
+    }
+    toReturn
+  }
 
-  val possibleEnergies = implemAndProcessorAndDurationAndEnergyAndPower.map(_._4)
-  val energy: CPIntVar = CPIntVar.sparse(possibleEnergies)
+  private val processorImplementationCombo = CPIntVar(0,indice-1)
 
-  val possiblePowers = implemAndProcessorAndDurationAndEnergyAndPower.map(_._5)
-  val power: CPIntVar = CPIntVar.sparse(possiblePowers)
+  //duration
+  private val possibleDurations = implemAndProcessorAndDurationAndEnergyAndPower.map(_.duration)
+  val minDuration = possibleDurations.min
+  val maxDuration = possibleDurations.max
 
-  add(table(implementationID, processorID, taskDuration, energy, power, implemAndProcessorAndDurationAndEnergyAndPower))
-  add(end == (start + taskDuration))
+  private val indiceToDuration = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.duration)))
+  val taskDuration: CPIntVar = CPIntVar(minDuration,maxDuration)
 
-  val possibleProcessorAndDuration = implemAndProcessorAndDurationAndEnergyAndPower.map(possible => (possible._2,possible._3))
-  val possibleProcessorToMinDuration = possibleProcessorAndDuration.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
+  add(element(indiceToDuration,processorImplementationCombo,taskDuration))
+
+  add(end == start + taskDuration)
+
+  //energy
+  private val possibleEnergies = implemAndProcessorAndDurationAndEnergyAndPower.map(_.energy)
+  val minEnergy = possibleEnergies.min
+  val maxEnergy = possibleEnergies.max
+
+  private val indiceToEnergy = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.energy)))
+  val energy: CPIntVar = CPIntVar(minEnergy,maxEnergy)
+
+  add(element(indiceToEnergy,processorImplementationCombo,energy))
+
+  //power
+  val possiblePower = implemAndProcessorAndDurationAndEnergyAndPower.map(_.power)
+  val minPower = possiblePower.min
+  val maxPower = possiblePower.max
+
+  private val indiceToPower = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.power)))
+  val power: CPIntVar = CPIntVar(minPower,maxPower)
+
+  add(element(indiceToPower,processorImplementationCombo,power))
+
+  private val implemAndProcessorAndIndice = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.implem,x.processor,x.indice))
+
+  add(table(implementationID, processorID, processorImplementationCombo,implemAndProcessorAndIndice))
+
+  private val possibleProcessorAndDuration = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.processor,x.duration))
+  private val possibleProcessorToMinDuration = possibleProcessorAndDuration.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
 
   def minTaskDurationOnProcessor(processorID:Int):Int = {
     possibleProcessorToMinDuration.getOrElse(processorID,0)
@@ -112,8 +163,8 @@ case class CPTask(id: Int,
   var incomingCPTransmissions: List[CPTransmission] = List.empty
   var outgoingCPTransmissions: List[CPTransmission] = List.empty
 
-  val computationMemoryAndImplementation = task.implementationArray.map(i => (i.computationMemory, i.id))
-  val computationMemories = computationMemoryAndImplementation.map(_._1)
+  private val computationMemoryAndImplementation = task.implementationArray.map(i => (i.computationMemory, i.id))
+  private val computationMemories = computationMemoryAndImplementation.map(_._1)
   val computationMemory = CPIntVar.sparse(computationMemories)
   add(table(computationMemory, implementationID, computationMemoryAndImplementation))
 
@@ -146,6 +197,6 @@ case class CPTask(id: Int,
     }
   }
 
-  override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, /*end, taskDuration,*/ implementationID /*, processorID*/)
+  override def variablesToDistribute: Iterable[cp.CPIntVar] = List(start, /*end, taskDuration,*/ implementationID , processorID)
   def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, taskDuration, implementationID, processorID)
 }

@@ -23,6 +23,7 @@ import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
+import oscar.cp.nogoods.searches.ConflictOrderingSearch
 import placerT.algo.hw._
 import placerT.algo.sw.{CPTask, CPTransmission}
 import placerT.metadata.hw._
@@ -100,6 +101,10 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
     val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
       process => new CPTask(process.id, process, process.name, this, maxHorizon)
     )
+
+    val taskStartArray = cpTasks.map(_.start)
+    val taskDurationArray= cpTasks.map(_.taskDuration)
+    val taskEndArray= cpTasks.map(_.end)
 
     reportProgress("creating processors")
 
@@ -205,6 +210,26 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
       proc.close()
     }
 
+    //TODO: create redundant cumulative constraint among monoTask processors, to have better pruning.
+    // /maybe per implementation?
+
+    reportProgress("Adding redundant cumulative resource per monotask processingElementClass")
+    //per same implementation
+    //per group of symmetric cores
+    //and use belongsTo to compute the isActive, to have more propagation on this boolean
+
+    for(pEClass <- hardwareModel.processorClasses){
+      reportProgress("\tAdding redundant cumulative resource constraint for " + pEClass.name)
+
+      val peS = hardwareModel.processingElementsOfClass(pEClass)
+
+      val peIDs = SortedSet.empty ++ peS.map(_.id)
+      val taskOnThesePEArray:Array[CPIntVar] = cpTasks.map(cpTask => cpTask.processorID isIn(peIDs))
+
+      add(maxCumulativeResource(taskStartArray,taskDurationArray,taskEndArray,taskOnThesePEArray,CPIntVar(peIDs.size)))
+    }
+
+
     widthVar match{
       case Some(w) =>
         reportProgress("posting maxFrameDelay")
@@ -213,8 +238,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
     }
 
     reportProgress("computing makeSpanon tasks")
-    val taskEnds = cpTasks.map(task => task.end)
-    val makeSpan = maximum(taskEnds)
+    val makeSpan = maximum(taskEndArray)
 
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
     reportProgress("redundant bin-packing constraint on workload for mono task processors")
@@ -291,6 +315,15 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
 
     reportProgress("posting mapping constraints")
 
+    object TaskToPlace{
+      def apply(task:CPTask):TaskToPlace = {
+        TaskToPlace(task,task.taskDuration.max)
+      }
+    }
+    case class TaskToPlace(task:CPTask,maxDuration:Int)
+
+    var allTasksToPlace = cpTasks.toList.map(TaskToPlace(_))
+
     for(constraint <- problem.constraints){
       constraint match {
         case RunOnConstraint(processor, process, value) =>
@@ -300,14 +333,30 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
             add(cpTasks(process.id).processorID !== processor.id)
           }
         case c@CoreSharingConstraint(processes, value) =>
+          require(!processes.isEmpty)
+
           if (value) {
             //same cores all
-            if(! processes.isEmpty){
-              val processorID = cpTasks(processes.head.id).processorID
-              for(process <- processes){
-                add(cpTasks(process.id).processorID === processorID)
+
+            //constraining same core
+            val processorID = cpTasks(processes.head.id).processorID
+            for(process <- processes){
+              add(cpTasks(process.id).processorID === processorID)
+            }
+
+            //constraining localLoop (since it does not propagate straight
+            val processesIDs = SortedSet.empty[Int] ++ processes.map(_.id)
+
+            for(transmission <- cpTransmissions){
+              if((processesIDs contains transmission.from.id) && (processesIDs contains transmission.to.id)){
+                transmission.setFromAndToProcessesOnSameCore()
               }
             }
+
+            val totalMaxDuration = processes.map(process => cpTasks(process.id).maxDuration).sum
+            //adding the set of tasks as a single task to map, for distribution
+            allTasksToPlace = TaskToPlace(cpTasks(processes.head.id),totalMaxDuration) :: allTasksToPlace
+
           } else {
             //different cores all
             val processesVars = processes.map(p => cpTasks(p.id).processorID)
@@ -438,11 +487,35 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
               problem.cpTransmissions.map(transmission => transmission.start)
             ).toArray
 
-          (conflictOrderingSearch(
+          val shortestAtLessBuzyProc = conflictOrderingSearch(
             processorIDChoices,
             taskMaxDurations(_),
-            processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-            ++ oscar.algo.search.Branching({secondLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+            taskID => {
+              processorIDChoices(taskID).iterator.toList.maxBy(procID => {
+                problem.processorLoadArrayUnderApprox(procID).max
+              })
+            })
+
+          val heft = conflictOrderingSearch(
+            processorIDChoices,
+            taskID => problem.cpTasks(taskID).start.min,
+            taskID => {
+              processorIDChoices(taskID).iterator.toList.minBy(procID => {
+                problem.processorLoadArrayUnderApprox(procID).min
+              })
+            })
+
+          val lognestAtLessBuzyProc = conflictOrderingSearch(
+            processorIDChoices,
+            -taskMaxDurations(_),
+            taskID => {
+              processorIDChoices(taskID).iterator.toList.maxBy(procID => {
+                problem.processorLoadArrayUnderApprox(procID).max
+              })
+            })
+
+
+          (shortestAtLessBuzyProc ++ oscar.algo.search.Branching({secondLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
             //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
             ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
             ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("third level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
@@ -450,9 +523,10 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int,search
 
       }
     } onSolution {
-      println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
-
+      println("solution found, makeSpan:" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
+
+    solver.silent = true
 
     val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = timeLimit) //,maxDiscrepancy = maxDiscrepancy)
 

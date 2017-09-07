@@ -71,3 +71,4 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
     else SimpleTask.resourceWidthOfUse(simpleTasks)
   }
 }
+
