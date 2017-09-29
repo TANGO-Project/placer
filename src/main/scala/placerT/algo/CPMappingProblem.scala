@@ -65,11 +65,6 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
       cpTransmissions.flatMap(_.variablesToDistribute) //  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
   }
 
-  def generateTaskPriorityValues:List[CPBoolVar] = {
-    val taskPairs = Pairs.makeAllSortedPairs(cpTasks.toList)
-    taskPairs.map({case (taskA:CPTask,taskB:CPTask) => taskA.start <== taskB.start})
-  }
-
   def varsToSave: List[CPIntVar] = List(makeSpan,energy) ++ cpTasks.flatMap(_.variablesToSave) ++ cpTransmissions.flatMap(_.variablesToSave) ++ widthVar
 
 }

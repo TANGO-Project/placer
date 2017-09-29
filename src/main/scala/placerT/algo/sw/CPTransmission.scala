@@ -88,8 +88,8 @@ case class CPTransmission(id: Int,
 
   timing match{
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>
-      //if globalBus then Asap
-      add((busID isIn localLoopBusses) implies (start === from.end+1))
+      //if localLoop then force asap
+      add((busID isIn localLoopBusses) implies (start ?=== (from.end+1)))
     case _ => ;
   }
 

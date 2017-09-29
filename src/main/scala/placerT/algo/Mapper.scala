@@ -19,8 +19,8 @@
 
 package placerT.algo
 
-import oscar.cp
 import oscar.cp._
+import oscar.cp.modeling._
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import placerT.algo.hw._
@@ -63,7 +63,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
   def reportProgress(startedUpTask:String): Unit ={
     this.solver.propagate()
-    if(this.solver.isFailed()) throw new Error("solver trivially concluded to no solution or overflowed during latest modeling step")
+    if(this.solver.isFailed) throw new Error("solver trivially concluded to no solution or overflowed during latest modeling step")
     println(startedUpTask)
   }
 
@@ -228,7 +228,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
           val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
           val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
           add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
-          add(processorLoadVariable <== makeSpan + switchingDelay)
+          add(processorLoadVariable <= (makeSpan + switchingDelay))
         case _ => ;
       }
     }
@@ -245,7 +245,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       cpBus match{
         case r:CPRegularBus =>
           //TODO: not sure with the endNZ and end, which one should be used?
-          add(r.busOccupancy <== makeSpan)
+          add(r.busOccupancy <= makeSpan)
         case _ => ;
       }
     }
@@ -316,7 +316,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         case MustBeUsedConstraint(processor,value) =>
           if(value) {
             val isRunningOnProcessor: Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
-            add(new cp.constraints.Or(isRunningOnProcessor))
+            add(new oscar.cp.constraints.Or(isRunningOnProcessor))
           }else{
             for(task <- cpTasks){
               add(task.isRunningOnProcessor(processor.id) === 0)
@@ -334,7 +334,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
               def makeSorted(varList: List[CPIntVar]): Unit = {
                 varList match {
                   case a :: b :: tail =>
-                    add(a <== b)
+                    add(a <= b)
                     makeSorted(b :: tail)
                   case _ => ;
                 }
@@ -452,7 +452,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
            ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
    */
 
-      //setTimes(startsVar, durationsVar, endsVar)
+      //setTimes(problem.cpTasks.map(_.start), problem.cpTasks.map(_.taskDuration), problem.cpTasks.map(_.end)) ++
       //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
 
     } onSolution {

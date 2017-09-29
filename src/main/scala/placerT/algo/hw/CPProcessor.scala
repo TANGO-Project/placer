@@ -22,7 +22,7 @@ package placerT.algo.hw
 import oscar.cp
 import oscar.cp._
 import oscar.cp.constraints.Or
-import oscar.cp.core.{CPOutcome, NoSolutionException}
+import oscar.cp.core.NoSolutionException
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper}
@@ -52,8 +52,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
   private var temporaryStorages: List[CumulativeTask] = List.empty
 
-  private def accumulateTemporaryStorage(from: CPIntVar, duration: Option[CPIntVar], to: CPIntVar, amount: CPIntVar, explanation: String) {
-    temporaryStorages = CumulativeTask(from, duration, to, amount, explanation) :: temporaryStorages
+  private def accumulateTemporaryStorage(from: CPIntVar, durationOpt: Option[CPIntVar], to: CPIntVar, amount: CPIntVar, explanation: String) {
+    temporaryStorages = CumulativeTask(from, durationOpt, to, amount, explanation) :: temporaryStorages
   }
 
   def accumulateExecutionConstraintsOnTask(task: CPTask)
@@ -91,12 +91,12 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
         incomingTransmission.timing match {
           case Alap => //we have to constraint the arrival time here
-            addDocumented(new oscar.cp.constraints.Eq(incomingTransmission.end,task.start - 1),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
+            addDocumented(incomingTransmission.end === (task.start - 1),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
           case Sticky =>
             addDocumented(
               new Or(Array(
-                incomingTransmission.end === task.start - 1,
-                incomingTransmission.start === incomingTransmission.from.end + 1))
+                incomingTransmission.end ?=== (task.start - 1),
+                incomingTransmission.start ?=== (incomingTransmission.from.end + 1)))
               ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
           case _ =>
             //we are on the other side, the simple constraint is enough

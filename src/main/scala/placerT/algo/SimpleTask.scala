@@ -20,7 +20,6 @@
 package placerT.algo
 
 import oscar.cp._
-import oscar.cp.core.CPOutcome
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 
@@ -45,9 +44,11 @@ object SimpleTask extends Constraints {
           i <- startTimeArray.indices
           j <- i + 1 until startTimeArray.length
         } {
-          if(CPOutcome.Failure == cp.add((!isNeededArray(i)) || (!isNeededArray(j)) || (endArray(j) + switchingDelay <== startTimeArray(i)) || (endArray(i) + switchingDelay <== startTimeArray(j)))){
-            throw new NoSolutionException("no solution when posting switchingDelay on " + origin)
-          }
+          cp.add(
+            ((!isNeededArray(i))
+            || (!isNeededArray(j))
+            || ((endArray(j) + switchingDelay) ?<= startTimeArray(i))
+            || ((endArray(i) + switchingDelay) ?<= startTimeArray(j))))
         }
       }
     } else {
@@ -56,9 +57,7 @@ object SimpleTask extends Constraints {
         durationArray(t) = durationArray(t) + switchingDelay
       }
     }
-    if(CPOutcome.Failure == cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))){
-      throw new NoSolutionException("no solution when posting cumulative co for " + origin)
-    }
+    cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))
   }
 
   def resourceWidthOfUse(simpleTasks: List[SimpleTask]):CPIntVar = {
@@ -115,7 +114,6 @@ object CumulativeTask extends Constraints {
    * @param cumulativeTasks a set of cumulative tasks, which require a certain amount of resource (zero means that it does not use the resource, actually)
    * @param maxResource the maximal amount of available resources
    */
-
   def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String) {
     val summedAmount = cumulativeTasks.map(_.duration.max).sum
     if(summedAmount > maxResource.min){
@@ -128,13 +126,18 @@ object CumulativeTask extends Constraints {
       val durationArray = simpleTasksArray.map(_.duration)
       val amountArray = simpleTasksArray.map(_.amount)
       val cp = startTimeArray(0).store
-      if(CPOutcome.Failure == cp.add(maxCumulativeResource(startTimeArray, durationArray, endArray, amountArray, maxResource)))
-        throw new NoSolutionException("error on constraint " + origin)
+      cp.add(maxCumulativeResource(startTimeArray, durationArray, endArray, amountArray, maxResource))
     }
   }
 }
 
-case class CumulativeTask(start:CPIntVar, durationOpt: Option[CPIntVar], end: CPIntVar, amount: CPIntVar, explanation: String){
-  def duration = end - start
+case class CumulativeTask(start:CPIntVar, var durationOpt: Option[CPIntVar], end: CPIntVar, amount: CPIntVar, explanation: String){
+  def duration:CPIntVar = durationOpt match{
+    case Some(dur) => dur
+    case None =>
+      val newDur:CPIntVar = end - start
+      durationOpt = Some(newDur)
+      newDur
+  }
 }
 
