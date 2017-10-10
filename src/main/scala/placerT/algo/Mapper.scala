@@ -31,17 +31,18 @@ import placerT.metadata.{MappingProblem, _}
 
 import scala.collection.immutable.SortedSet
 
+case class MapperConfig(maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue)
+
 object Mapper {
 
-  def findMapping(problem: MappingProblem,maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue): Mappings = {
+  def findMapping(problem: MappingProblem,config:MapperConfig): Mappings = {
     // try {
-    Mappings(new Mapper(problem,maxDiscrepancy:Int,timeLimit).mapping)
+    Mappings(new Mapper(problem,config).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 }
 
-class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) extends CPModel with Constraints {
-
+class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel with Constraints {
 
   def addDocumented(c: Constraint,origin: =>String){
     try {
@@ -59,7 +60,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
   val store:CPStore = this.solver
 
   val cpProblem = postProblem(softwareModel, hardwareModel)
-  val mapping = searchMappingProblem(cpProblem, goal)
+  val mapping = solveMappingProblem(cpProblem, goal)
 
   def reportProgress(startedUpTask:String): Unit ={
     this.solver.propagate()
@@ -134,6 +135,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
+    println("processorToBusToProcessorAdjacency" + processorToBusToProcessorAdjacency)
 
     reportProgress("creating busses")
     //creating the CPbusses
@@ -142,6 +144,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     ) ++ selfLoopBusses).toArray
 
     reportProgress("creating transmissions")
+
     //creating the CPtransmissions
     val cpTransmissions: Array[CPTransmission] = softwareModel.transmissions.map(
       flow => new CPTransmission(flow.id, flow,
@@ -153,6 +156,9 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
         processorToBusToProcessorAdjacency,
         selfLoopBussesID)
     )
+
+    println(cpTransmissions.map(t => t.toString + t.occuringOnBussesDebugInfo).mkString("\n"))
+
 
     //creating the width var, in case needed for modulo scheduling
     val widthVar:Option[CPIntVar] =
@@ -212,7 +218,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       case _ => ;
     }
 
-    reportProgress("computing makeSpanon tasks")
+    reportProgress("computing makeSpan on tasks")
     val taskEnds = cpTasks.map(task => task.end)
     val makeSpan = maximum(taskEnds)
 
@@ -227,8 +233,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
           val switchingDelay = m.switchingDelay
           val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
           val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
-          add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
-          add(processorLoadVariable <= (makeSpan + switchingDelay))
+//          add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
+//          add(processorLoadVariable <= (makeSpan + switchingDelay))
         case _ => ;
       }
     }
@@ -245,7 +251,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       cpBus match{
         case r:CPRegularBus =>
           //TODO: not sure with the endNZ and end, which one should be used?
-          add(r.busOccupancy <= makeSpan)
+//          add(r.busOccupancy <= makeSpan)
         case _ => ;
       }
     }
@@ -384,7 +390,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       processorLoadArrayUnderApprox)
   }
 
-  def searchMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
+  def solveMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
 
     def simpleVarFinder(a:SimpleMappingGoal):CPIntVar = {
       a match{
@@ -411,8 +417,8 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
     var thirdLevels = 0
 
     search {
-      //binaryFirstFail(problem.varsToDistribute)
-
+      binaryFirstFail(problem.varsToDistribute)
+/*
       val allVars= (
         List.empty ++
           problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
@@ -440,7 +446,7 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
       //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
         ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
         ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-        ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),maxDiscrepancy))
+        ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
 
       /*val allVars = problem.varsToDistribute.toArray
       conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
@@ -454,13 +460,13 @@ class Mapper(val problem: MappingProblem,maxDiscrepancy:Int,timeLimit:Int) exten
 
       //setTimes(problem.cpTasks.map(_.start), problem.cpTasks.map(_.taskDuration), problem.cpTasks.map(_.end)) ++
       //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
-
+*/
     } onSolution {
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
 
     }
 
-    val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = timeLimit) //,maxDiscrepancy = maxDiscrepancy)
+    val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit) //,maxDiscrepancy = maxDiscrepancy)
 
     print(stat)
     println("secondLevels:" + secondLevels)

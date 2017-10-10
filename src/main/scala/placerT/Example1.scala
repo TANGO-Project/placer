@@ -20,8 +20,8 @@
 
 package placerT
 
-import placerT.algo.Mapper
-import placerT.metadata.{MappingProblem, MinMakeSpan, Dim}
+import placerT.algo.{Mapper, MapperConfig}
+import placerT.metadata.{Dim, MappingProblem, MinMakeSpan}
 import placerT.metadata.hw._
 import placerT.metadata.sw.TransmissionTiming._
 import placerT.metadata.sw._
@@ -145,7 +145,7 @@ object Example1 extends App {
 
   val goal = MinMakeSpan() // ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val mappingSet = Mapper.findMapping(new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, List.empty, goal)).mapping
+  val mappingSet = Mapper.findMapping(new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, List.empty, goal),MapperConfig()).mapping
 
   if (mappingSet.isEmpty) {
     println("no mapping found")

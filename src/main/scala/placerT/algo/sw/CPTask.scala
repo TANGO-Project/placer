@@ -38,6 +38,8 @@ case class CPTask(id: Int,
   extends CPAbstractTask(mapper) {
   implicit val solver = mapper.solver
 
+  def occuringOnProcDebugInfo = task.name + " runing on proc:[" +  isRunningOnProcessor.mkString(",") + "]"
+
   val start: CPIntVar = CPIntVar(0, maxHorizon)
   val end: CPIntVar = CPIntVar(0, maxHorizon)
 

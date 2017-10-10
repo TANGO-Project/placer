@@ -22,7 +22,7 @@ package placerT
 import java.io.{File, PrintWriter}
 
 import net.liftweb.json._
-import placerT.algo.Mapper
+import placerT.algo.{Mapper, MapperConfig}
 import placerT.io.Extractor
 import placerT.metadata.MappingProblem
 
@@ -102,7 +102,8 @@ object Main extends App {
       val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
       if (config.verbose) println(problem)
-      val mappingSet = Mapper.findMapping(problem,config.discrepancy,config.timeLimit)
+      
+      val mappingSet = Mapper.findMapping(problem,MapperConfig(config.discrepancy,config.timeLimit))
 
       if (config.verbose) println(mappingSet)
 

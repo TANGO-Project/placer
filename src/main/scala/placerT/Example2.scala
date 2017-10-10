@@ -21,7 +21,7 @@
 package placerT
 
 import net.liftweb.json._
-import placerT.algo.Mapper
+import placerT.algo.{Mapper, MapperConfig}
 import placerT.io.Extractor
 import placerT.metadata.hw._
 import placerT.metadata.sw.TransmissionTiming._
@@ -35,7 +35,7 @@ object Example2 extends App {
   val problem = Example2Data.problem
   println(problem)
 
-  val mappingSet = Mapper.findMapping(problem)
+  val mappingSet = Mapper.findMapping(problem,MapperConfig())
 
   println(mappingSet)
 
