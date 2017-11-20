@@ -57,9 +57,7 @@ case class CPTransmission(id: Int,
   val busID: CPIntVar = CPIntVar.sparse(busses.indices)
   val isOccurringOnBus: Array[CPBoolVar] = busses.map(bus => busID isEq bus.id)
 
-  def occuringOnBussesDebugInfo:String = "occuringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
-
-  println("occuringOnBussesDebugInfo1" + occuringOnBussesDebugInfo)
+  def occuringOnBussesDebugInfo1:String = "occuringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
 
   val originProcessorID = from.processorID
   val destinationProcessorID = to.processorID
@@ -68,14 +66,12 @@ case class CPTransmission(id: Int,
 
   val busAndDuration = busses.toList.map(bus => (bus.id, bus.transmissionDuration(transmission.size)))
   val busAndDurationNZ = busAndDuration.filter(_._2!=0)
-  println("occuringOnBussesDebugInfo2" + occuringOnBussesDebugInfo)
 
   val possibleDurationsNZ = busAndDurationNZ.map(_._2)
   val stubValueForDurationNZ = possibleDurationsNZ.min
 
   val busWithTransmissionNZ = busAndDurationNZ.map(_._1).toSet
   val busWithTransmissionZ = busAndDuration.filter(_._2==0).map(_._1).toSet
-  println("occuringOnBussesDebugInfo3" + occuringOnBussesDebugInfo)
 
   val busAndDurationNZWithStub = busAndDurationNZ.toList ::: busWithTransmissionZ.toList.map(bus => (bus,stubValueForDurationNZ))
 
@@ -85,21 +81,16 @@ case class CPTransmission(id: Int,
 
   add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ2))))
   add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
-  println("occuringOnBussesDebugInfo4" + occuringOnBussesDebugInfo)
 
   //This is to be used to represent usage of regular busses
   val endNZ: CPIntVar = start + transmissionDurationNZ2
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
-  println("occuringOnBussesDebugInfo5" + occuringOnBussesDebugInfo)
 
   //these are redundant, since the timing is also constrained by the storage task on both side of the transmission
   add(from.end <= start)
-  println("occuringOnBussesDebugInfo6" + occuringOnBussesDebugInfo)
   add(end <= to.start)  //TODO: there must be an equal here, or it fails.
-
-  println("occuringOnBussesDebugInfo7" + occuringOnBussesDebugInfo)
 
   timing match{
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>
@@ -107,8 +98,6 @@ case class CPTransmission(id: Int,
       add((busID isIn localLoopBusses) implies (start ?=== (from.end+1)))
     case _ => ;
   }
-
-  println("occuringOnBussesDebugInfo8" + occuringOnBussesDebugInfo)
 
   def transmissionDuration(sol:CPSol):Int = {
     val selectedBusID = sol(busID)

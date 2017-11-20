@@ -61,7 +61,7 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
 
   def varsToDistribute: List[CPIntVar] = {
     List.empty ++
-      cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
+      cpTasks.flatMap(task => List(task.start,task.implementationID,task.processorID)) ++
       cpTransmissions.flatMap(_.variablesToDistribute) //  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
   }
 

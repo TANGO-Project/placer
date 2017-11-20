@@ -157,9 +157,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         selfLoopBussesID)
     )
 
-    println(cpTransmissions.map(t => t.toString + t.occuringOnBussesDebugInfo).mkString("\n"))
-
-
     //creating the width var, in case needed for modulo scheduling
     val widthVar:Option[CPIntVar] =
       softwareModel.softwareClass match {
@@ -319,7 +316,9 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
             val processesVars = processes.map(p => cpTasks(p.id).processorID)
             addDocumented(allDifferent(processesVars),c.toString)
           }
-        case MustBeUsedConstraint(processor,value) =>
+        case x@MustBeUsedConstraint(processor,value) =>
+
+          println("XXX " + x + " id:" + processor.id)
           if(value) {
             val isRunningOnProcessor: Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
             add(new oscar.cp.constraints.Or(isRunningOnProcessor))

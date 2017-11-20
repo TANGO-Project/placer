@@ -100,7 +100,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
               ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
           case _ =>
             //we are on the other side, the simple constraint is enough
-            addDocumented(incomingTransmission.end < task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)
+            //notice that it must be a <= because global timing is computed in this way!
+            addDocumented(incomingTransmission.end <= task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)
         }
       }
 
@@ -119,7 +120,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
             addDocumented(new oscar.cp.constraints.Eq(task.end + 1,outGoingTransmission.start),"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
           case _ =>
             //we are on the other side, the simple constraint is enough
-            addDocumented(task.end < outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)
+            //notice that it must be a <= because global timing is computed in this way!
+            addDocumented(task.end <= outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)
         }
       }
     }

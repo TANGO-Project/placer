@@ -90,5 +90,17 @@
   },
   "goal":{
     "simpleObjective":"sat"
-  }
+  },
+
+  "constraints":
+  [
+    {
+      "mustNotBeUsed":"procA"
+    },
+    {
+      "mustBeUsed":"procB"
+    }
+    ]
 }
+
+
