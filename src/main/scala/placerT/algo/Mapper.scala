@@ -220,21 +220,21 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val makeSpan = maximum(taskEnds)
 
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
-    reportProgress("redundant bin-packing constraint on workload for mono task processors")
 
+    //reportProgress("redundant bin-packing constraint on workload for mono task processors")
     //this one assumes adjusted minDuration per processor
-    for (processorID <- cpProcessors.indices) {
-      cpProcessors(processorID) match{
-        case m:CPMonoTaskProcessor =>
-          val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
-          val switchingDelay = m.switchingDelay
-          val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
-          val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
+    //for (processorID <- cpProcessors.indices) {
+    //  cpProcessors(processorID) match{
+    //    case m:CPMonoTaskProcessor =>
+    //      val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
+    //      val switchingDelay = m.switchingDelay
+    //      val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
+    //      val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
 //          add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
 //          add(processorLoadVariable <= (makeSpan + switchingDelay))
-        case _ => ;
-      }
-    }
+     //   case _ => ;
+     // }
+    //}
 
     //this one assumes minDuration for all task on any processor
     //it only works if all processors are CPMonoTaskProcessor
@@ -418,8 +418,9 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     search {
 
-      val allVars = problem.varsToDistribute.toArray
-      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+      binaryFirstFail(problem.varsToDistribute)
+//      val allVars = problem.varsToDistribute.toArray
+//      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
       //binaryFirstFail(problem.varsToDistribute)
 /*
       val allVars= (

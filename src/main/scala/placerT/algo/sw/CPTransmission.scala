@@ -109,3 +109,4 @@ case class CPTransmission(id: Int,
 
   override def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, transmissionDurationNZ2, busID)
 }
+
