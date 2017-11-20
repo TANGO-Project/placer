@@ -417,7 +417,10 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     var thirdLevels = 0
 
     search {
-      binaryFirstFail(problem.varsToDistribute)
+
+      val allVars = problem.varsToDistribute.toArray
+      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+      //binaryFirstFail(problem.varsToDistribute)
 /*
       val allVars= (
         List.empty ++
@@ -466,7 +469,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     }
 
-    val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit) //,maxDiscrepancy = maxDiscrepancy)
+    val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit, maxDiscrepancy = config.maxDiscrepancy)
 
     print(stat)
     println("secondLevels:" + secondLevels)
