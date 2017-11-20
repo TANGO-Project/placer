@@ -70,8 +70,6 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
         transmission.transmissionDurationNZ2,
         transmission.endNZ,
         isTransmissionOccurringHere) :: allSimpleTasksPotentiallyExecutingHere
-    }else{
-      println("skipping transmission " + transmission.explanation + " on bus " + bus)
     }
   }
 

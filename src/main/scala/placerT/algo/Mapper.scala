@@ -135,7 +135,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
-    println("processorToBusToProcessorAdjacency" + processorToBusToProcessorAdjacency)
+//    println("processorToBusToProcessorAdjacency" + processorToBusToProcessorAdjacency)
 
     reportProgress("creating busses")
     //creating the CPbusses
@@ -318,11 +318,12 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           }
         case x@MustBeUsedConstraint(processor,value) =>
 
-          println("XXX " + x + " id:" + processor.id)
           if(value) {
+            println("posting MustBeUsedConstraint(" + processor.name + ")")
             val isRunningOnProcessor: Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
             add(new oscar.cp.constraints.Or(isRunningOnProcessor))
           }else{
+            println("posting MustNotBeUsedConstraint(" + processor.name + ")")
             for(task <- cpTasks){
               add(task.isRunningOnProcessor(processor.id) === 0)
             }

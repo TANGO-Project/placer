@@ -42,7 +42,6 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
   val resourceToUsage: SortedMap[String, CPIntVar] = p.resources.mapValues(maxValue => CPIntVar(0, maxValue))
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
-    println("CPMultiTaskProcessor.accumulateExecutionConstraintsOnTask")
     accumulateTransmissionStorageOnTask(task)
     val isTaskExecutedHere = task.isRunningOnProcessor(id)
     if (!isTaskExecutedHere.isFalse) {

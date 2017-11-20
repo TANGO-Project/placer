@@ -155,8 +155,8 @@ object Example1 extends App {
     }
     for (mapping <- mappingSet) {
       println(mapping.toStringSortedLight)
-      println(mapping.coreToUsage)
-      println(mapping.busToUsage)
+      println(mapping.coreUsages.mkString("\n"))
+      println(mapping.busUsages.mkString("\n"))
     }
   }
 }

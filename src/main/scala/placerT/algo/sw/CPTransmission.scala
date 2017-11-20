@@ -45,9 +45,9 @@ case class CPTransmission(id: Int,
                           localLoopBusses:Set[Int])
   extends CPAbstractTask(mapper) with Constraints{
 
-  println("instantiating transmission " + transmission.name)
-  println("from occuring where:" + from.occuringOnProcDebugInfo)
-  println("to occuring where:" + to.occuringOnProcDebugInfo)
+  //  println("instantiating transmission " + transmission.name)
+  // println("from occuring where:" + from.occuringOnProcDebugInfo)
+  //  println("to occuring where:" + to.occuringOnProcDebugInfo)
 
   implicit val solver = mapper.solver
 

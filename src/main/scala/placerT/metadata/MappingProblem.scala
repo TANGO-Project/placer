@@ -75,7 +75,7 @@ case class MustBeUsedConstraint(processor:ProcessingElement,value:Boolean) exten
   override def toString: String = (if(value) "MustBeUsed(" else "MustNotBeUsed(") + processor.name + ")"
 }
 
-case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:SymmetricPEConstraintType.Value = SymmetricPEConstraintType.Workload) extends MappingConstraint {
+case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:SymmetricPEConstraintType.Value = SymmetricPEConstraintType.LongTask) extends MappingConstraint {
   override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
 }
 

@@ -185,7 +185,7 @@
   },
   "goal":{
     "multiObjective":{
-      "a":"minMakeSpan",
+      "a":"minMakespan",
       "b":"minEnergy"
     }
   }

@@ -39,7 +39,6 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
   var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
-    println("CPMultiTaskProcessor.accumulateExecutionConstraintsOnTask")
 
     accumulateTransmissionStorageOnTask(task)
 

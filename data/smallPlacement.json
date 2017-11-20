@@ -4,8 +4,8 @@
       "timeUnit":"ms",
       "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
-      "makeSpan":118,
-      "energy":35026,
+      "makeSpan":116,
+      "energy":35012,
       "taskMapping":[
         {
           "task":"input",
@@ -21,9 +21,9 @@
           "processingElement":"procA",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":13,
+          "start":12,
           "duration":12,
-          "end":25
+          "end":24
         },
         {
           "task":"output",
@@ -35,9 +35,9 @@
               "value":2
             }
           ],
-          "start":27,
+          "start":25,
           "duration":91,
-          "end":118
+          "end":116
         }
       ],
       "transmissionMapping":[
@@ -51,9 +51,9 @@
         {
           "transmission":"transformToOutput",
           "bus":"local loop on procA",
-          "start":26,
+          "start":25,
           "duration":0,
-          "end":26
+          "end":25
         },
         {
           "transmission":"inputToOutput",
@@ -68,8 +68,8 @@
       "timeUnit":"ms",
       "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
-      "makeSpan":258,
-      "energy":32706,
+      "makeSpan":255,
+      "energy":32685,
       "taskMapping":[
         {
           "task":"input",
@@ -85,9 +85,9 @@
           "processingElement":"procA",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":153,
+          "start":151,
           "duration":12,
-          "end":165
+          "end":163
         },
         {
           "task":"output",
@@ -99,32 +99,32 @@
               "value":2
             }
           ],
-          "start":167,
+          "start":164,
           "duration":91,
-          "end":258
+          "end":255
         }
       ],
       "transmissionMapping":[
         {
           "transmission":"inputToTransform",
           "bus":"globalBus",
-          "start":1,
+          "start":0,
           "duration":151,
-          "end":152
+          "end":151
         },
         {
           "transmission":"transformToOutput",
           "bus":"local loop on procA",
-          "start":166,
+          "start":164,
           "duration":0,
-          "end":166
+          "end":164
         },
         {
           "transmission":"inputToOutput",
           "bus":"globalBus",
-          "start":152,
+          "start":151,
           "duration":7,
-          "end":159
+          "end":158
         }
       ]
     }

@@ -418,7 +418,7 @@
         "source":"decoding",
         "target":"Transforming",
         "size":2,
-        "timing":"Asap"
+        "timing":"Sticky"
       },
       {
         "name":"transformToWatermark",
@@ -432,7 +432,7 @@
         "source":"decoding",
         "target":"Transforming2",
         "size":2,
-        "timing":"Asap"
+        "timing":"Sticky"
       },
       {
         "name":"transform2ToWatermark",
@@ -464,7 +464,7 @@
   },
   "goal":{
     "multiObjective":{
-      "a":"minMakeSpan",
+      "a":"minMakespan",
       "b":"minEnergy"
     }
   }
