@@ -40,29 +40,7 @@
           "end":116
         }
       ],
-      "transmissionMapping":[
-        {
-          "transmission":"inputToTransform",
-          "bus":"local loop on procA",
-          "start":12,
-          "duration":0,
-          "end":12
-        },
-        {
-          "transmission":"transformToOutput",
-          "bus":"local loop on procA",
-          "start":25,
-          "duration":0,
-          "end":25
-        },
-        {
-          "transmission":"inputToOutput",
-          "bus":"local loop on procA",
-          "start":12,
-          "duration":0,
-          "end":12
-        }
-      ]
+      "transmissionMapping":[]
     },
     {
       "timeUnit":"ms",
@@ -111,13 +89,6 @@
           "start":0,
           "duration":151,
           "end":151
-        },
-        {
-          "transmission":"transformToOutput",
-          "bus":"local loop on procA",
-          "start":164,
-          "duration":0,
-          "end":164
         },
         {
           "transmission":"inputToOutput",

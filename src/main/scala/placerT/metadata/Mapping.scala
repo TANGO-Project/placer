@@ -91,7 +91,7 @@ case class Mapping(timeUnit:String,
     "Mapping(timeUnit:" + timeUnit + " dataUnit:" + dataUnit + " hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
-  def usages:String = "usagesX{" + coreUsages.mkString("\n\t","\n\t","") + busUsages.mkString("\n\t","\n\t","\n") + "}"
+  def usages:String = "usages{" + coreUsages.mkString("\n\t","\n\t","") + busUsages.mkString("\n\t","\n\t","\n") + "}"
 
   def toJSon: String = "{" +
     JSonHelper.string("timeUnit", timeUnit) + "," +
