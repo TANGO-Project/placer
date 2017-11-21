@@ -59,6 +59,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
   val store:CPStore = this.solver
 
+  store.silent = true
+
   val cpProblem = postProblem(softwareModel, hardwareModel)
   val mapping = solveMappingProblem(cpProblem, goal)
 
@@ -135,7 +137,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
-//    println("processorToBusToProcessorAdjacency" + processorToBusToProcessorAdjacency)
+    //    println("processorToBusToProcessorAdjacency" + processorToBusToProcessorAdjacency)
 
     reportProgress("creating busses")
     //creating the CPbusses
@@ -223,18 +225,18 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     //reportProgress("redundant bin-packing constraint on workload for mono task processors")
     //this one assumes adjusted minDuration per processor
-    //for (processorID <- cpProcessors.indices) {
-    //  cpProcessors(processorID) match{
-    //    case m:CPMonoTaskProcessor =>
-    //      val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
-    //      val switchingDelay = m.switchingDelay
-    //      val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
-    //      val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
-//          add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
-//          add(processorLoadVariable <= (makeSpan + switchingDelay))
-     //   case _ => ;
-     // }
-    //}
+    for (processorID <- cpProcessors.indices) {
+      cpProcessors(processorID) match{
+        case m:CPMonoTaskProcessor =>
+          val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
+          val switchingDelay = m.switchingDelay
+          val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
+          val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
+          add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
+        //          add(processorLoadVariable <= (makeSpan + switchingDelay))
+        case _ => ;
+      }
+    }
 
     //this one assumes minDuration for all task on any processor
     //it only works if all processors are CPMonoTaskProcessor
@@ -247,8 +249,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     for(cpBus <- cpBusses){
       cpBus match{
         case r:CPRegularBus =>
-          //TODO: not sure with the endNZ and end, which one should be used?
-//          add(r.busOccupancy <= makeSpan)
+        //TODO: not sure with the endNZ and end, which one should be used?
+        //          add(r.busOccupancy <= makeSpan)
         case _ => ;
       }
     }
@@ -348,8 +350,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
               makeSorted(loadVariables)
 
             case SymmetricPEConstraintType.LongTask =>
-              println("breaking symmetry among " + processors.map(_.name)  + " by lognest tasks assignment")
-
+              println("breaking symmetry among " + processors.map(_.name)  + " by longest tasks assignment")
+              assert(false,"this should not be used because it only works if the selected tasks hae no additional constraints on it, such as SamePE")
               val witnessProcessor = processors.head
               val witnessCPProcessor = cpProcessors(witnessProcessor.id)
               val witnessProcessorID = witnessProcessor.id
@@ -360,11 +362,10 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
                   case Nil => ;
                   case currentProcessorID :: tail =>
                     val longestTask = taskPotentiallyunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
-                    val otherTasks =
 
-                      for (p <- tail) {
-                        add(longestTask.isRunningOnProcessor(p) === 0)
-                      }
+                    for (p <- tail) {
+                      add(longestTask.isRunningOnProcessor(p) === 0)
+                    }
                     if (tail.nonEmpty) {
                       breakSymmetry(taskPotentiallyunningOnProcessors.filter(_.id != longestTask.id), tail)
                     }
@@ -419,52 +420,52 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     search {
 
       binaryFirstFail(problem.varsToDistribute)
-//      val allVars = problem.varsToDistribute.toArray
-//      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+            val allVars = problem.varsToDistribute.toArray
+            conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
       //binaryFirstFail(problem.varsToDistribute)
-/*
-      val allVars= (
-        List.empty ++
-          problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
-          problem.cpTransmissions.flatMap(transmission => List(transmission.start, transmission.busID))
-      ).toArray
-
-      val taskSchedulingVars = List.empty ++
-          problem.cpTasks.map(task => (task.start,task.taskDuration,task.end))
-
-      val processorIDChoices = problem.cpTasks.map(task => task.processorID)
-      val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
-      val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
-
-      val taskStarts = (
-        List.empty ++
-          problem.cpTasks.map(task => task.start) ++
-          problem.cpTransmissions.map(transmission => transmission.start)
-        ).toArray
-
-      (conflictOrderingSearch(
-        processorIDChoices,
-        taskMaxDurations(_),
-        processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-        ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-      //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
-        ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
-        ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-        ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
-
-      /*val allVars = problem.varsToDistribute.toArray
-      conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
-*/
       /*
-         val taskPriorities = problem.generateTaskPriorityValues.toArray.asInstanceOf[Array[CPIntVar]]
-         val taskAlternatives
-         (conflictOrderingSearch(taskPriorities,taskPriorities(_).min,taskPriorities(_).min)
-           ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
-   */
+            val allVars= (
+              List.empty ++
+                problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
+                problem.cpTransmissions.flatMap(transmission => List(transmission.start, transmission.busID))
+            ).toArray
 
-      //setTimes(problem.cpTasks.map(_.start), problem.cpTasks.map(_.taskDuration), problem.cpTasks.map(_.end)) ++
-      //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
-*/
+            val taskSchedulingVars = List.empty ++
+                problem.cpTasks.map(task => (task.start,task.taskDuration,task.end))
+
+            val processorIDChoices = problem.cpTasks.map(task => task.processorID)
+            val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
+            val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
+
+            val taskStarts = (
+              List.empty ++
+                problem.cpTasks.map(task => task.start) ++
+                problem.cpTransmissions.map(transmission => transmission.start)
+              ).toArray
+
+            (conflictOrderingSearch(
+              processorIDChoices,
+              taskMaxDurations(_),
+              processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
+              ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+            //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
+              ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
+              ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+              ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
+
+            /*val allVars = problem.varsToDistribute.toArray
+            conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+      */
+            /*
+               val taskPriorities = problem.generateTaskPriorityValues.toArray.asInstanceOf[Array[CPIntVar]]
+               val taskAlternatives
+               (conflictOrderingSearch(taskPriorities,taskPriorities(_).min,taskPriorities(_).min)
+                 ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
+         */
+
+            //setTimes(problem.cpTasks.map(_.start), problem.cpTasks.map(_.taskDuration), problem.cpTasks.map(_.end)) ++
+            //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
+      */
     } onSolution {
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
 

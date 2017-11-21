@@ -116,9 +116,9 @@ object CumulativeTask extends Constraints {
    */
   def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String) {
     val simpleTasksArray = cumulativeTasks.filter(!_.amount.isBoundTo(0)).toArray
-    val summedAmount = simpleTasksArray.map(_.duration.max).sum
+    val summedAmount = simpleTasksArray.map(_.amount.max).sum
     if (summedAmount < maxResource.min) {
-      println("INFO: skipping tautological cumulative constraint: " + origin)
+      println("INFO: skipping tautological cumulative constraint: " + origin + ", summedAmount:" + summedAmount + ", min available resource:" + maxResource.min)
     } else {
       if (simpleTasksArray.length != 0) {
         val startTimeArray = simpleTasksArray.map(_.start)
