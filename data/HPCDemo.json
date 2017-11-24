@@ -375,7 +375,7 @@
       "softwareClass":
       {
          "oneShotSoftware": {
-            "maxMakespan":44
+            "maxMakespan":42
          }
       }
    },

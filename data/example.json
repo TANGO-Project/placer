@@ -44,7 +44,7 @@
       {
         "processorClass":"cpu",
         "name":"procA",
-        "memSize":100,
+        "memSize":1000,
         "resources":[],
         "properties":[
           {
@@ -61,7 +61,7 @@
       {
         "processorClass":"gpgpu",
         "name":"GPGPU1",
-        "memSize":200,
+        "memSize":2000,
         "resources":[
           {
             "name":"core",
@@ -74,7 +74,7 @@
       {
         "processorClass":"cpu",
         "name":"procB",
-        "memSize":100,
+        "memSize":1000,
         "resources":[],
         "properties":[
           {
@@ -91,7 +91,7 @@
       {
         "processorClass":"fpga",
         "name":"FPGA1",
-        "memSize":100,
+        "memSize":1000,
         "resources":[
           {
             "name":"kgate",

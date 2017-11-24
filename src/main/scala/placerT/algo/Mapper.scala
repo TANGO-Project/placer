@@ -20,7 +20,6 @@
 package placerT.algo
 
 import oscar.cp._
-import oscar.cp.modeling._
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import placerT.algo.hw._
@@ -31,7 +30,7 @@ import placerT.metadata.{MappingProblem, _}
 
 import scala.collection.immutable.SortedSet
 
-case class MapperConfig(maxDiscrepancy:Int=20,timeLimit:Int = Int.MaxValue)
+case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,timeLimit:Int = Int.MaxValue)
 
 object Mapper {
 
@@ -404,24 +403,53 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }
     }
 
-    val searchOnlyOne = goal match {
+    val (isSearchOnlyOne,isParetoSearch) = goal match {
       case s:SimpleMappingGoal =>
         minimize(simpleVarFinder(s))
-        false
+        (false,false)
       case Pareto(a,b) => solver.paretoMinimize(simpleVarFinder(a), simpleVarFinder(b))
-        false
-      case Sat() => true
+        (false,true)
+      case Sat() => (true,false)
     }
 
     solver.addDecisionVariables(problem.varsToSave)
+
     var secondLevels = 0
     var thirdLevels = 0
 
     search {
+      val allVars = problem.varsToDistribute.toArray
+      if(isParetoSearch) {
+        binaryFirstFail(allVars)
+        //conflict search does not deliver pareto optimal results so it is not used here.
+        //conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+      }else{
+        //binaryFirstFail(allVars)
+        //splitLastConflict(allVars)
+        val processorIDArray = problem.cpTasks.map(_.processorID)
+        conflictOrderingSearch(processorIDArray,processorIDArray(_).min,processorIDArray(_).min) ++ conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
 
-      binaryFirstFail(problem.varsToDistribute)
-            val allVars = problem.varsToDistribute.toArray
-            conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+        val processorIDChoices = problem.cpTasks.map(task => task.processorID)
+        val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
+
+        val taskStarts = (
+          List.empty ++
+            problem.cpTasks.map(task => task.start) ++
+            problem.cpTransmissions.map(transmission => transmission.start)
+          ).toArray
+
+        (conflictOrderingSearch(
+          processorIDChoices,
+          taskMaxDurations(_),
+          processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
+          ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+          //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
+          ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
+          ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
+          ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
+
+      }
+
       //binaryFirstFail(problem.varsToDistribute)
       /*
             val allVars= (
@@ -471,11 +499,11 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     }
 
-    val stat = start(nSols = if(searchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit, maxDiscrepancy = config.maxDiscrepancy)
+    val stat = start(nSols = if(isSearchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit, maxDiscrepancy = config.maxDiscrepancy)
 
     print(stat)
-    println("secondLevels:" + secondLevels)
-    println("thirdLevels:" + thirdLevels)
+   // println("secondLevels:" + secondLevels)
+   // println("thirdLevels:" + thirdLevels)
     println
 
     goal match {

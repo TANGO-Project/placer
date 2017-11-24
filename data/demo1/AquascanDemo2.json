@@ -1,6 +1,6 @@
 {
    "timeUnit":"us",
-   "dataUnit":"byte",
+   "dataUnit":"8*32bit",
    "hardwareModel":
    {
       "name":"ExampleHardware1",
@@ -1237,7 +1237,7 @@
       {
          "oneShotSoftware":
          {
-            "maxMakespanDISABLED":85451
+            "maxMakespan":85451
          }
       }
    },
