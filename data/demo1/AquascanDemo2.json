@@ -1237,7 +1237,7 @@
       {
          "oneShotSoftware":
          {
-            "maxMakespan":85451
+            "maxMakespanDISABLED":84003
          }
       }
    },
@@ -1321,6 +1321,6 @@
    ],
    "goal":
    {
-      "simpleObjective":"sat"
+      "simpleObjective":"minMakespan"
    }
 }

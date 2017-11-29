@@ -33,8 +33,9 @@ case class Config(in: File = new File("."),
                   out: File = new File("."),
                   verbose: Boolean = false,
                   license:Boolean = false,
-                  discrepancy:Int=20,
-                  timeLimit:Int = Int.MaxValue)
+                  discrepancy:Int = Int.MaxValue,
+                  timeLimit:Int = Int.MaxValue,
+                  lns:Boolean = false)
 
 object Main extends App {
 
@@ -51,7 +52,7 @@ object Main extends App {
 
     opt[Int]('d', "discrepancy").
       action((x, c) => c.copy(discrepancy = x)).
-      text("'d' the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is 20")
+      text("'d' the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is MaxInt")
 
     opt[Int]('t', "timeLimit").
       action((x, c) => c.copy(timeLimit= x)).
@@ -62,6 +63,11 @@ object Main extends App {
 
     opt[Unit]("license").action((_, c) =>
       c.copy(license = true)).text("prints license and stops")
+
+    opt[Boolean]("lns").action((_,c) =>
+      c.copy(lns = true)).text("use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto")
+
+
 
     help("help").text("prints this usage text")
 

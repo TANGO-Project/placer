@@ -29,8 +29,9 @@ import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
 import scala.collection.immutable.SortedSet
+import scala.collection.mutable.ArrayBuffer
 
-case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,timeLimit:Int = Int.MaxValue)
+case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,timeLimit:Int = Int.MaxValue,lns:Boolean = true)
 
 object Mapper {
 
@@ -330,48 +331,52 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
             }
           }
         case SymmetricPEConstraint(processors:List[ProcessingElement],breaking) =>
+          if(config.lns){
+            println("symmetry among " + processors.map(_.name) + " is disabled because using LNS")
+          }else {
+            //TODO: check that PE are indeed symmetric
+            breaking match {
+              case SymmetricPEConstraintType.Workload =>
+                println("breaking symmetry among " + processors.map(_.name) + " by workload")
+                val processorIDs = processors.map(_.id)
+                val loadVariables = processorIDs.map(processorLoadArrayUnderApprox(_))
 
-          //TODO: check that PE are indeed symmetric
-          breaking match {
-            case SymmetricPEConstraintType.Workload =>
-              println("breaking symmetry among " + processors.map(_.name)  + " by workload")
-              val processorIDs = processors.map(_.id)
-              val loadVariables = processorIDs.map(processorLoadArrayUnderApprox(_))
-
-              def makeSorted(varList: List[CPIntVar]): Unit = {
-                varList match {
-                  case a :: b :: tail =>
-                    add(a <= b)
-                    makeSorted(b :: tail)
-                  case _ => ;
+                def makeSorted(varList: List[CPIntVar]): Unit = {
+                  varList match {
+                    case a :: b :: tail =>
+                      add(a <= b)
+                      makeSorted(b :: tail)
+                    case _ => ;
+                  }
                 }
-              }
-              makeSorted(loadVariables)
 
-            case SymmetricPEConstraintType.LongTask =>
-              println("breaking symmetry among " + processors.map(_.name)  + " by longest tasks assignment")
-              assert(false,"this should not be used because it only works if the selected tasks hae no additional constraints on it, such as SamePE")
-              val witnessProcessor = processors.head
-              val witnessCPProcessor = cpProcessors(witnessProcessor.id)
-              val witnessProcessorID = witnessProcessor.id
-              val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessor.id).isFalse)
+                makeSorted(loadVariables)
 
-              def breakSymmetry(taskPotentiallyunningOnProcessors: List[CPTask], processorIDs: List[Int]) {
-                processorIDs match {
-                  case Nil => ;
-                  case currentProcessorID :: tail =>
-                    val longestTask = taskPotentiallyunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
+              case SymmetricPEConstraintType.LongTask =>
+                println("breaking symmetry among " + processors.map(_.name) + " by longest tasks assignment")
+                assert(false, "this should not be used because it only works if the selected tasks hae no additional constraints on it, such as SamePE")
+                val witnessProcessor = processors.head
+                val witnessCPProcessor = cpProcessors(witnessProcessor.id)
+                val witnessProcessorID = witnessProcessor.id
+                val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessor.id).isFalse)
 
-                    for (p <- tail) {
-                      add(longestTask.isRunningOnProcessor(p) === 0)
-                    }
-                    if (tail.nonEmpty) {
-                      breakSymmetry(taskPotentiallyunningOnProcessors.filter(_.id != longestTask.id), tail)
-                    }
+                def breakSymmetry(taskPotentiallyunningOnProcessors: List[CPTask], processorIDs: List[Int]) {
+                  processorIDs match {
+                    case Nil => ;
+                    case currentProcessorID :: tail =>
+                      val longestTask = taskPotentiallyunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
+
+                      for (p <- tail) {
+                        add(longestTask.isRunningOnProcessor(p) === 0)
+                      }
+                      if (tail.nonEmpty) {
+                        breakSymmetry(taskPotentiallyunningOnProcessors.filter(_.id != longestTask.id), tail)
+                      }
+                  }
                 }
-              }
 
-              breakSymmetry(tasksPotentiallyRunningOnprocessors, processors.map(_.id))
+                breakSymmetry(tasksPotentiallyRunningOnprocessors, processors.map(_.id))
+            }
           }
       }
     }
@@ -390,7 +395,16 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       processorLoadArrayUnderApprox)
   }
 
+
+
+
+
   def solveMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
+
+
+    if(config.lns) {
+      return solveMappingProblemMinimizeLNS(problem: CPMappingProblem, goal.asInstanceOf[SimpleMappingGoal])
+    }
 
     def simpleVarFinder(a:SimpleMappingGoal):CPIntVar = {
       a match{
@@ -403,13 +417,14 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }
     }
 
-    val (isSearchOnlyOne,isParetoSearch) = goal match {
+    val (isSearchOnlyOne,isParetoSearch,theVar) = goal match {
       case s:SimpleMappingGoal =>
-        minimize(simpleVarFinder(s))
-        (false,false)
+        val theVar = simpleVarFinder(s)
+        minimize(theVar)
+        (false,false,theVar)
       case Pareto(a,b) => solver.paretoMinimize(simpleVarFinder(a), simpleVarFinder(b))
-        (false,true)
-      case Sat() => (true,false)
+        (false,true,null)
+      case Sat() => (true,false,null)
     }
 
     solver.addDecisionVariables(problem.varsToSave)
@@ -423,6 +438,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         binaryFirstFail(allVars)
         //conflict search does not deliver pareto optimal results so it is not used here.
         //conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+        //Same for split
+        //splitLastConflict(allVars)
       }else{
         //binaryFirstFail(allVars)
         //splitLastConflict(allVars)
@@ -447,63 +464,16 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
           ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
           ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
-
       }
-
-      //binaryFirstFail(problem.varsToDistribute)
-      /*
-            val allVars= (
-              List.empty ++
-                problem.cpTasks.flatMap(task => List(task.start,task.implementationID)) ++
-                problem.cpTransmissions.flatMap(transmission => List(transmission.start, transmission.busID))
-            ).toArray
-
-            val taskSchedulingVars = List.empty ++
-                problem.cpTasks.map(task => (task.start,task.taskDuration,task.end))
-
-            val processorIDChoices = problem.cpTasks.map(task => task.processorID)
-            val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
-            val taskMinDurations = problem.cpTasks.map(task => task.taskDuration.min)
-
-            val taskStarts = (
-              List.empty ++
-                problem.cpTasks.map(task => task.start) ++
-                problem.cpTransmissions.map(transmission => transmission.start)
-              ).toArray
-
-            (conflictOrderingSearch(
-              processorIDChoices,
-              taskMaxDurations(_),
-              processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-              ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-            //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
-              ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
-              ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-              ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
-
-            /*val allVars = problem.varsToDistribute.toArray
-            conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
-      */
-            /*
-               val taskPriorities = problem.generateTaskPriorityValues.toArray.asInstanceOf[Array[CPIntVar]]
-               val taskAlternatives
-               (conflictOrderingSearch(taskPriorities,taskPriorities(_).min,taskPriorities(_).min)
-                 ++ discrepancy(conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min),maxDiscrepancy))
-         */
-
-            //setTimes(problem.cpTasks.map(_.start), problem.cpTasks.map(_.taskDuration), problem.cpTasks.map(_.end)) ++
-            //discrepancy(binaryFirstFail(problem.varsToDistribute),3)
-      */
     } onSolution {
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
-
     }
 
     val stat = start(nSols = if(isSearchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit, maxDiscrepancy = config.maxDiscrepancy)
-
     print(stat)
-   // println("secondLevels:" + secondLevels)
-   // println("thirdLevels:" + thirdLevels)
+
+    println("secondLevels:" + secondLevels)
+    println("thirdLevels:" + thirdLevels)
     println
 
     goal match {
@@ -517,5 +487,122 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           Some(problem.getMapping(lastSol))
         }
     }
+  }
+
+
+
+  def solveMappingProblemMinimizeLNS(problem: CPMappingProblem, simpleGoal: SimpleMappingGoal): Iterable[Mapping] = {
+
+    def simpleVarFinder(a: SimpleMappingGoal): CPIntVar = {
+      a match {
+        case MinEnergy() => problem.energy
+        case MinMakeSpan() => problem.makeSpan
+        case MinFrame() => problem.widthVar match {
+          case Some(w) => w
+          case None => throw new Error("you want to minimize width, but this can only be done for iterative software")
+        }
+      }
+    }
+
+    val varToMinimize = simpleVarFinder(simpleGoal)
+
+    minimize(varToMinimize)
+
+    solver.addDecisionVariables(problem.varsToSave)
+
+    var secondLevels = 0
+    var thirdLevels = 0
+
+    var bestSolution: Option[Mapping] = None
+    var bestValue: Int = Int.MaxValue
+
+    search {
+      val allVars = problem.varsToDistribute.toArray
+
+      //binaryFirstFail(allVars)
+      //splitLastConflict(allVars)
+      val processorIDArray = problem.cpTasks.map(_.processorID)
+      conflictOrderingSearch(processorIDArray, processorIDArray(_).min, processorIDArray(_).min) ++ conflictOrderingSearch(allVars, allVars(_).min, allVars(_).min)
+
+      val processorIDChoices = problem.cpTasks.map(task => task.processorID)
+      val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
+
+      val taskStarts = (
+        List.empty ++
+          problem.cpTasks.map(task => task.start) ++
+          problem.cpTransmissions.map(transmission => transmission.start)
+        ).toArray
+
+      (conflictOrderingSearch(
+        processorIDChoices,
+        taskMaxDurations(_),
+        processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
+        ++ oscar.algo.search.Branching({
+        secondLevels += 1; Seq.empty
+      }) //to know how many second levels (although I do not know how to interpret this yet)
+        //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
+        ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
+        ++ oscar.algo.search.Branching({
+        thirdLevels += 1; /*println("second level");*/ Seq.empty
+      }) //to know how many second levels (although I do not know how to interpret this yet)
+        ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
+
+    } onSolution {
+      bestSolution = Some(problem.getMapping(solver.lastSol))
+      bestValue = varToMinimize.value
+      println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
+    }
+
+    val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
+
+    val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.flatMap(
+      _ match{
+        case c@CoreSharingConstraint(processes, value) if value => Some(c)
+        case _ => None
+      }
+    )
+
+    val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
+
+    //LNS restart stuff here!
+    val constraintBuffer = ArrayBuffer[Constraint]()
+    val maxFails = 2000
+    val relaxProba = 90
+    val nRelaxations = 500
+    val nbRelaxationNoImprove = 200
+    var remainigRelaxationNoImprove = nbRelaxationNoImprove
+    var currentRelaxation = 0
+    while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
+      remainigRelaxationNoImprove -= 1
+      currentRelaxation = currentRelaxation +1
+      println("relaxation " + currentRelaxation)
+      constraintBuffer.clear()
+      val stats = startSubjectTo(failureLimit = maxFails,timeLimit = config.timeLimit) {
+        for ((task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
+          if(!allProcessesInSamePEConstraints.contains(task.id)) {
+            if (scala.math.random * 100 > relaxProba) {
+              constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)
+            }
+          }
+        }
+
+        for(samePEConstraint <- samePEConstraints){
+          if (scala.math.random * 100 > relaxProba) {
+            val witnessTaskID = samePEConstraint.processes.head.id
+            val processorID = problem.cpTasks(witnessTaskID).processorID
+            for(task <- samePEConstraint.processes) {
+              constraintBuffer += (problem.cpTasks(task.id).processorID === processorID)
+            }
+          }
+        }
+        add(constraintBuffer)
+      }
+
+      if(stats.nSols > 0){
+        remainigRelaxationNoImprove = nbRelaxationNoImprove
+      }
+    }
+
+    bestSolution
   }
 }
