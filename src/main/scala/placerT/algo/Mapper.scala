@@ -31,7 +31,14 @@ import placerT.metadata.{MappingProblem, _}
 import scala.collection.immutable.SortedSet
 import scala.collection.mutable.ArrayBuffer
 
-case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,timeLimit:Int = Int.MaxValue,lns:Boolean = true)
+case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,
+                        timeLimit:Int = Int.MaxValue,
+                        lns:Boolean = true,
+                        lnsMaxFails:Int = 2000,
+                        lnsRelaxProba:Int = 90,
+                        lnsNbRelaxations:Int = 500,
+                        lnsNbRelaxationNoImprove:Int = 200)
+
 
 object Mapper {
 
@@ -395,15 +402,15 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       processorLoadArrayUnderApprox)
   }
 
-
-
-
-
   def solveMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
 
-
     if(config.lns) {
-      return solveMappingProblemMinimizeLNS(problem: CPMappingProblem, goal.asInstanceOf[SimpleMappingGoal])
+      goal match {
+        case s: SimpleMappingGoal =>
+          return solveMappingProblemMinimizeLNS(problem: CPMappingProblem, s)
+        case _ =>
+          throw new Error("LNS can only be used for simple mapping goals, not for " + goal)
+      }
     }
 
     def simpleVarFinder(a:SimpleMappingGoal):CPIntVar = {

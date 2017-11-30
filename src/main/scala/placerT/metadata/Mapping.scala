@@ -23,7 +23,6 @@ import placerT.io.JSonHelper
 import placerT.metadata.hw.{SelfLoopBus, Bus, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, Transmission}
 
-
 case class Mapping(timeUnit:String,
                    dataUnit:String,
                    hardwareName: String,
