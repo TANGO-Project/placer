@@ -590,7 +590,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       println("relaxation " + currentRelaxation)
       constraintBuffer.clear()
       val stats = startSubjectTo(failureLimit = maxFails,timeLimit = config.timeLimit) {
-        for ((task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
+        for (TaskMapping(task, pe, implem, s, d, e,_) <- bestSolution.get.taskMapping) {
           if(!allProcessesInSamePEConstraints.contains(task.id)) {
             if (scala.math.random * 100 > relaxProba) {
               constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)

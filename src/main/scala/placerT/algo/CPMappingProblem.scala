@@ -24,7 +24,7 @@ import oscar.cp._
 import oscar.cp.core.CPSol
 import placerT.algo.hw.{CPBus, CPProcessor, CPRegularBus, CPSelfLoopBus}
 import placerT.algo.sw.{CPTask, CPTransmission}
-import placerT.metadata.{Mapping, MappingProblem}
+import placerT.metadata.{Mapping, MappingProblem, TaskMapping}
 import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation}
 
@@ -46,8 +46,9 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
     def implem(task: CPTask): FlattenedImplementation = task.task.implementationArray(sol(task.implementationID))
 
     val firstTaskMapping = cpTasks.map(cpTask =>
-      (cpTask.task, proc(cpTask.processorID), implem(cpTask),sol(cpTask.start), sol(cpTask.taskDuration), sol(cpTask.end)))
+      TaskMapping(cpTask.task, proc(cpTask.processorID), implem(cpTask),sol(cpTask.start), sol(cpTask.taskDuration), sol(cpTask.end)))
 
+    /*
     val coreToTasks = firstTaskMapping.map(f => (f._2.id,f)).groupBy(_._1).toList.map({case (id:Int,l) => (cpProcessors(id).p,l)})
 
     val coreToTaskSpread = coreToTasks.flatMap({ case (core,taskList) =>
@@ -60,6 +61,7 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
     }})
 
     println(coreToTasks)
+*/
 
     def bus(cPTransmission: CPTransmission): Bus = cPTransmission.busses(sol(cPTransmission.busID)) match {
       case c: CPSelfLoopBus => c.selfLoopBus
@@ -73,13 +75,15 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
 
   }
 
+  /*
   private def spreadTasksOnMultiCore(core:ProcessingElement,taskList:List[(AtomicTask,ProcessingElement,FlattenedImplementation,Int,Int,Int)]):
       List[(ProcessingElement,List[(AtomicTask,ProcessingElement,FlattenedImplementation,Int,Int,Int)])] = {
 
     val nbCores = core.nbCore
 
     val instantiatedCores = Array.tabulate(nbCores)(subID => core.)
-  }
+  }*/
+
 
   def varsToDistribute: List[CPIntVar] = {
     List.empty ++
