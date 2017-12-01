@@ -286,20 +286,31 @@ case class EProcessingElement(processorClass: String,
                               properties: List[ENameValue],
                               name: String,
                               memSize: Int,
+                              multiCore:Option[Int],
                               powerModel: String) {
   val parsedPowerModel = FormulaParser(powerModel)
 
-  def extract(pc: Array[ProcessingElementClass]): ProcessingElement = ProcessingElement(
-    pc.find(_.name equals processorClass)match{
+  def extract(pc: Array[ProcessingElementClass]): ProcessingElement = {
+    val peClass = pc.find(_.name equals processorClass)match{
       case None => throw new Error("cannot find processing element class " + processorClass + " used in processing element" + name)
       case Some(x) => x
-    },
-    SortedMap.empty[String, Int] ++ resources.map(_.toCouple),
-    SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
-    name,
-    memSize,
-    parsedPowerModel
-  )
+    }
+    val nbCore = multiCore match{
+      case None => None
+      case Some(n) =>
+        require(peClass.isInstanceOf[MonoTaskSwitchingTask],"multi core model can onky be declared for switching cores")
+        Some(n)
+    }
+    ProcessingElement(
+      peClass,
+      SortedMap.empty[String, Int] ++ resources.map(_.toCouple),
+      SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
+      name,
+      memSize,
+      parsedPowerModel,
+      nbCore
+    )
+  }
 }
 
 case class EBus(halfDuplexBus: Option[EHalfDuplexBus], singleWayBus: Option[ESingleWayBus]) {
