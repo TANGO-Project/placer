@@ -401,7 +401,7 @@
                   "name":"FpgaDigit1Correlation",
                   "target":"fpga",
                   "parameters":[],
-                  "resourceUsage":[{"name":"gates", "formula":"3000"}],
+                  "resourceUsage":[{"name":"gates", "formula":"300"}],
                   "computationMemory":"2",
                   "duration":"8640"
                }
@@ -522,7 +522,7 @@
                   "name":"FpgaDigit2Correlation",
                   "target":"fpga",
                   "parameters":[],
-                  "resourceUsage":[],
+                  "resourceUsage":[{"name":"gates", "formula":"300"}],
                   "computationMemory":"2",
                   "duration":"3205"
                }
@@ -643,7 +643,7 @@
                   "name":"FpgaDigit3Correlation",
                   "target":"fpga",
                   "parameters":[],
-                  "resourceUsage":[],
+                  "resourceUsage":[{"name":"gates", "formula":"300"}],
                   "computationMemory":"2",
                   "duration":"3205"
                }
@@ -764,7 +764,7 @@
                   "name":"FpgaDigit4Correlation",
                   "target":"fpga",
                   "parameters":[],
-                  "resourceUsage":[],
+                  "resourceUsage":[{"name":"gates", "formula":"300"}],
                   "computationMemory":"2",
                   "duration":"3205"
                }
