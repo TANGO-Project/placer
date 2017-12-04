@@ -224,7 +224,8 @@ case class EParametricImplementation(name: String,
   val parsedDuration = FormulaParser(duration)
 
   def extract(hw: HardwareModel) =
-    ParametricImplementation(name,
+    ParametricImplementation(
+      name,
       hw.processorClasses.find(_.name equals target)match{case Some(x) => x ; case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)},
       SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract),
       parsedComputationMemory,
@@ -291,7 +292,7 @@ case class EProcessingElement(processorClass: String,
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = ProcessingElement(
     pc.find(_.name equals processorClass)match{
-      case None => throw new Error("cannot find processing element class " + processorClass + " used in processing element" + name)
+      case None => throw new Error("cannot find processing element class " + processorClass + " used in processing element: " + name)
       case Some(x) => x
     },
     SortedMap.empty[String, Int] ++ resources.map(_.toCouple),

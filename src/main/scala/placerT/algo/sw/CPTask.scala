@@ -140,7 +140,7 @@ case class CPTask(id: Int,
           implementation => isThisProcessorSelected && isImplementationSelected(implementation.id))
 
         val dimAndSizePerImplemSubArray: List[(String, Array[Int])] = processorClass.resources.toList.map((dimension: String) =>
-          (dimension, implementationSubArray.map(implementation => implementation.resourceUsage(dimension))))
+          (dimension,implementationSubArray.map(implementation => implementation.resourceUsage.getOrElse(dimension,target.p.resources(dimension)+1))))
 
         val dimToSizesPerImplemSubArrays: SortedMap[String, Array[Int]] = SortedMap.empty[String, Array[Int]] ++ dimAndSizePerImplemSubArray
 

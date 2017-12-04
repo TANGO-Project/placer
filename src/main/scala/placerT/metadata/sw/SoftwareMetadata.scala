@@ -40,7 +40,7 @@ case class FlattenedImplementation(name: String,
                                    duration: Formula,
                                    originImplementation: ParametricImplementation = null,
                                    parameterValues: SortedMap[String, Int] = null) extends Indiced {
-
+println("instantiatedresourceUSage: " + resourceUsage)
   require(resourceUsage.keySet subsetOf target.resources, "unknown resources specified in implementation " + target + ": " + (resourceUsage.keySet -- target.resources).mkString(","))
   require(duration.terms subsetOf target.properties, "duration is defined based on unknown features in implementation " + target + ": " + (duration.terms -- target.properties).mkString(","))
 
@@ -94,6 +94,7 @@ case class ParametricImplementation(name: String,
     parameterize(parameters.toList, SortedMap.empty[String, Int])
   }
 
+  println("resource usage:" + resourceUsage)
   private def parameterize(freeParameters: List[(String, Iterable[Int])], setParameters: SortedMap[String, Int]): Iterable[FlattenedImplementation] = {
     def resolve(f: Formula): Int = Formula.simplifyConstants(f, setParameters) match {
       case Const(c) => c
@@ -102,6 +103,7 @@ case class ParametricImplementation(name: String,
     def simplify(f: Formula): Formula = Formula.simplifyConstants(f, setParameters)
     freeParameters match {
       case Nil =>
+        println("flattened resource usage:" + resourceUsage.mapValues(resolve))
         Some(FlattenedImplementation(name,
           target,
           resourceUsage.mapValues(resolve),
@@ -154,6 +156,7 @@ case class AtomicTask(implementations: List[ParametricImplementation],
             return true
           }
         }
+        return false
       case _ => throw new Error("internal error")
     }
     throw new Error("internal error")
