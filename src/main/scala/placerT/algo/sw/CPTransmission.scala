@@ -57,6 +57,8 @@ case class CPTransmission(id: Int,
   val busID: CPIntVar = CPIntVar.sparse(busses.indices)
   val isOccurringOnBus: Array[CPBoolVar] = busses.map(bus => busID isEq bus.id)
 
+  val isSelfLoopTransmission:CPBoolVar = busID.isIn(localLoopBusses)
+
   def occuringOnBussesDebugInfo1:String = "occuringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
 
   val originProcessorID = from.processorID

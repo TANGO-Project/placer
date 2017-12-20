@@ -23,7 +23,7 @@
             "name":"Core1",
             "memSizeOLD":1048576,
             "memSizeCORRECT":332768,
-            "memSize":146506,
+            "memSize":1048576,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -33,7 +33,7 @@
             "name":"Core2",
             "memSizeOLD":1048576,
             "memSizeCORRECT":332768,
-            "memSize":146506,
+            "memSize":1048576,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -43,7 +43,7 @@
             "name":"Core3",
             "memSizeOLD":1048576,
             "memSizeCORRECT":332768,
-            "memSize":146506,
+            "memSize":1048576,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -53,7 +53,7 @@
             "name":"Core4",
             "memSizeOLD":1048576,
             "memSizeCORRECT":332768,
-            "memSize":146506,
+            "memSize":1048576,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -1245,7 +1245,7 @@
       {
          "oneShotSoftware":
          {
-           "maxMakespanDISABLED":82936
+           "maxMakespanDISABLED":82907
          }
       }
    },

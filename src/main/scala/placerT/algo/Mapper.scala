@@ -312,6 +312,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
             add(cpTasks(process.id).processorID !== processor.id)
           }
         case c@CoreSharingConstraint(processes, value) =>
+          val processesIDSet = SortedSet.empty ++ processes.map(_.id)
           if (value) {
             //same cores all
             if(! processes.isEmpty){
@@ -319,11 +320,27 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
               for(process <- processes){
                 add(cpTasks(process.id).processorID === processorID)
               }
+
+              //this improves propagation
+              for(transmission <- cpTransmissions) {
+                if (processesIDSet.contains(transmission.from.id) && processesIDSet.contains(transmission.to.id)) {
+                  transmission.isSelfLoopTransmission.assignTrue()
+                }
+              }
+            }else{
+              println("requiring same core for an empty set of tasks?")
             }
           } else {
             //different cores all
             val processesVars = processes.map(p => cpTasks(p.id).processorID)
             addDocumented(allDifferent(processesVars),c.toString)
+
+            //this improves propagation
+            for(transmission <- cpTransmissions) {
+              if (processesIDSet.contains(transmission.from.id) && processesIDSet.contains(transmission.to.id)) {
+                transmission.isSelfLoopTransmission.assignFalse()
+              }
+            }
           }
         case x@MustBeUsedConstraint(processor,value) =>
 

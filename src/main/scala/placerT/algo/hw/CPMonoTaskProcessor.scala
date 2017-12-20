@@ -63,7 +63,6 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
     else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
   }
 
-
   override def close() {
     SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay,origin="usage of CPMonoTaskProcessor" + p.name)
     closeTransmissionAndComputationMemory()
