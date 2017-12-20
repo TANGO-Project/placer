@@ -73,20 +73,19 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
   protected def accumulateTransmissionStorageOnTask(task: CPTask) {
     val isTaskExecutedHere = task.isRunningOnProcessor(this.id)
 
+    //if transmission is a self-loop, is is constrained to occur
     if (!isTaskExecutedHere.isFalse) {
       //true or not decided yet; if false, we have nothing to do
 
       // the code here  ensures that the storage is maintained during the execution of the task.
       //storage of incoming transmissions
       for (incomingTransmission <- task.incomingCPTransmissions) {
-        val storageStart = incomingTransmission.start
-        val storageEnd = task.start - 1
-
+        //buffer for incoming data
         accumulateTemporaryStorage(
-          storageStart,
+          incomingTransmission.start,
           None,
-          storageEnd,
-          isTaskExecutedHere * incomingTransmission.size,
+          task.start,
+          isTaskExecutedHere * (incomingTransmission.size),
           "incoming data from " + incomingTransmission.explanation + " before start of " + task.explanation)
 
         incomingTransmission.timing match {
@@ -98,6 +97,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
                 incomingTransmission.end ?=== (task.start - 1),
                 incomingTransmission.start ?=== (incomingTransmission.from.end + 1)))
               ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
+
           case _ =>
             //we are on the other side, the simple constraint is enough
             //notice that it must be a <= because global timing is computed in this way!
@@ -107,8 +107,10 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
       //storage of outgoing transmissions
       for (outGoingTransmission <- task.outgoingCPTransmissions) {
+
+        //buffer for outgoing data.
         accumulateTemporaryStorage(
-          task.end + 1,
+          task.end,
           None,
           outGoingTransmission.end,
           isTaskExecutedHere * outGoingTransmission.size,
@@ -117,8 +119,9 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
         outGoingTransmission.timing match {
           case Asap =>
             //we have to constraint the departure time here
-            addDocumented(new oscar.cp.constraints.Eq(task.end + 1,outGoingTransmission.start),"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
+            addDocumented((task.end + 1) === outGoingTransmission.start,"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
           case _ =>
+            //Sticky or asap
             //we are on the other side, the simple constraint is enough
             //notice that it must be a <= because global timing is computed in this way!
             addDocumented(task.end <= outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)

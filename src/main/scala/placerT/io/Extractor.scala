@@ -223,14 +223,22 @@ case class EParametricImplementation(name: String,
   val parsedComputationMemory = FormulaParser(computationMemory)
   val parsedDuration = FormulaParser(duration)
 
-  def extract(hw: HardwareModel) =
+  val parsedResources = SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract)
+
+  def extract(hw: HardwareModel) = {
+    val targetClass = hw.processorClasses.find(_.name equals target) match {
+      case Some(x) => x;
+      case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)
+    }
+    require(targetClass.resources equals parsedResources.keySet,"error in declared resources of " + name)
     ParametricImplementation(
       name,
-      hw.processorClasses.find(_.name equals target)match{case Some(x) => x ; case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)},
-      SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract),
+      targetClass,
+      parsedResources,
       parsedComputationMemory,
       parsedDuration,
       SortedMap.empty[String, Iterable[Int]] ++ parameters.map(_.extract))
+  }
 }
 
 case class ENameValues(name: String, values: List[Int]) {
@@ -354,7 +362,7 @@ case class EHardwareModel(name: String,
     val p = processingElements.map(_.extract(pc))
     Checker.checkDuplicates(p.map(_.name),"processing element")
     val b = busses.map(_.extract(p))
-    Checker.checkDuplicates(p.map(_.name),"bus")
+    Checker.checkDuplicates(b.map(_.name),"bus")
     HardwareModel(
       name,
       pc,

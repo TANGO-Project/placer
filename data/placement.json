@@ -314,18 +314,18 @@
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":27,
+          "start":38,
           "duration":10,
-          "end":37
+          "end":48
         },
         {
           "task":"Transforming2",
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":38,
+          "start":27,
           "duration":10,
-          "end":48
+          "end":37
         },
         {
           "task":"watermarking",
@@ -354,38 +354,38 @@
       "transmissionMapping":[
         {
           "transmission":"decodeToTransform",
-          "bus":"busAtoGPGPU",
-          "start":23,
-          "duration":3,
-          "end":26
-        },
-        {
-          "transmission":"transformToWatermark",
-          "bus":"globalBus2",
-          "start":38,
-          "duration":9,
-          "end":47
-        },
-        {
-          "transmission":"decodeToTransform2",
           "bus":"globalBus",
           "start":24,
           "duration":7,
           "end":31
         },
         {
-          "transmission":"transform2ToWatermark",
+          "transmission":"transformToWatermark",
           "bus":"busBToGPGPU",
           "start":49,
           "duration":5,
           "end":54
         },
         {
+          "transmission":"decodeToTransform2",
+          "bus":"busAtoGPGPU",
+          "start":23,
+          "duration":3,
+          "end":26
+        },
+        {
+          "transmission":"transform2ToWatermark",
+          "bus":"globalBus",
+          "start":38,
+          "duration":7,
+          "end":45
+        },
+        {
           "transmission":"side_comm",
           "bus":"globalBus",
-          "start":31,
+          "start":45,
           "duration":16,
-          "end":47
+          "end":61
         }
       ]
     }

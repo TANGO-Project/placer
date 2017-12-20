@@ -90,7 +90,7 @@ case class CPTransmission(id: Int,
 
   //these are redundant, since the timing is also constrained by the storage task on both side of the transmission
   add(from.end <= start)
-  add(end <= to.start)  //TODO: there must be an equal here, or it fails.
+  add(end <= to.start)
 
   timing match{
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>

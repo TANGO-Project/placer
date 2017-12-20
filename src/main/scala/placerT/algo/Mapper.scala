@@ -529,7 +529,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       //binaryFirstFail(allVars)
       //splitLastConflict(allVars)
       val processorIDArray = problem.cpTasks.map(_.processorID)
-      conflictOrderingSearch(processorIDArray, processorIDArray(_).min, processorIDArray(_).min) ++ conflictOrderingSearch(allVars, allVars(_).min, allVars(_).min)
+     // conflictOrderingSearch(processorIDArray, processorIDArray(_).min, processorIDArray(_).min) ++ conflictOrderingSearch(allVars, allVars(_).min, allVars(_).min)
 
       val processorIDChoices = problem.cpTasks.map(task => task.processorID)
       val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
@@ -554,6 +554,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }) //to know how many second levels (although I do not know how to interpret this yet)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
 
+
     } onSolution {
       bestSolution = Some(problem.getMapping(solver.lastSol))
       bestValue = varToMinimize.value
@@ -562,6 +563,13 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
 
+      println("stat of initial solution: ")
+      println(stat)
+
+    bestSolution match{
+      case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
+      case _ => ;
+    }
     val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.flatMap(
       _ match{
         case c@CoreSharingConstraint(processes, value) if value => Some(c)

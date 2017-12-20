@@ -41,6 +41,7 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
 
     accumulateTransmissionStorageOnTask(task)
+    accumulateComputationMemoryOnProcessor(task)
 
     val isTaskExecutedHere = task.isRunningOnProcessor(id)
 
