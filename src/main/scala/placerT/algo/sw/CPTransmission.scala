@@ -75,7 +75,6 @@ case class CPTransmission(id: Int,
 
   add(end === (start + transmissionDuration))
 
-
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
 
