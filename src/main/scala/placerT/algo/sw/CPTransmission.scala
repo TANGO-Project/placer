@@ -64,26 +64,17 @@ case class CPTransmission(id: Int,
 
   add(table(originProcessorID, busID, destinationProcessorID, processorToBusToProcessorAdjacency))
 
-  val busAndDuration = busses.toList.map(bus => (bus.id, bus.transmissionDuration(transmission.size)))
-  val busAndDurationNZ = busAndDuration.filter(_._2!=0)
+  val busToDuration = Array.tabulate(busses.length)(busID => busses(busID).transmissionDuration(transmission.size))
 
-  val possibleDurationsNZ = busAndDurationNZ.map(_._2)
-  val stubValueForDurationNZ = possibleDurationsNZ.min
+  val minDuration = busToDuration.min
+  val maxDuration = busToDuration.max
 
-  val busWithTransmissionNZ = busAndDurationNZ.map(_._1).toSet
-  val busWithTransmissionZ = busAndDuration.filter(_._2==0).map(_._1).toSet
+  val transmissionDuration: CPIntVar = CPIntVar(minDuration,maxDuration)
 
-  val busAndDurationNZWithStub = busAndDurationNZ.toList ::: busWithTransmissionZ.toList.map(bus => (bus,stubValueForDurationNZ))
+  add(element(busToDuration,busID,transmissionDuration))
 
-  val transmissionDurationNZ2: CPIntVar = CPIntVar(possibleDurationsNZ)
+  add(end === (start + transmissionDuration))
 
-  add(table(busID, transmissionDurationNZ2, busAndDurationNZWithStub))
-
-  add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ2))))
-  add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
-
-  //This is to be used to represent usage of regular busses
-  val endNZ: CPIntVar = start + transmissionDurationNZ2
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
@@ -100,13 +91,11 @@ case class CPTransmission(id: Int,
   }
 
   def transmissionDuration(sol:CPSol):Int = {
-    val selectedBusID = sol(busID)
-    if(busWithTransmissionZ contains selectedBusID) 0
-    else sol(transmissionDurationNZ2)
+    busToDuration(sol(busID))
   }
 
   override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
 
-  override def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, transmissionDurationNZ2, busID)
+  override def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, transmissionDuration, busID)
 }
 
