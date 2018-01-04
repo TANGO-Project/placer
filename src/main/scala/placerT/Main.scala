@@ -60,7 +60,7 @@ object Main extends App {
 
     opt[Int]("timeLimit").
       action((x, c) => c.copy(timeLimit= x)).
-      text("the maximal run time for Placer in seconds, default is MaxInt. In case of LNS it is taken as the time limit pers CP exploration. ")
+      text("the maximal run time for Placer in seconds, default is MaxInt. In case of LNS it is taken as the time limit pers CP exploration; if no solution found within this time limit, exploration is stopped. ")
 
     opt[Unit]("verbose").action((_, c) =>
       c.copy(verbose = true)).text("prints some verbosities")
