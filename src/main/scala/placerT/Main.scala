@@ -72,19 +72,19 @@ object Main extends App {
       c.copy(lns = true)).text("use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto")
 
     opt[Int]("lnsMaxFails").
-      action((x, c) => c.copy(timeLimit= x)).
+      action((x, c) => c.copy(lnsMaxFails= x)).
       text("for LNS: the maximal number of fail per CP search default is 2000")
 
     opt[Int]("lnsRelaxProba").
-      action((x, c) => c.copy(timeLimit= x)).
+      action((x, c) => c.copy(lnsMaxFails= x)).
       text("for LNS: the probability (in percentage) to maintain an element from one solution to the relaxed one, default is 90")
 
     opt[Int]("lnsNbRelaxations").
-      action((x, c) => c.copy(timeLimit= x)).
+      action((x, c) => c.copy(lnsNbRelaxations= x)).
       text("for LNS: the total number of relaxation to try out, default is 500")
 
     opt[Int]("lnsNbRelaxationNoImprove").
-      action((x, c) => c.copy(timeLimit= x)).
+      action((x, c) => c.copy(lnsNbRelaxationNoImprove= x)).
       text("for LNS: the maximal number of consecutive relaxation without improvement, default is 200")
 
     help("help").text("prints this usage text")

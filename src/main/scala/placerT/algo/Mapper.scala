@@ -596,11 +596,10 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     //LNS restart stuff here!
     val constraintBuffer = ArrayBuffer[Constraint]()
-    val maxFails = 2000
-    val relaxProba = 90
-    val nRelaxations = 500
-    val nbRelaxationNoImprove = 200
-    var remainigRelaxationNoImprove = nbRelaxationNoImprove
+    val maxFails = config.lnsMaxFails
+    val relaxProba = config.lnsRelaxProba
+    val nRelaxations = config.lnsNbRelaxations
+    var remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
     var currentRelaxation = 0
     while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
       remainigRelaxationNoImprove -= 1
@@ -629,7 +628,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }
 
       if(stats1.nSols > 0) {
-        remainigRelaxationNoImprove = nbRelaxationNoImprove
+        remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
         val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*100) {
           add(constraintBuffer)
         }
