@@ -156,36 +156,47 @@ sealed abstract class Formula(subFormula: Formula*) {
   def prettyPrint(priorityOut: Int = 0): String = toString
 
   def parenteses(p: Int, outP: Int, s: String): String = if (outP > p) "(" + s + ")" else s
+
+  def equals(that:Formula):Boolean
 }
 
 case class Plus(a: Formula, b: Formula) extends Formula(a, b) {
   override def splitSum: List[Formula] = List(a, b).flatMap(_.splitSum)
 
   override def prettyPrint(priorityOut: Int): String = parenteses(1, priorityOut, a.prettyPrint(1) + "+" + b.prettyPrint(1))
+
+  override def equals(that: Formula): Boolean = that match{case Plus(c,d) if (a equals c) && (b equals d) => true; case _ => false}
 }
 
 case class Minus(a: Formula, b: Formula) extends Formula(a, b) {
   override def splitSum: List[Formula] = a.splitSum ::: b.splitSum.map(x => Times(x, Const(-1)))
 
   override def prettyPrint(priorityOut: Int): String = parenteses(2, priorityOut, a.prettyPrint(1) + "-" + b.prettyPrint(2))
+
+  override def equals(that: Formula): Boolean = that match{case Minus(c,d) if (a equals c) && (b equals d) => true; case _ => false}
 }
 
 case class Times(a: Formula, b: Formula) extends Formula(a, b) {
   override def prettyPrint(priorityOut: Int): String = parenteses(3, priorityOut, a.prettyPrint(3) + "*" + b.prettyPrint(3))
+  override def equals(that: Formula): Boolean = that match{case Times(c,d) if (a equals c) && (b equals d) => true; case _ => false}
 }
 
 case class Div(a: Formula, b: Formula) extends Formula(a, b) {
   override def prettyPrint(priorityOut: Int): String = parenteses(3, priorityOut, a.prettyPrint(3) + "/" + b.prettyPrint(3))
+  override def equals(that: Formula): Boolean = that match{case Div(c,d) if (a equals c) && (b equals d) => true; case _ => false}
 }
 
 case class Const(value: Int) extends Formula() {
   override def prettyPrint(priorityOut: Int): String = "" + value
+  override def equals(that: Formula): Boolean = that match{case Const(x) if x == value => true; case _ => false}
 }
 
 case class Dim(dimension: String) extends Formula() {
   override def terms: SortedSet[String] = SortedSet(dimension)
 
   override def prettyPrint(priorityOut: Int): String = dimension
+
+  override def equals(that: Formula): Boolean = that match{case Dim(x) if x equals dimension => true; case _ => false}
 }
 
 // [1,2+a,3,4](g) ==> ...
@@ -193,6 +204,9 @@ case class Table(index: Formula, values: Array[Formula]) extends Formula() {
   override def terms: SortedSet[String] = index.terms ++ values.flatMap(_.terms)
 
   override def prettyPrint(priorityOut: Int): String = "[" + values.map(_.prettyPrint()).mkString(",") + "](" + index.prettyPrint() + ")"
+
+  override def equals(that: Formula): Boolean = that match{case Table(i,v) if (i equals index) && (values equals v) => true; case _ => false}
+
 }
 
 /*

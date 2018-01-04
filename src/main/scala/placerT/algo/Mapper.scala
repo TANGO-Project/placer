@@ -379,16 +379,14 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
               case SymmetricPEConstraintType.LongTask =>
                 println("breaking symmetry among " + processors.map(_.name) + " by longest tasks assignment")
                 assert(false, "this should not be used because it only works if the selected tasks hae no additional constraints on it, such as SamePE")
-                val witnessProcessor = processors.head
-                val witnessCPProcessor = cpProcessors(witnessProcessor.id)
-                val witnessProcessorID = witnessProcessor.id
-                val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessor.id).isFalse)
+                val witnessProcessorID =  processors.head.id
+                val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessorID).isFalse)
 
-                def breakSymmetry(taskPotentiallyunningOnProcessors: List[CPTask], processorIDs: List[Int]) {
+                def breakSymmetry(taskPotentiallyRunningOnProcessors: List[CPTask], processorIDs: List[Int]) {
                   processorIDs match {
                     case Nil => ;
                     case currentProcessorID :: tail =>
-                      val longestTask = taskPotentiallyunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
+                      val longestTask = taskPotentiallyRunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
 
                       for (p <- tail) {
                         add(longestTask.isRunningOnProcessor(p) === 0)
