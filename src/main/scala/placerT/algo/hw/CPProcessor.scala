@@ -30,11 +30,11 @@ import placerT.metadata.hw.ProcessingElement
 import placerT.metadata.sw.TransmissionTiming._
 
 /**
- * @param id
- * @param p
- * @param memSize the memory used for storing incoming and outgoing data, also used for computation memory of tasks te memory for data in and out is maintained during task execution.
- * @param mapper
- */
+  * @param id
+  * @param p
+  * @param memSize the memory used for storing incoming and outgoing data, also used for computation memory of tasks te memory for data in and out is maintained during task execution.
+  * @param mapper
+  */
 abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, mapper: Mapper) {
 
   implicit val solver = mapper.solver
@@ -52,8 +52,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
   private var temporaryStorages: List[CumulativeTask] = List.empty
 
-  private def accumulateTemporaryStorage(from: CPIntVar, durationOpt: Option[CPIntVar], to: CPIntVar, amount: CPIntVar, explanation: String) {
-    temporaryStorages = CumulativeTask(from, durationOpt, to, amount, explanation) :: temporaryStorages
+  private def accumulateTemporaryStorage(from: CPIntVar, duration: CPIntVar, to: CPIntVar, amount: CPIntVar, explanation: String) {
+    temporaryStorages = CumulativeTask(from, duration, to, amount, explanation) :: temporaryStorages
   }
 
   def accumulateExecutionConstraintsOnTask(task: CPTask)
@@ -63,10 +63,10 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (!isTaskExecutedHere.isFalse) {
       accumulateTemporaryStorage(
         task.start,
-        Some(task.taskDuration),
+        task.taskDuration,
         task.end,
         isTaskExecutedHere * task.computationMemory,
-        "temporary storage of " + task.explanation)
+        "working memory of task " + task.explanation)
     }
   }
 
@@ -84,19 +84,20 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
         accumulateTemporaryStorage(
           incomingTransmission.start,
-          None,
+           task.start - incomingTransmission.start
+            ,
           task.start,
           isTaskExecutedHere * incomingTransmission.size,
-          "incoming data from " + incomingTransmission.explanation + " before start of " + task.explanation)
+          "data buffer of incoming transmission " + incomingTransmission.explanation + " waiting for task " + task.explanation)
 
         incomingTransmission.timing match {
           case Alap => //we have to constraint the arrival time here
-            addDocumented(incomingTransmission.end === (task.start - 1),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
+            addDocumented(incomingTransmission.end === (task.start),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
           case Sticky =>
             addDocumented(
               new Or(Array(
-                incomingTransmission.end ?=== (task.start - 1),
-                incomingTransmission.start ?=== (incomingTransmission.from.end + 1)))
+                incomingTransmission.end ?=== (task.start),
+                incomingTransmission.start ?=== (incomingTransmission.from.end)))
               ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
 
           case _ =>
@@ -111,16 +112,16 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
         //buffer for outgoing data.
         accumulateTemporaryStorage(
-          task.end + 1,
-          None,
+          task.end,
+          outGoingTransmission.end - task.end,
           outGoingTransmission.end,
           isTaskExecutedHere * outGoingTransmission.isSelfLoopTransmission.not * outGoingTransmission.size,
-          "outgoing data from " + task.explanation + " before transmission " + outGoingTransmission.explanation)
+          "data buffer outgoing task " + task.explanation + " before transmission " + outGoingTransmission.explanation)
 
         outGoingTransmission.timing match {
           case Asap =>
             //we have to constraint the departure time here
-            addDocumented((task.end + 1) === outGoingTransmission.start,"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
+            addDocumented(task.end === outGoingTransmission.start,"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
           case _ =>
             //Sticky or asap
             //we are on the other side, the simple constraint is enough

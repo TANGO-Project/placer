@@ -86,7 +86,7 @@ case class CPTransmission(id: Int,
   timing match{
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>
       //if localLoop then force asap
-      add(isSelfLoopTransmission implies (start ?=== (from.end+1)))
+      add(isSelfLoopTransmission implies (start ?=== (from.end)))
     case _ => ;
   }
 

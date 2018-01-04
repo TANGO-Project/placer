@@ -288,7 +288,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       case Some(cap) =>
         reportProgress("posting powerCap")
         val simpleCumulativeTasks = cpTasks.toList.map(
-          task => CumulativeTask(start = task.start, durationOpt = Some(task.taskDuration), end = task.end, amount = task.power, explanation = "power of task " + task)
+          task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
         )
         CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(cap - backgroundPower),"powerCap")
     }
@@ -392,7 +392,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
                         add(longestTask.isRunningOnProcessor(p) === 0)
                       }
                       if (tail.nonEmpty) {
-                        breakSymmetry(taskPotentiallyunningOnProcessors.filter(_.id != longestTask.id), tail)
+                        breakSymmetry(taskPotentiallyRunningOnProcessors.filter(_.id != longestTask.id), tail)
                       }
                   }
                 }

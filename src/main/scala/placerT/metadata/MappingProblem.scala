@@ -80,9 +80,8 @@ case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:Sym
   require(processors.size > 1,"SymmetricPEConstraint cannot be specified with fewer that two processing elements")
   val witnessPE = processors.head
   for(p <- processors.tail){
-    require(witnessPE symmetricTo p, "different processing elemnts specified in SymmetricPEConstraint:" + witnessPE.name + " and " + p.name)
+    require(witnessPE symmetricTo p, "different processing elements specified in SymmetricPEConstraint:" + witnessPE.name + " and " + p.name)
   }
-
 
   override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
 }

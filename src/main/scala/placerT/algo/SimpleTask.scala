@@ -58,6 +58,11 @@ object SimpleTask extends Constraints {
         durationArray(t) = durationArray(t) + switchingDelay
       }
     }
+    //needed because there is a bug in resource constraint when duration is unset and negative
+    for(duration <- durationArray){
+      cp.add(duration >= 0)
+    }
+
     cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))
   }
 
@@ -116,7 +121,7 @@ object CumulativeTask extends Constraints {
    * @param maxResource the maximal amount of available resources
    */
   def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String) {
-    val simpleTasksArray = cumulativeTasks.filter(t => !t.amount.isBoundTo(0) && !t.duration.isBoundTo(0)).toArray
+    val simpleTasksArray = cumulativeTasks.filter(t => !t.amount.isBoundTo(0)).toArray
     val summedMaxAmount = simpleTasksArray.map(_.amount.max).sum
     if (summedMaxAmount < maxResource.min) {
       println("INFO: skipping tautological cumulative constraint: " + origin + ", summedMaxAmount:" + summedMaxAmount + ", min available resource:" + maxResource.min)
@@ -125,21 +130,22 @@ object CumulativeTask extends Constraints {
         val startTimeArray = simpleTasksArray.map(_.start)
         val endArray = simpleTasksArray.map(_.end)
         val durationArray = simpleTasksArray.map(_.duration)
+
         val amountArray = simpleTasksArray.map(_.amount)
         val cp = startTimeArray(0).store
+
+        //needed because there is a bug in resource constraint when duration is unset and negative
+        for(duration <- durationArray){
+          cp.add(duration >=0)
+        }
+
         cp.add(maxCumulativeResource(startTimeArray, durationArray, endArray, amountArray, maxResource))
       }
     }
   }
 }
 
-case class CumulativeTask(start:CPIntVar, var durationOpt: Option[CPIntVar], end: CPIntVar, amount: CPIntVar, explanation: String){
-  def duration:CPIntVar = durationOpt match{
-    case Some(dur) => dur
-    case None =>
-      val newDur:CPIntVar = end - start
-      durationOpt = Some(newDur)
-      newDur
-  }
+case class CumulativeTask(start:CPIntVar, duration:CPIntVar, end: CPIntVar, amount: CPIntVar, explanation: String){
+
 }
 
