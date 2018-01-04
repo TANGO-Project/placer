@@ -25,7 +25,7 @@
       {
         "processorClass":"cpu",
         "name":"procB",
-        "memSize":30,
+        "memSize":10,
         "resources":[],
         "properties":[],
         "powerModel":"1"

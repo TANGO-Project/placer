@@ -28,7 +28,7 @@
          {
             "processorClass":"cpu",
             "name":"Core1",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -36,7 +36,7 @@
          {
             "processorClass":"cpu",
             "name":"Core2",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -44,7 +44,7 @@
          {
             "processorClass":"cpu",
             "name":"Core3",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -52,7 +52,7 @@
          {
             "processorClass":"cpu",
             "name":"Core4",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -60,7 +60,7 @@
          {
             "processorClass":"fpga",
             "name":"Fpga1",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[{"name":"gates", "value":1000}],
             "properties":[],
             "powerModel":"0"

@@ -21,8 +21,6 @@
          {
             "processorClass":"cpu",
             "name":"Core1",
-            "memSizeOLD":1048576,
-            "memSizeCORRECT":32768,
             "memSize":32768,
             "resources":[],
             "properties":[],
@@ -31,8 +29,6 @@
          {
             "processorClass":"cpu",
             "name":"Core2",
-            "memSizeOLD":1048576,
-            "memSizeCORRECT":32768,
             "memSize":32768,
             "resources":[],
             "properties":[],
@@ -41,8 +37,6 @@
          {
             "processorClass":"cpu",
             "name":"Core3",
-            "memSizeOLD":1048576,
-            "memSizeCORRECT":32768,
             "memSize":32768,
             "resources":[],
             "properties":[],
@@ -51,8 +45,6 @@
          {
             "processorClass":"cpu",
             "name":"Core4",
-            "memSizeOLD":1048576,
-            "memSizeCORRECT":32768,
             "memSize":32768,
             "resources":[],
             "properties":[],

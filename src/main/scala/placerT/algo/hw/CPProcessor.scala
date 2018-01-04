@@ -84,8 +84,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
         accumulateTemporaryStorage(
           incomingTransmission.start,
-           task.start - incomingTransmission.start
-            ,
+           task.start - incomingTransmission.start,
           task.start,
           isTaskExecutedHere * incomingTransmission.size,
           "data buffer of incoming transmission " + incomingTransmission.explanation + " waiting for task " + task.explanation)
