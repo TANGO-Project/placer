@@ -374,38 +374,9 @@
       ],
       "softwareClass":
       {
-         "oneShotSoftware": {
-            "maxMakespan":42
-         }
+         "oneShotSoftware": {}
       }
    },
-   "constraints":
-   [
-      {
-         "mustBeUsed":"Core1"
-      },
-      {
-         "mustBeUsed":"Core2"
-      },
-      {
-         "mustBeUsed":"Core3"
-      },
-      {
-         "mustBeUsed":"Core4"
-      },
-      {
-         "symmetricPE":["Core1","Core2","Core3","Core4"]
-      },
-      {
-         "samePE":["a1","a2","a3"]
-      },
-      {
-         "samePE":["b1","b2","b3"]
-      },
-      {
-         "samePE":["c1","c2","c3"]
-      }
-   ],
    "goal":
    {
       "simpleObjective":"minMakespan"

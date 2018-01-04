@@ -633,6 +633,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*100) {
           add(constraintBuffer)
         }
+      }else{
+        println("early stop")
       }
     }
 
