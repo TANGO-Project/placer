@@ -805,133 +805,133 @@
             "source":"Input",
             "target":"AvgFieldBrightnessCorrection",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"AvgFieldBrightnessCorrectionToLightingNormalisation",
             "source":"AvgFieldBrightnessCorrection",
             "target":"LightingNormalisation",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"LightingNormalisationToDownscale",
             "source":"LightingNormalisation",
             "target":"Downscale",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"DownscaleToBinarisation",
             "source":"Downscale",
             "target":"Binarisation",
             "size":512,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"BinarisationToDetailsSuppression",
             "source":"Binarisation",
             "target":"DetailsSuppression",
             "size":512,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"DetailsSuppressionToOrientationEstimation",
             "source":"DetailsSuppression",
             "target":"OrientationEstimation",
             "size":512,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"OrientationEstimationToFirstRotation",
             "source":"OrientationEstimation",
             "target":"FirstRotation",
             "size":512,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"FirstRotationToOrientationDetermination",
             "source":"FirstRotation",
             "target":"OrientationDetermination",
             "size":512,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"LightingNormalisationToBarcodeResearch",
             "source":"LightingNormalisation",
             "target":"BarcodeResearch",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"OrientationDeterminationToBarcodeResearch",
             "source":"OrientationDetermination",
             "target":"BarcodeResearch",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"BarcodeResearchToBarcodeDecode",
             "source":"BarcodeResearch",
             "target":"BarcodeDecode",
             "size":32,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"LightingNormalisationToSecondRotation",
             "source":"LightingNormalisation",
             "target":"SecondRotation",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"OrientationDeterminationToSecondRotation",
             "source":"OrientationDetermination",
             "target":"SecondRotation",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"SecondRotationToLocalBinarisation",
             "source":"SecondRotation",
             "target":"LocalBinarisation",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"LocalBinarisationToAccurateLocationDetermination",
             "source":"LocalBinarisation",
             "target":"AccurateLocationDetermination",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"AvgFieldBrightnessCorrectionToTransformation",
             "source":"AvgFieldBrightnessCorrection",
             "target":"Transformation",
             "size":8192,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"AccurateLocationDeterminationToTransformation",
             "source":"AccurateLocationDetermination",
             "target":"Transformation",
             "size":4,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"TransformationToPositionAccuracyEstimation",
             "source":"Transformation",
             "target":"PositionAccuracyEstimation",
             "size":625,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"TransformationToFinalLightingNormalisation",
             "source":"Transformation",
             "target":"FinalLightingNormalisation",
             "size":625,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          
          {
@@ -939,70 +939,70 @@
             "source":"FinalLightingNormalisation",
             "target":"Digit1Extraction",
             "size":625,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1ExtractionToDigit1FinalCut",
             "source":"Digit1Extraction",
             "target":"Digit1FinalCut",
             "size":56,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1FinalCutToDigit1LightingNormalisation",
             "source":"Digit1FinalCut",
             "target":"Digit1LightingNormalisation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1LightingNormalisationToDigit1LightingEnhancement",
             "source":"Digit1LightingNormalisation",
             "target":"Digit1LightingEnhancement",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1LightingEnhancementToDigit1DigitCorrelation",
             "source":"Digit1LightingEnhancement",
             "target":"Digit1Correlation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1LightingEnhancementToDigit1PatternsIdentification",
             "source":"Digit1LightingEnhancement",
             "target":"Digit1PatternsIdentification",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1CorrelationToDigit1Decision",
             "source":"Digit1Correlation",
             "target":"Digit1Decision",
             "size":122,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1PatternsIdentificationToDigit1Decision",
             "source":"Digit1PatternsIdentification",
             "target":"Digit1Decision",
             "size":61,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1DecisionToDigit1ValueDetermination",
             "source":"Digit1Decision",
             "target":"Digit1ValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit1ValueDeterminationToFinalValueDetermination",
             "source":"Digit1ValueDetermination",
             "target":"FinalValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          
          {
@@ -1010,70 +1010,70 @@
             "source":"FinalLightingNormalisation",
             "target":"Digit2Extraction",
             "size":624,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2ExtractionToDigit2FinalCut",
             "source":"Digit2Extraction",
             "target":"Digit2FinalCut",
             "size":45,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2FinalCutToDigit2LightingNormalisation",
             "source":"Digit2FinalCut",
             "target":"Digit2LightingNormalisation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2LightingNormalisationToDigit2LightingEnhancement",
             "source":"Digit2LightingNormalisation",
             "target":"Digit2LightingEnhancement",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2LightingEnhancementToDigit2DigitCorrelation",
             "source":"Digit2LightingEnhancement",
             "target":"Digit2Correlation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2LightingEnhancementToDigit2PatternsIdentification",
             "source":"Digit2LightingEnhancement",
             "target":"Digit2PatternsIdentification",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2CorrelationToDigit2Decision",
             "source":"Digit2Correlation",
             "target":"Digit2Decision",
             "size":122,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2PatternsIdentificationToDigit2Decision",
             "source":"Digit2PatternsIdentification",
             "target":"Digit2Decision",
             "size":61,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2DecisionToDigit2ValueDetermination",
             "source":"Digit2Decision",
             "target":"Digit2ValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit2ValueDeterminationToFinalValueDetermination",
             "source":"Digit2ValueDetermination",
             "target":"FinalValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          
          {
@@ -1081,70 +1081,70 @@
             "source":"FinalLightingNormalisation",
             "target":"Digit3Extraction",
             "size":624,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3ExtractionToDigit3FinalCut",
             "source":"Digit3Extraction",
             "target":"Digit3FinalCut",
             "size":56,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3FinalCutToDigit3LightingNormalisation",
             "source":"Digit3FinalCut",
             "target":"Digit3LightingNormalisation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3LightingNormalisationToDigit3LightingEnhancement",
             "source":"Digit3LightingNormalisation",
             "target":"Digit3LightingEnhancement",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3LightingEnhancementToDigit3DigitCorrelation",
             "source":"Digit3LightingEnhancement",
             "target":"Digit3Correlation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3LightingEnhancementToDigit3PatternsIdentification",
             "source":"Digit3LightingEnhancement",
             "target":"Digit3PatternsIdentification",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3CorrelationToDigit3Decision",
             "source":"Digit3Correlation",
             "target":"Digit3Decision",
             "size":122,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3PatternsIdentificationToDigit3Decision",
             "source":"Digit3PatternsIdentification",
             "target":"Digit3Decision",
             "size":61,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3DecisionToDigit3ValueDetermination",
             "source":"Digit3Decision",
             "target":"Digit3ValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit3ValueDeterminationToFinalValueDetermination",
             "source":"Digit3ValueDetermination",
             "target":"FinalValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          
          {
@@ -1152,77 +1152,77 @@
             "source":"FinalLightingNormalisation",
             "target":"Digit4Extraction",
             "size":624,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4ExtractionToDigit4FinalCut",
             "source":"Digit4Extraction",
             "target":"Digit4FinalCut",
             "size":56,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4FinalCutToDigit4LightingNormalisation",
             "source":"Digit4FinalCut",
             "target":"Digit4LightingNormalisation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4LightingNormalisationToDigit4LightingEnhancement",
             "source":"Digit4LightingNormalisation",
             "target":"Digit4LightingEnhancement",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4LightingEnhancementToDigit4DigitCorrelation",
             "source":"Digit4LightingEnhancement",
             "target":"Digit4Correlation",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4LightingEnhancementToDigit4PatternsIdentification",
             "source":"Digit4LightingEnhancement",
             "target":"Digit4PatternsIdentification",
             "size":26,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4CorrelationToDigit4Decision",
             "source":"Digit4Correlation",
             "target":"Digit4Decision",
             "size":122,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4PatternsIdentificationToDigit4Decision",
             "source":"Digit4PatternsIdentification",
             "target":"Digit4Decision",
             "size":61,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"PositionAccuracyEstimationToDigit4ValueDetermination",
             "source":"PositionAccuracyEstimation",
             "target":"Digit4ValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4DecisionToDigit4ValueDetermination",
             "source":"Digit4Decision",
             "target":"Digit4ValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"Digit4ValueDeterminationToFinalValueDetermination",
             "source":"Digit4ValueDetermination",
             "target":"FinalValueDetermination",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          
          
@@ -1231,14 +1231,14 @@
             "source":"BarcodeDecode",
             "target":"Output",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          },
          {
             "name":"FinalValueDeterminationToOutput",
             "source":"FinalValueDetermination",
             "target":"Output",
             "size":1,
-            "timing":"Sticky"
+            "timing":"Free"
          }
       ],
       "softwareClass":

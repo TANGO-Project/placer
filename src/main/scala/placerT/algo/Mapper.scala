@@ -312,7 +312,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
             add(cpTasks(process.id).processorID !== processor.id)
           }
         case c@CoreSharingConstraint(processes, value) =>
-          val processesIDSet = SortedSet.empty ++ processes.map(_.id)
+          val processesIDSet = SortedSet.empty[Int] ++ processes.map(_.id)
           if (value) {
             //same cores all
             if(! processes.isEmpty){

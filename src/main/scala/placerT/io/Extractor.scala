@@ -104,7 +104,6 @@ case class EMappingConstraint(runOn:Option[ERunOn],
       SymmetricPEConstraint(processors)
     }
 
-
     (runOn,notRunOn,samePE,notSamePE,mustBeUsed,mustNotBeUsed,symmetricPE) match {
       case (Some(s),None,None,None,None,None,None) =>
         extractRunOn(s,true)

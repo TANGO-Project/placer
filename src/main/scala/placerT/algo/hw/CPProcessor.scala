@@ -81,11 +81,12 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
       //storage of incoming transmissions
       for (incomingTransmission <- task.incomingCPTransmissions) {
         //buffer for incoming data
+
         accumulateTemporaryStorage(
           incomingTransmission.start,
           None,
           task.start,
-          isTaskExecutedHere * (incomingTransmission.size),
+          isTaskExecutedHere * incomingTransmission.size,
           "incoming data from " + incomingTransmission.explanation + " before start of " + task.explanation)
 
         incomingTransmission.timing match {
@@ -110,10 +111,10 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
         //buffer for outgoing data.
         accumulateTemporaryStorage(
-          task.end,
+          task.end + 1,
           None,
           outGoingTransmission.end,
-          isTaskExecutedHere * outGoingTransmission.size,
+          isTaskExecutedHere * outGoingTransmission.isSelfLoopTransmission.not * outGoingTransmission.size,
           "outgoing data from " + task.explanation + " before transmission " + outGoingTransmission.explanation)
 
         outGoingTransmission.timing match {

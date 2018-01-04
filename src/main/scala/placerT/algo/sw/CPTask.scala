@@ -109,7 +109,7 @@ case class CPTask(id: Int,
 
   add(element(indiceToDuration,processorImplementationCombo,taskDuration))
 
-  add(end === start + taskDuration)
+  add(end === (start + taskDuration))
 
   //energy
   private val possibleEnergies = implemAndProcessorAndDurationAndEnergyAndPower.map(_.energy)

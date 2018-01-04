@@ -80,14 +80,13 @@ case class CPTransmission(id: Int,
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
 
-  //these are redundant, since the timing is also constrained by the storage task on both side of the transmission
   add(from.end <= start)
   add(end <= to.start)
 
   timing match{
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>
       //if localLoop then force asap
-      add((busID isIn localLoopBusses) implies (start ?=== (from.end+1)))
+      add(isSelfLoopTransmission implies (start ?=== (from.end+1)))
     case _ => ;
   }
 
