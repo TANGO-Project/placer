@@ -23,13 +23,14 @@ import oscar.cp._
 import oscar.cp.core.CPPropagStrength
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
+import placerT.algo.CumulativeTask.maxCumulativeResource
 
 
 case class SimpleTask(start:CPIntVar, duration: CPIntVar, end: CPIntVar, isNeeded: CPBoolVar)
 
 object SimpleTask extends Constraints {
 
-  def postUnaryResourceFromSimpleTasks(simpleTasks: List[SimpleTask], switchingDelay: Int = 0,origin:String) {
+  def postUnaryResourceForSimpleTasks(simpleTasks: List[SimpleTask], switchingDelay: Int = 0, origin:String) {
     val simpleTasksArray = simpleTasks.filter(!_.isNeeded.isFalse).toArray
     val startTimeArray = simpleTasksArray.map(_.start)
     val endArray = simpleTasksArray.map(_.end)
@@ -84,6 +85,12 @@ object SimpleTask extends Constraints {
       filteredTaskID => elementVar(IndexedSeq(CPIntVar(minimumStartTime)(store),endTimeArray(filteredTaskID)),isNeededArray(filteredTaskID)))
 
     maximum(endTimeArrayMinIfNotNeeded) - minimum(startTimeArrayMaxIfNotNeeded)
+  }
+
+  def postCumulativeResourceForSimpleTasks(simpleTasks: List[SimpleTask], maxResource: CPIntVar,origin:String) {
+    CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleTasks.map(
+      s => CumulativeTask(s.start, Some(s.duration), s.end, amount = s.isNeeded, origin)
+    ), maxResource, origin)
   }
 }
 

@@ -122,8 +122,14 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
                              properties: SortedMap[String, Int],
                              name: String,
                              memSize: Int,
-                             powerModel: Formula) //expressed in term of resource usage and features
+                             powerModel: Formula,
+                             nbCore:Option[Int] = None) //expressed in term of resource usage and features
   extends Indiced() with Ordered[ProcessingElement] {
+
+  nbCore match{
+    case Some(_) => require(processorClass.isInstanceOf[MonoTaskSwitchingTask],"multi cores can only be declared for switching task processing element classes")
+    case _ => ;
+  }
 
   val simplifiedPowerModel = Formula.simplifyConstants(powerModel, properties)
   val (constantPower: Const, powerModelForTaskTmp: Formula) = Formula.splitConstant(simplifiedPowerModel)

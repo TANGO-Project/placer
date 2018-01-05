@@ -79,7 +79,7 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) {
       println("WARNING: no transmission will fit on bus " + bus.name)
     } else {
-      SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere,origin="bus " + bus.name)
+      SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere,origin="bus " + bus.name)
     }
   }
 

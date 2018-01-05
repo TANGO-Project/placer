@@ -120,7 +120,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val cpProcessors = hardwareModel.processors.map(
       processor => processor.processorClass match {
         case m: MultiTaskPermanentTasks => new CPMultiTaskProcessor(processor.id, processor, processor.memSize, this)
-        case m: MonoTaskSwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, m.switchingDelay, this)
+        case m: MonoTaskSwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, m.switchingDelay, processor.nbCore.getOrElse(1), this)
       })
 
     reportProgress("constants about adjacency")
@@ -231,7 +231,13 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val taskEnds = cpTasks.map(task => task.end)
     val makeSpan = maximum(taskEnds)
 
-    val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(_ => CPIntVar(0, maxHorizon))
+    //does not work for multi-cores becauze of rounding stuff.
+    val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(
+      (processorID:Int) => cpProcessors(processorID) match {
+        case m: CPMonoTaskProcessor => CPIntVar(0, maxHorizon * m.nbCores)
+        case _ => CPIntVar(0, maxHorizon)
+      })
+
 
     //reportProgress("redundant bin-packing constraint on workload for mono task processors")
     //this one assumes adjusted minDuration per processor
@@ -469,7 +475,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         //binaryFirstFail(allVars)
         //splitLastConflict(allVars)
         val processorIDArray = problem.cpTasks.map(_.processorID)
-        conflictOrderingSearch(processorIDArray,processorIDArray(_).min,processorIDArray(_).min) ++ conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+//        conflictOrderingSearch(processorIDArray,processorIDArray(_).min,processorIDArray(_).min) ++ conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
 
         val processorIDChoices = problem.cpTasks.map(task => task.processorID)
         val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
@@ -494,7 +500,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
 
-    val stat = start(nSols = if(isSearchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit, maxDiscrepancy = config.maxDiscrepancy)
+    val stat = start(nSols = if(isSearchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit)
     print(stat)
 
     println("secondLevels:" + secondLevels)
@@ -513,8 +519,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         }
     }
   }
-
-
 
   def solveMappingProblemMinimizeLNS(problem: CPMappingProblem, simpleGoal: SimpleMappingGoal): Iterable[Mapping] = {
 
@@ -609,7 +613,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       println("relaxation " + currentRelaxation)
       constraintBuffer.clear()
       val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
-        for ((task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
+        for (TaskMapping(task, pe, implem, s, d, e,_) <- bestSolution.get.taskMapping) {
           if(!allProcessesInSamePEConstraints.contains(task.id)) {
             if (scala.math.random * 100 > relaxProba) {
               constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)

@@ -31,9 +31,10 @@ import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
  * @param p the processing element, to get more info
  * @param memSize the max mem size, taken from p
  */
-class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, mapper: Mapper)
+class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, val nbCores:Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
   require(p.processorClass.isInstanceOf[MonoTaskSwitchingTask])
+  require(nbCores ==1 || switchingDelay==0, "cannot have switching delay with multi cores")
 
   var allSimpleTasksPotentiallyExecutingHere: List[SimpleTask] = List.empty
   var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
@@ -64,7 +65,11 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
   }
 
   override def close() {
-    SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay,origin="usage of CPMonoTaskProcessor" + p.name)
+    if(nbCores == 1) {
+      SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay, origin = "usage of CPMonoTaskProcessor" + p.name)
+    }else{
+      SimpleTask.postCumulativeResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores), origin = "usage of CPMonoTaskProcessor" + p.name)
+    }
     closeTransmissionAndComputationMemory()
   }
 }
