@@ -140,7 +140,8 @@ object Main extends App {
 
       val outJSon = mappingSet.toJSon
       new PrintWriter(config.out) {
-        write(prettyRender(parse(outJSon)))
+        val parsed = parse(outJSon)
+        write(prettyRender(parsed))
         close()
       }
       System.exit(0)

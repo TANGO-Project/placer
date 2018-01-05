@@ -35,6 +35,7 @@ import scala.reflect.macros.whitebox
  */
 case class FlattenedImplementation(name: String,
                                    target: ProcessingElementClass,
+                                   nbThreads:Int,
                                    resourceUsage: SortedMap[String, Int],
                                    computationMemory: Int,
                                    duration: Formula,
@@ -42,6 +43,7 @@ case class FlattenedImplementation(name: String,
                                    parameterValues: SortedMap[String, Int] = null) extends Indiced {
   require(resourceUsage.keySet subsetOf target.resources, "unknown resources specified in implementation " + target + ": " + (resourceUsage.keySet -- target.resources).mkString(","))
   require(duration.terms subsetOf target.properties, "duration is defined based on unknown features in implementation " + target + ": " + (duration.terms -- target.properties).mkString(","))
+  require(target match{case _:MonoTaskSwitchingTask => true; case _ => nbThreads == 1},"mult thread can only be specified for implem running on switchig task PE")
 
   override def toString: String = {
     "Implementation(" + name +
@@ -69,6 +71,7 @@ case class FlattenedImplementation(name: String,
 
   def toParam: ParametricImplementation = ParametricImplementation(name: String,
     target: ProcessingElementClass,
+    nbThreads,
     resourceUsage = resourceUsage.mapValues(v => Const(v)),
     computationMemory = Const(computationMemory),
     duration = duration,
@@ -84,6 +87,7 @@ case class FlattenedImplementation(name: String,
  */
 case class ParametricImplementation(name: String,
                                     target: ProcessingElementClass,
+                                    nbThreads:Formula,
                                     resourceUsage: SortedMap[String, Formula],
                                     computationMemory: Formula,
                                     duration: Formula,
@@ -103,6 +107,7 @@ case class ParametricImplementation(name: String,
       case Nil =>
         Some(FlattenedImplementation(name,
           target,
+          simplify(nbThreads) match {case Const(c) => c case _ => throw new Error("cannot simplify nbThreads based on parameters of implementation")},
           resourceUsage.mapValues(resolve),
           resolve(computationMemory),
           simplify(duration),

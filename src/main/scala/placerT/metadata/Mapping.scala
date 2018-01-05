@@ -28,8 +28,7 @@ case class TaskMapping(task:AtomicTask,
                        implem:FlattenedImplementation,
                        s:Int,
                        d:Int,
-                       e:Int,
-                       subcores:List[Int] = Nil)
+                       e:Int)
 
 case class Mapping(hardwareName: String,
                    taskMapping: Array[TaskMapping],
@@ -43,7 +42,7 @@ case class Mapping(hardwareName: String,
   private def nStrings(n: Int, s: String): String = if (n <= 0) "" else s + nStrings(n - 1, s)
 
   def coreUsages:List[String] = {
-    val coreAndTaskAndDuration = taskMapping.map({case TaskMapping(task:AtomicTask,pe:ProcessingElement,i,s,d,e,_) => (pe.name,task.name + "(dur:" + d + ")",d)}).toList
+    val coreAndTaskAndDuration = taskMapping.map({case TaskMapping(task:AtomicTask,pe:ProcessingElement,i,s,d,e) => (pe.name,task.name + "(dur:" + d + ")",d)}).toList
     val coreToTask = coreAndTaskAndDuration.groupBy(_._1).toList.sortBy(_._1)
     coreToTask.map({case (core,tasks) => "" + core +":" + tasks.map(_._3).sum + ":" + tasks.map(_._2).mkString(",")}).toList
   }
@@ -63,7 +62,7 @@ case class Mapping(hardwareName: String,
 
   override def toString: String = "Mapping(\n\t" +
     taskMapping.map(
-      { case TaskMapping(task, pe, implem, start, dur, end,_) =>
+      { case TaskMapping(task, pe, implem, start, dur, end) =>
         padToLength(task.name, 22) + "implem:" + padToLength(implem.description, 22) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4)
       }).mkString("\n\t") + "\n\t" +
     transmissionMapping.filter(p => p._2.id != p._3.id).map(
@@ -73,7 +72,7 @@ case class Mapping(hardwareName: String,
 
   def toStringSorted: String = {
     val stringAndStart = taskMapping.map(
-      { case TaskMapping(task, pe, implem, start, dur, end,_) =>
+      { case TaskMapping(task, pe, implem, start, dur, end) =>
         (padToLength(task.name, 40) + "implem:" + padToLength(implem.description, 40) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
       }).toList ++
       transmissionMapping.filter(p => p._2.id != p._3.id).map(
@@ -85,7 +84,7 @@ case class Mapping(hardwareName: String,
 
   def toStringSortedLight: String = {
     val stringAndStart = taskMapping.map(
-      { case TaskMapping(task, pe, implem, start, dur, end,_) =>
+      { case TaskMapping(task, pe, implem, start, dur, end) =>
         (padToLength(task.name, 60) + " " + padToLength(pe.name + "(" + implem.description + ")", 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       }).toList ++
       transmissionMapping.filter(p => p._2.id != p._3.id).map(
@@ -137,7 +136,7 @@ case class Mappings(timeUnit:String,
   def toJSon: String = {
     "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +
-      JSonHelper.string("info",info) + "," +
+      JSonHelper.string("info",info.split("\\\\").mkString("\\\\")) + "," +
       JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
   }
 
@@ -149,5 +148,4 @@ case class Mappings(timeUnit:String,
       "\n\tdataUnit:" + dataUnit + "\n" +
     mapping.map(l => l.toStringSortedLight + l.usages).mkString("\n\n") + "\n)"
   }
-
 }

@@ -60,14 +60,20 @@ case class CPTask(id: Int,
 
   var indice = 0
   object ImplemAndProcessorAndDurationAndEnergyAndPower{
-    def apply(implem:Int,processor:Int,duration:Int,energy:Int,power:Int):ImplemAndProcessorAndDurationAndEnergyAndPower = {
+    def apply(implem:Int,processor:Int,duration:Int,energy:Int,power:Int,nbThreads:Int):ImplemAndProcessorAndDurationAndEnergyAndPower = {
       val curentIndice = indice
       indice = indice+1
-      ImplemAndProcessorAndDurationAndEnergyAndPower(implem:Int,processor:Int,duration:Int,energy:Int,power:Int,curentIndice)
+      ImplemAndProcessorAndDurationAndEnergyAndPower(implem:Int,processor:Int,duration:Int,energy:Int,power:Int,curentIndice,nbThreads)
     }
   }
 
-  case class ImplemAndProcessorAndDurationAndEnergyAndPower(implem:Int,processor:Int,duration:Int,energy:Int,power:Int,indice:Int)
+  case class ImplemAndProcessorAndDurationAndEnergyAndPower(implem:Int,
+                                                            processor:Int,
+                                                            duration:Int,
+                                                            energy:Int,
+                                                            power:Int,
+                                                            indice:Int,
+                                                            nbThreads:Int)
 
   val implemAndProcessorAndDurationAndEnergyAndPower: Iterable[ImplemAndProcessorAndDurationAndEnergyAndPower] =
     task.implementationArray.flatMap(
@@ -85,7 +91,8 @@ case class CPTask(id: Int,
             processor=p.id,
             duration=durationPI,
             energy=energy,
-            power=power
+            power=power,
+            nbThreads = implem.nbThreads
           )
         }))
 
@@ -131,6 +138,17 @@ case class CPTask(id: Int,
 
   add(element(indiceToPower,processorImplementationCombo,power))
 
+
+  //nbThreads
+  val possibleNbTreads = implemAndProcessorAndDurationAndEnergyAndPower.map(_.nbThreads)
+  val minThread = possibleNbTreads.min
+  val maxThread = possibleNbTreads.max
+  private val indiceToThreads = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.nbThreads)))
+  val nbThreads: CPIntVar = CPIntVar(minThread,maxThread)
+
+  add(element(indiceToThreads,processorImplementationCombo,nbThreads))
+
+  //all other stuff, with a table constraint
   private val implemAndProcessorAndIndice = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.implem,x.processor,x.indice))
 
   add(table(implementationID, processorID, processorImplementationCombo,implemAndProcessorAndIndice))

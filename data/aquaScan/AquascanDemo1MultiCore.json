@@ -8,8 +8,6 @@
          "monoTaskSwitchingTask":
          {
             "name":"cpu",
-            "resources":[],
-            "properties":[],
             "switchingDelay":0
          }
       }
@@ -23,8 +21,6 @@
             "processorClass":"cpu",
             "name":"MultiCore1",
             "memSize":131072,
-            "resources":[],
-            "properties":[],
             "powerModel":"0",
             "multiCore":4
          }
@@ -43,8 +39,7 @@
                "latency":1
             }
          }
-      ],
-      "properties":[]
+      ]
    },
    "softwareModel":
    {
@@ -57,8 +52,6 @@
                {
                   "name":"CpuInput",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }
@@ -71,8 +64,6 @@
                {
                   "name":"CpuAvgFieldBrightnessCorrection",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"934"
                }
@@ -85,8 +76,6 @@
                {
                   "name":"CpuLightingNormalisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"8690"
                }
@@ -99,8 +88,6 @@
                {
                   "name":"CpuDownscaling",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"534"
                }
@@ -113,8 +100,6 @@
                {
                   "name":"CpuBinarisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"275"
                }
@@ -127,8 +112,6 @@
                {
                   "name":"CpuDetailsSuppression",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"2620"
                }
@@ -141,8 +124,6 @@
                {
                   "name":"CpuOrientationEstimation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"6690"
                }
@@ -155,8 +136,6 @@
                {
                   "name":"CpuFirstRotation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"322"
                }
@@ -169,8 +148,6 @@
                {
                   "name":"CpuAvgFieldBrightnessCorrection",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"103"
                }
@@ -183,8 +160,6 @@
                {
                   "name":"CpuBarcodeResearch",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1425"
                }
@@ -197,8 +172,6 @@
                {
                   "name":"CpuBarcodeDecode",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"71"
                }
@@ -211,8 +184,6 @@
                {
                   "name":"CpuSecondRotation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"4230"
                }
@@ -225,8 +196,6 @@
                {
                   "name":"CpuLocalBinarisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1640"
                }
@@ -239,8 +208,6 @@
                {
                   "name":"CpuAccurateLocationDetermination",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"5810"
                }
@@ -253,8 +220,6 @@
                {
                   "name":"CpuTransformation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"5260"
                }
@@ -267,8 +232,6 @@
                {
                   "name":"CpuPositionAccuracyEstimation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"2040"
                }
@@ -281,8 +244,6 @@
                {
                   "name":"CpuFinalLightingNormalisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"483"
                }
@@ -295,8 +256,6 @@
                {
                   "name":"CpuDigit1Extraction",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"13"
                }
@@ -309,8 +268,6 @@
                {
                   "name":"CpuDigit1FinalCut",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"131"
                }
@@ -323,8 +280,7 @@
                {
                   "name":"CpuDigit1LightingNormalisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
+
                   "computationMemory":"2",
                   "duration":"33"
                }
@@ -337,8 +293,6 @@
                {
                   "name":"CpuDigit1LightingEnhancement",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"17"
                }
@@ -351,8 +305,6 @@
                {
                   "name":"CpuDigit1Correlation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"43205"
                }
@@ -365,8 +317,6 @@
                {
                   "name":"CpuDigit1PatternsIdentification",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"854"
                }
@@ -379,8 +329,6 @@
                {
                   "name":"CpuDigit1Decision",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"23"
                }
@@ -393,8 +341,6 @@
                {
                   "name":"CpuDigit1ValueDetermination",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }
@@ -407,8 +353,6 @@
                {
                   "name":"CpuDigit2Extraction",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"13"
                }
@@ -421,8 +365,6 @@
                {
                   "name":"CpuDigit2FinalCut",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"131"
                }
@@ -435,8 +377,6 @@
                {
                   "name":"CpuDigit2LightingNormalisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"33"
                }
@@ -449,8 +389,6 @@
                {
                   "name":"CpuDigit2LightingEnhancement",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"17"
                }
@@ -463,8 +401,6 @@
                {
                   "name":"CpuDigit2Correlation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"43205"
                }
@@ -477,8 +413,6 @@
                {
                   "name":"CpuDigit2PatternsIdentification",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"854"
                }
@@ -491,8 +425,6 @@
                {
                   "name":"CpuDigit2Decision",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"23"
                }
@@ -505,8 +437,6 @@
                {
                   "name":"CpuDigit2ValueDetermination",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }
@@ -519,8 +449,7 @@
                {
                   "name":"CpuDigit3Extraction",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
+
                   "computationMemory":"2",
                   "duration":"13"
                }
@@ -533,8 +462,6 @@
                {
                   "name":"CpuDigit3FinalCut",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"131"
                }
@@ -547,8 +474,6 @@
                {
                   "name":"CpuDigit3LightingNormalisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"33"
                }
@@ -561,8 +486,6 @@
                {
                   "name":"CpuDigit3LightingEnhancement",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"17"
                }
@@ -575,8 +498,6 @@
                {
                   "name":"CpuDigit3Correlation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"43205"
                }
@@ -589,8 +510,6 @@
                {
                   "name":"CpuDigit3PatternsIdentification",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"854"
                }
@@ -603,8 +522,6 @@
                {
                   "name":"CpuDigit3Decision",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"23"
                }
@@ -617,8 +534,6 @@
                {
                   "name":"CpuDigit3ValueDetermination",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }
@@ -631,8 +546,6 @@
                {
                   "name":"CpuDigit4Extraction",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"13"
                }
@@ -645,8 +558,6 @@
                {
                   "name":"CpuDigit4FinalCut",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"131"
                }
@@ -659,8 +570,6 @@
                {
                   "name":"CpuDigit4LightingNormalisation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"33"
                }
@@ -673,8 +582,6 @@
                {
                   "name":"CpuDigit4LightingEnhancement",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"17"
                }
@@ -687,8 +594,6 @@
                {
                   "name":"CpuDigit4Correlation",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"43205"
                }
@@ -701,8 +606,6 @@
                {
                   "name":"CpuDigit4PatternsIdentification",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"854"
                }
@@ -715,8 +618,6 @@
                {
                   "name":"CpuDigit4Decision",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"23"
                }
@@ -729,8 +630,6 @@
                {
                   "name":"CpuDigit4ValueDetermination",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }
@@ -743,8 +642,6 @@
                {
                   "name":"CpuFinalValueDetermination",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }
@@ -757,8 +654,6 @@
                {
                   "name":"CpuOutput",
                   "target":"cpu",
-                  "parameters":[],
-                  "resourceUsage":[],
                   "computationMemory":"2",
                   "duration":"1"
                }

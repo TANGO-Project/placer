@@ -22,7 +22,7 @@ package placerT.algo.hw
 
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
-import placerT.algo.{Mapper, SimpleTask}
+import placerT.algo.{CumulativeTask, Mapper, SimpleTask}
 import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
 
 /**
@@ -36,7 +36,7 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
   require(p.processorClass.isInstanceOf[MonoTaskSwitchingTask])
   require(nbCores ==1 || switchingDelay==0, "cannot have switching delay with multi cores")
 
-  var allSimpleTasksPotentiallyExecutingHere: List[SimpleTask] = List.empty
+  var allSimpleTasksPotentiallyExecutingHere: List[CumulativeTask] = List.empty
   var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
@@ -51,24 +51,25 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
 
       allTasksPotentiallyExecutingHere = task :: allTasksPotentiallyExecutingHere
 
-      allSimpleTasksPotentiallyExecutingHere = SimpleTask(
+      allSimpleTasksPotentiallyExecutingHere = CumulativeTask(
         task.start,
         task.taskDuration,
         task.end,
-        isTaskExecutedHere) :: allSimpleTasksPotentiallyExecutingHere
+        isTaskExecutedHere * task.nbThreads,
+        "threads of task " + task.task.name) :: allSimpleTasksPotentiallyExecutingHere
     }
   }
 
   override def timeWidth: CPIntVar = {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)
-    else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
+    else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))))
   }
 
   override def close() {
     if(nbCores == 1) {
-      SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay, origin = "usage of CPMonoTaskProcessor" + p.name)
+      SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))), switchingDelay, origin = "usage of CPMonoTaskProcessor" + p.name)
     }else{
-      SimpleTask.postCumulativeResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores), origin = "usage of CPMonoTaskProcessor" + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores),origin = "usage of CPMonoTaskProcessor" + p.name)
     }
     closeTransmissionAndComputationMemory()
   }

@@ -44,10 +44,11 @@ case class EMappingProblem(timeUnit:String,
                            softwareModel: ESoftwareModel,
                            hardwareModel: EHardwareModel,
                            constraints:List[EMappingConstraint],
-                           properties: List[ENameValue] = List.empty,
+                           properties: List[ENameValue],
                            goal:EGoal) {
 
-  require(processingElementClasses.nonEmpty,"no procesing element class specified in input file")
+  require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
+
   def extract(verbose:Boolean,fileName:String) = {
     val cl = processingElementClasses.map(_.extract)
     Checker.checkDuplicates(cl.map(_.name),"processing element class")
@@ -211,6 +212,7 @@ case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int])
 case class EAtomicTask(name: String,
                        implementations: List[EParametricImplementation]) {
   Checker.checkDuplicates(implementations.map(_.name),"implementation of task " + name)
+  require(implementations.nonEmpty,"task " + name + " has no implementation")
 
   def extract(hw: HardwareModel) = {
     val translatedImplems = implementations.map(_.extract(hw))
@@ -224,14 +226,16 @@ case class ENameValue(name: String, value: Int) {
 
 case class EParametricImplementation(name: String,
                                      target: String,
+                                     nbThreads:Option[String],
                                      resourceUsage: List[ENameFormula],
-                                     computationMemory: String,
+                                     computationMemory: String = "0",
                                      duration: String,
                                      parameters: List[ENameValues]) {
   val parsedComputationMemory = FormulaParser(computationMemory)
   val parsedDuration = FormulaParser(duration)
 
   val parsedResources = SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract)
+  val parsedNbThreads = nbThreads match{case None => Const(1); case Some(f) => FormulaParser(f)}
 
   def extract(hw: HardwareModel) = {
     val targetClass = hw.processorClasses.find(_.name equals target) match {
@@ -242,6 +246,7 @@ case class EParametricImplementation(name: String,
     ParametricImplementation(
       name,
       targetClass,
+      parsedNbThreads,
       parsedResources,
       parsedComputationMemory,
       parsedDuration,
@@ -302,9 +307,9 @@ case class EProcessingElement(processorClass: String,
                               resources: List[ENameValue],
                               properties: List[ENameValue],
                               name: String,
-                              memSize: Int,
+                              memSize: Int = 0,
                               multiCore:Option[Int],
-                              powerModel: String) {
+                              powerModel: String = "0") {
   val parsedPowerModel = FormulaParser(powerModel)
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = {
@@ -343,8 +348,10 @@ case class EBus(halfDuplexBus: Option[EHalfDuplexBus], singleWayBus: Option[ESin
 
 case class EHalfDuplexBus(relatedProcessors: List[String],
                           timeUnitPerDataUnit: Int,
-                          latency: Int,
+                          latency: Int = 0,
                           name: String) {
+  require(relatedProcessors.size >= 1,"bus " + name + " should be linked to at least one PE")
+
   def extract(p: Array[ProcessingElement]) = HalfDuplexBus(
     relatedProcessors.map(name => p.find(_.name equals name)
     match{
@@ -358,8 +365,11 @@ case class EHalfDuplexBus(relatedProcessors: List[String],
 case class ESingleWayBus(from: List[String],
                          to: List[String],
                          timeUnitPerDataUnit: Int,
-                         latency: Int,
+                         latency: Int = 0,
                          name: String) {
+  require(from.size >= 1,"bus " + name + " should have at least one from PE")
+  require(to.size >= 1,"bus " + name + " should have at least one to PE")
+
   def extract(p: Array[ProcessingElement]) = SingleWayBus(
     from.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
     to.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
@@ -374,6 +384,8 @@ case class EHardwareModel(name: String,
                           properties: List[ENameValue],
                           powerCap: Option[Int],
                           energyCap: Option[Int]) {
+  require(processingElements.nonEmpty,"no processing element declared")
+
   def extract(pc:Array[ProcessingElementClass]) = {
     val p = processingElements.map(_.extract(pc))
     Checker.checkDuplicates(p.map(_.name),"processing element")
