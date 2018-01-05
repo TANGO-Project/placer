@@ -1,12 +1,13 @@
 {
+  "timeUnit":"ms",
+  "dataUnit":"bit",
+  "info":"C:\\sers\rdl\\ocuments\\ANGO\\ptim5TANGO\\lacer\\ata\\xample.json",
   "mappings":[
     {
-      "timeUnit":"ms",
-      "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
-      "makeSpan":144,
-      "width":144,
-      "energy":43442,
+      "makeSpan":142,
+      "width":142,
+      "energy":43406,
       "taskMapping":[
         {
           "task":"inputting",
@@ -40,18 +41,18 @@
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":27,
+          "start":26,
           "duration":10,
-          "end":37
+          "end":36
         },
         {
           "task":"watermarking",
           "processingElement":"procA",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":41,
+          "start":39,
           "duration":11,
-          "end":52
+          "end":50
         },
         {
           "task":"encoding",
@@ -63,9 +64,9 @@
               "value":2
             }
           ],
-          "start":53,
+          "start":51,
           "duration":91,
-          "end":144
+          "end":142
         }
       ],
       "transmissionMapping":[
@@ -79,19 +80,17 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busAtoGPGPU",
-          "start":38,
+          "start":36,
           "duration":3,
-          "end":41
+          "end":39
         }
       ]
     },
     {
-      "timeUnit":"ms",
-      "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
-      "makeSpan":155,
-      "width":155,
-      "energy":40090,
+      "makeSpan":153,
+      "width":153,
+      "energy":40054,
       "taskMapping":[
         {
           "task":"inputting",
@@ -116,27 +115,27 @@
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":38,
+          "start":37,
           "duration":10,
-          "end":48
+          "end":47
         },
         {
           "task":"Transforming2",
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":27,
+          "start":26,
           "duration":10,
-          "end":37
+          "end":36
         },
         {
           "task":"watermarking",
           "processingElement":"procA",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":52,
+          "start":50,
           "duration":11,
-          "end":63
+          "end":61
         },
         {
           "task":"encoding",
@@ -148,25 +147,25 @@
               "value":2
             }
           ],
-          "start":64,
+          "start":62,
           "duration":91,
-          "end":155
+          "end":153
         }
       ],
       "transmissionMapping":[
         {
           "transmission":"decodeToTransform",
           "bus":"globalBus",
-          "start":24,
+          "start":23,
           "duration":7,
-          "end":31
+          "end":30
         },
         {
           "transmission":"transformToWatermark",
           "bus":"busAtoGPGPU",
-          "start":49,
+          "start":47,
           "duration":3,
-          "end":52
+          "end":50
         },
         {
           "transmission":"decodeToTransform2",
@@ -178,19 +177,17 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"globalBus",
-          "start":38,
+          "start":36,
           "duration":7,
-          "end":45
+          "end":43
         }
       ]
     },
     {
-      "timeUnit":"ms",
-      "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
-      "makeSpan":177,
+      "makeSpan":176,
       "width":133,
-      "energy":29276,
+      "energy":29258,
       "taskMapping":[
         {
           "task":"inputting",
@@ -224,18 +221,18 @@
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":27,
+          "start":26,
           "duration":10,
-          "end":37
+          "end":36
         },
         {
           "task":"watermarking",
           "processingElement":"procB",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":44,
+          "start":43,
           "duration":26,
-          "end":70
+          "end":69
         },
         {
           "task":"encoding",
@@ -247,18 +244,18 @@
               "value":2
             }
           ],
-          "start":71,
+          "start":70,
           "duration":106,
-          "end":177
+          "end":176
         }
       ],
       "transmissionMapping":[
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
-          "start":37,
+          "start":36,
           "duration":7,
-          "end":44
+          "end":43
         },
         {
           "transmission":"decodeToTransform2",
@@ -270,9 +267,9 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busBToGPGPU",
-          "start":38,
+          "start":36,
           "duration":5,
-          "end":43
+          "end":41
         },
         {
           "transmission":"side_comm",
@@ -284,12 +281,10 @@
       ]
     },
     {
-      "timeUnit":"ms",
-      "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
-      "makeSpan":187,
+      "makeSpan":185,
       "width":133,
-      "energy":25906,
+      "energy":25870,
       "taskMapping":[
         {
           "task":"inputting",
@@ -314,27 +309,27 @@
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":38,
+          "start":37,
           "duration":10,
-          "end":48
+          "end":47
         },
         {
           "task":"Transforming2",
           "processingElement":"GPGPU1",
           "implementation":"gpgpu_standard",
           "parameters":[],
-          "start":27,
+          "start":26,
           "duration":10,
-          "end":37
+          "end":36
         },
         {
           "task":"watermarking",
           "processingElement":"procB",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":54,
+          "start":52,
           "duration":26,
-          "end":80
+          "end":78
         },
         {
           "task":"encoding",
@@ -346,25 +341,25 @@
               "value":2
             }
           ],
-          "start":81,
+          "start":79,
           "duration":106,
-          "end":187
+          "end":185
         }
       ],
       "transmissionMapping":[
         {
           "transmission":"decodeToTransform",
           "bus":"globalBus",
-          "start":24,
+          "start":23,
           "duration":7,
-          "end":31
+          "end":30
         },
         {
           "transmission":"transformToWatermark",
           "bus":"busBToGPGPU",
-          "start":49,
+          "start":47,
           "duration":5,
-          "end":54
+          "end":52
         },
         {
           "transmission":"decodeToTransform2",
@@ -376,16 +371,16 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"globalBus",
-          "start":38,
+          "start":36,
           "duration":7,
-          "end":45
+          "end":43
         },
         {
           "transmission":"side_comm",
           "bus":"globalBus",
-          "start":45,
+          "start":43,
           "duration":16,
-          "end":61
+          "end":59
         }
       ]
     }

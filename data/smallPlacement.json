@@ -1,8 +1,9 @@
 {
+  "timeUnit":"ms",
+  "dataUnit":"bit",
+  "info":"C:\\sers\rdl\\ocuments\\ANGO\\ptim5TANGO\\lacer\\ata\\mallExample.json",
   "mappings":[
     {
-      "timeUnit":"ms",
-      "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
       "makeSpan":116,
       "energy":35012,
@@ -43,8 +44,6 @@
       "transmissionMapping":[]
     },
     {
-      "timeUnit":"ms",
-      "dataUnit":"bit",
       "hardwareName":"ExampleHardware1",
       "makeSpan":255,
       "energy":32685,
