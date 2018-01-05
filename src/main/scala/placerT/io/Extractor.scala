@@ -32,27 +32,35 @@ object Extractor {
   implicit val formats = DefaultFormats
 
   // Brings in default date formats etc.
-  def extractProblem(jValue: JValue,verbose:Boolean = true): MappingProblem = {
-    jValue.extract[EMappingProblem].extract(verbose)
+  def extractProblem(jValue:JValue,fileName:String,verbose:Boolean = true): MappingProblem = {
+    jValue.extract[EMappingProblem].extract(verbose,fileName)
   }
 }
 
 case class EMappingProblem(timeUnit:String,
                            dataUnit:String,
+                           info:Option[String],
+                           processingElementClasses:Array[EProcessingElementClass],
                            softwareModel: ESoftwareModel,
                            hardwareModel: EHardwareModel,
                            constraints:List[EMappingConstraint],
                            properties: List[ENameValue] = List.empty,
                            goal:EGoal) {
 
-  def extract(verbose:Boolean) = {
-    val hw = hardwareModel.extract
+  require(processingElementClasses.nonEmpty,"no procesing element class specified in input file")
+  def extract(verbose:Boolean,fileName:String) = {
+    val cl = processingElementClasses.map(_.extract)
+    Checker.checkDuplicates(cl.map(_.name),"processing element class")
+
+    val hw = hardwareModel.extract(cl)
     val sw = softwareModel.extract(hw,verbose)
 
     MappingProblem(
       timeUnit,
       dataUnit,
+      info match{case None => fileName; case Some(i) => i},
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
+      cl,
       sw,
       hw,
       constraints.map(_.extract(hw,sw)),
@@ -349,15 +357,12 @@ case class ESingleWayBus(from: List[String],
 }
 
 case class EHardwareModel(name: String,
-                          processingElementClasses: Array[EProcessingElementClass],
                           processingElements: Array[EProcessingElement],
                           busses: Array[EBus],
                           properties: List[ENameValue],
                           powerCap: Option[Int],
                           energyCap: Option[Int]) {
-  def extract = {
-    val pc = processingElementClasses.map(_.extract)
-    Checker.checkDuplicates(pc.map(_.name),"processing element class")
+  def extract(pc:Array[ProcessingElementClass]) = {
     val p = processingElements.map(_.extract(pc))
     Checker.checkDuplicates(p.map(_.name),"processing element")
     val b = busses.map(_.extract(p))

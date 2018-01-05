@@ -145,7 +145,7 @@ object Example1 extends App {
 
   val goal = MinMakeSpan() // ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val mappingSet = Mapper.findMapping(new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, List.empty, goal),MapperConfig()).mapping
+  val mappingSet = Mapper.findMapping(new MappingProblem("ms","bit","Example1.scala",SortedMap.empty[String,Int],hardwareModel.processorClasses,softwareModel, hardwareModel, List.empty, goal),MapperConfig()).mapping
 
   if (mappingSet.isEmpty) {
     println("no mapping found")

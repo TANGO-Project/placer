@@ -1,45 +1,45 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
+  "processingElementClasses":[
+    {
+      "monoTaskSwitchingTask":{
+        "name":"cpu",
+        "resources":[],
+        "properties":[
+          "mflops",
+          "mips"
+        ],
+        "switchingDelay":1
+      }
+    },
+    {
+      "monoTaskSwitchingTask":{
+        "name":"gpgpu",
+        "resources":[
+          "core"
+        ],
+        "properties":[],
+        "switchingDelay":1
+      }
+    },
+    {
+      "multiTaskPermanentTasks":{
+        "name":"fpga",
+        "resources":[
+          "kgate",
+          "multiplier"
+        ],
+        "properties":[
+          "frequency"
+        ]
+      }
+    }
+  ],
   "hardwareModel":{
     "name":"ExampleHardware1",
     "powerCap":700,
     "energyCap":500000,
-    "processingElementClasses":[
-      {
-        "monoTaskSwitchingTask":{
-          "name":"cpu",
-          "resources":[],
-          "properties":[
-            "mflops",
-            "mips"
-          ],
-          "switchingDelay":1
-        }
-      },
-      {
-        "monoTaskSwitchingTask":{
-          "name":"gpgpu",
-          "resources":[
-            "core"
-          ],
-          "properties":[],
-          "switchingDelay":1
-        }
-      },
-      {
-        "multiTaskPermanentTasks":{
-          "name":"fpga",
-          "resources":[
-            "kgate",
-            "multiplier"
-          ],
-          "properties":[
-            "frequency"
-          ]
-        }
-      }
-    ],
     "processingElements":[
       {
         "processorClass":"cpu",

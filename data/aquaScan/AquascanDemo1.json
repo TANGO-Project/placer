@@ -1,27 +1,28 @@
 {
    "timeUnit":"us",
-   "dataUnit":"byte",
+   "dataUnit":"8*32bit",
+   "info":"the simple unconstrained aquascan model",
+   "processingElementClasses":
+   [
+      {
+         "monoTaskSwitchingTask":
+         {
+            "name":"cpu",
+            "resources":[],
+            "properties":[],
+            "switchingDelay":0
+         }
+      }
+   ],
    "hardwareModel":
    {
       "name":"ExampleHardware1",
-      "processingElementClasses":
-      [
-         {
-            "monoTaskSwitchingTask":
-            {
-               "name":"cpu",
-               "resources":[],
-               "properties":[],
-               "switchingDelay":0
-            }
-         }
-      ],
       "processingElements":
       [
          {
             "processorClass":"cpu",
             "name":"Core1",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -29,7 +30,7 @@
          {
             "processorClass":"cpu",
             "name":"Core2",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -37,7 +38,7 @@
          {
             "processorClass":"cpu",
             "name":"Core3",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -45,7 +46,7 @@
          {
             "processorClass":"cpu",
             "name":"Core4",
-            "memSize":1048576,
+            "memSize":32768,
             "resources":[],
             "properties":[],
             "powerModel":"0"
@@ -1237,7 +1238,7 @@
       {
          "oneShotSoftware":
          {
-            "maxMakespan":85451
+           "maxMakespanDISABLED":82907
          }
       }
    },
@@ -1258,69 +1259,20 @@
      {
        "symmetricPE":["Core1","Core2","Core3","Core4"]
      },
-     {
-       "samePE":[
-         "LightingNormalisation",
-         "Downscale",
-         "Binarisation",
-         "DetailsSuppression",
-         "OrientationEstimation",
-         "FirstRotation",
-         "OrientationDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit1Extraction",
-         "Digit1FinalCut",
-         "Digit1LightingNormalisation",
-         "Digit1LightingEnhancement",
-         "Digit1Correlation",
-         "Digit1PatternsIdentification",
-         "Digit1Decision",
-         "Digit1ValueDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit2Extraction",
-         "Digit2FinalCut",
-         "Digit2LightingNormalisation",
-         "Digit2LightingEnhancement",
-         "Digit2Correlation",
-         "Digit2PatternsIdentification",
-         "Digit2Decision",
-         "Digit2ValueDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit3Extraction",
-         "Digit3FinalCut",
-         "Digit3LightingNormalisation",
-         "Digit3LightingEnhancement",
-         "Digit3Correlation",
-         "Digit3PatternsIdentification",
-         "Digit3Decision",
-         "Digit3ValueDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit4Extraction",
-         "Digit4FinalCut",
-         "Digit4LightingNormalisation",
-         "Digit4LightingEnhancement",
-         "Digit4Correlation",
-         "Digit4PatternsIdentification",
-         "Digit4Decision",
-         "Digit4ValueDetermination"
-       ]
-     }
-
+      {
+         "samePE":[
+            "LightingNormalisation",
+            "Downscale",
+            "Binarisation",
+            "DetailsSuppression",
+            "OrientationEstimation",
+            "FirstRotation",
+            "OrientationDetermination"
+         ]
+      }
    ],
    "goal":
    {
-      "simpleObjective":"sat"
+      "simpleObjective":"minMakespan"
    }
 }

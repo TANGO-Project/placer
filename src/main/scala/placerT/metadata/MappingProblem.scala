@@ -21,7 +21,7 @@
 package placerT.metadata
 
 import placerT.io.JSonHelper
-import placerT.metadata.hw.{HardwareModel, ProcessingElement}
+import placerT.metadata.hw.{HardwareModel, ProcessingElement, ProcessingElementClass}
 import placerT.metadata.sw.{AtomicTask, SoftwareModel}
 
 import scala.collection.immutable.SortedMap
@@ -34,7 +34,9 @@ import scala.collection.immutable.SortedMap
  */
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
+                          info:String,
                           properties:SortedMap[String,Int],
+                          processorClasses: Array[ProcessingElementClass],
                           softwareModel: SoftwareModel,
                           hardwareModel: HardwareModel,
                           constraints:List[MappingConstraint],

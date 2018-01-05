@@ -1,18 +1,19 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
+  "info":"simplest example with two tasks and a transmission",
+  "processingElementClasses":[
+    {
+      "monoTaskSwitchingTask":{
+        "name":"cpu",
+        "resources":[],
+        "properties":[],
+        "switchingDelay":0
+      }
+    }
+  ],
   "hardwareModel":{
     "name":"ExampleHardware1",
-    "processingElementClasses":[
-      {
-        "monoTaskSwitchingTask":{
-          "name":"cpu",
-          "resources":[],
-          "properties":[],
-          "switchingDelay":0
-        }
-      }
-    ],
     "processingElements":[
       {
         "processorClass":"cpu",

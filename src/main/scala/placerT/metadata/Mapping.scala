@@ -23,9 +23,7 @@ import placerT.io.JSonHelper
 import placerT.metadata.hw.{SelfLoopBus, Bus, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, Transmission}
 
-case class Mapping(timeUnit:String,
-                   dataUnit:String,
-                   hardwareName: String,
+case class Mapping(hardwareName: String,
                    taskMapping: Array[(AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)],
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
                    makeSpan: Int,
@@ -35,7 +33,6 @@ case class Mapping(timeUnit:String,
   private def padToLength(s: String, l: Int) = (s + nStrings(l, " ")).substring(0, l)
 
   private def nStrings(n: Int, s: String): String = if (n <= 0) "" else s + nStrings(n - 1, s)
-
 
   def coreUsages:List[String] = {
     val coreAndTaskAndDuration = taskMapping.map({case (task:AtomicTask,pe:ProcessingElement,i,s,d,e) => (pe.name,task.name + "(dur:" + d + ")",d)}).toList
@@ -87,14 +84,12 @@ case class Mapping(timeUnit:String,
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 60) + " " + padToLength(bus.name, 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       })
-    "Mapping(timeUnit:" + timeUnit + " dataUnit:" + dataUnit + " hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
+    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
   def usages:String = "usages{" + coreUsages.mkString("\n\t","\n\t","") + busUsages.mkString("\n\t","\n\t","\n") + "}"
 
   def toJSon: String = "{" +
-    JSonHelper.string("timeUnit", timeUnit) + "," +
-    JSonHelper.string("dataUnit", dataUnit) + "," +
     JSonHelper.string("hardwareName", hardwareName) + "," +
     JSonHelper.int("makeSpan", makeSpan) + "," +
     JSonHelper.optionIntComa("width", width) +
@@ -124,14 +119,24 @@ case class Mapping(timeUnit:String,
   }
 }
 
-case class Mappings(mapping: Iterable[Mapping]) {
+case class Mappings(timeUnit:String,
+                    dataUnit:String,
+                    info:String,
+                    mapping: Iterable[Mapping]) {
   def toJSon: String = {
-    "{" + JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
+    "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
+      JSonHelper.string("dataUnit",dataUnit) + "," +
+      JSonHelper.string("info",info) + "," +
+      JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
   }
 
   override def toString: String = {
-    "Mappings(nbMapping:" + mapping.size + "\n" +
-      mapping.map(l => l.toStringSortedLight + "\n" + l.usages).mkString("\n\n") + "\n)"
+    "Mappings(" +
+      "\n\tnbMapping:" + mapping.size +
+      "\n\tinfo:" + info +
+      "\n\ttimeUnit:" + timeUnit +
+      "\n\tdataUnit:" + dataUnit + "\n" +
+    mapping.map(l => l.toStringSortedLight + l.usages).mkString("\n\n") + "\n)"
   }
 
 }

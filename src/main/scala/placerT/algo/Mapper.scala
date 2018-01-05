@@ -44,7 +44,10 @@ object Mapper {
 
   def findMapping(problem: MappingProblem,config:MapperConfig): Mappings = {
     // try {
-    Mappings(new Mapper(problem,config).mapping)
+    Mappings(timeUnit = problem.timeUnit,
+      dataUnit = problem.dataUnit,
+      info = problem.info,
+      new Mapper(problem,config).mapping)
     // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
   }
 }
@@ -569,7 +572,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }) //to know how many second levels (although I do not know how to interpret this yet)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
 
-
     } onSolution {
       bestSolution = Some(problem.getMapping(solver.lastSol))
       bestValue = varToMinimize.value
@@ -629,7 +631,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
       if(stats1.nSols > 0) {
         remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
-        val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*100) {
+        val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*10) {
           add(constraintBuffer)
         }
       }else{

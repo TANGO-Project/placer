@@ -51,7 +51,7 @@ object GenerateJSon extends App {
   println(json)
 
   val parsed = parse(json)
-  val extracted = Extractor.extractProblem(parsed)
+  val extracted = Extractor.extractProblem(parsed,"example2.scala")
   println(extracted)
 }
 
@@ -171,6 +171,6 @@ object Example2Data {
 
   val goal = Pareto(MinMakeSpan(),MinEnergy()) //ParetoMakeSpanEnergy //MinMakeSpan() //MinEnergy() //ParetoMakeSpanEnergy() //ParetoMakeSpanEnergy() //() // // MinEnergy() //MinMakeSpan()
 
-  val problem = new MappingProblem("ms","bit",SortedMap.empty[String,Int],softwareModel, hardwareModel, List.empty, goal)
+  val problem = new MappingProblem("ms","bit","Example2.scala",SortedMap.empty[String,Int],hardwareModel.processorClasses,softwareModel, hardwareModel, List.empty, goal)
 
 }

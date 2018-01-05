@@ -1,28 +1,28 @@
 {
    "timeUnit":"us",
    "dataUnit":"8*32bit",
+   "processingElementClasses":
+   [
+      {
+         "monoTaskSwitchingTask": {
+            "name": "cpu",
+            "resources": [],
+            "properties": [],
+            "switchingDelay": 0
+         }
+      },
+      {
+         "multiTaskPermanentTasks":
+         {
+            "name":"fpga",
+            "resources":["gates"],
+            "properties":[]
+         }
+      }
+   ],
    "hardwareModel":
    {
       "name":"ExampleHardware1",
-      "processingElementClasses":
-      [
-         {
-            "monoTaskSwitchingTask": {
-               "name": "cpu",
-               "resources": [],
-               "properties": [],
-               "switchingDelay": 0
-            }
-         },
-         {
-            "multiTaskPermanentTasks":
-            {
-               "name":"fpga",
-               "resources":["gates"],
-               "properties":[]
-            }
-         }
-      ],
       "processingElements":
       [
          {

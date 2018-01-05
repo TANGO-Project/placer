@@ -1,21 +1,21 @@
 {
    "timeUnit":"us",
    "dataUnit":"byte",
+   "processingElementClasses":
+   [
+      {
+         "monoTaskSwitchingTask":
+         {
+            "name":"cpu",
+            "resources":[],
+            "properties":[],
+            "switchingDelay":0
+         }
+      }
+   ],
    "hardwareModel":
    {
       "name":"ExampleHardware1",
-      "processingElementClasses":
-      [
-         {
-            "monoTaskSwitchingTask":
-            {
-               "name":"cpu",
-               "resources":[],
-               "properties":[],
-               "switchingDelay":0
-            }
-         }
-      ],
       "processingElements":
       [
          {

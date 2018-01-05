@@ -22,7 +22,6 @@ HardwareModel = {
     name:String
     powerCap:?Integer
     energyCap:?Integer
-    processingElementClasses:[ProcessingElementClass]
     processingElements:[ProcessingElement]
     busses:[Bus]
     properties:[NameValue]
@@ -173,8 +172,10 @@ Constraint = {mustBeUsed:String}
    | {notRunOn:TaskPE}
 
 Main = {
+    info:?String
     timeUnit:String
     dataUnit:String
+    processingElementClasses:[ProcessingElementClass]
     hardwareModel:HardwareModel
     softwareModel:SoftwareModel
     goal:MappingGoal
