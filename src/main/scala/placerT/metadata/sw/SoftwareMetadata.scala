@@ -107,7 +107,10 @@ case class ParametricImplementation(name: String,
       case Nil =>
         Some(FlattenedImplementation(name,
           target,
-          simplify(nbThreads) match {case Const(c) => c case _ => throw new Error("cannot simplify nbThreads based on parameters of implementation")},
+          simplify(nbThreads) match {
+            case Const(c) => c
+            case x =>
+              throw new Error("cannot simplify nbThreads based on parameters of implementation, remaining: " + x.prettyPrint())},
           resourceUsage.mapValues(resolve),
           resolve(computationMemory),
           simplify(duration),
