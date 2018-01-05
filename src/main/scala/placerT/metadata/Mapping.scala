@@ -95,7 +95,10 @@ case class Mapping(hardwareName: String,
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
-  def usages:String = "usages{" + coreUsages.mkString("\n\t","\n\t","") + busUsages.mkString("\n\t","\n\t","\n") + "}"
+  def usages:String = ("usages{" +
+    coreUsages.mkString("\n\t","\n\t","") +
+    (if(busUsages.nonEmpty) {busUsages.mkString("\n\t","\n\t","\n")} else "\n") + "}"
+    )
 
   def toJSon: String = "{" +
     JSonHelper.string("hardwareName", hardwareName) + "," +

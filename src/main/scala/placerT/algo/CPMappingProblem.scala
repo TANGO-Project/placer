@@ -71,7 +71,7 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
     val transmissionMapping = cpTransmissions.map(trans =>
       (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), trans.transmissionDuration(sol), sol(trans.end)))
 
-    new Mapping(mappingProblem.timeUnit,mappingProblem.dataUnit,hardwareName, firstTaskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
+    new Mapping(hardwareName, firstTaskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
   }
 
   /*

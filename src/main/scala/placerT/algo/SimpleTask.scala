@@ -89,7 +89,7 @@ object SimpleTask extends Constraints {
 
   def postCumulativeResourceForSimpleTasks(simpleTasks: List[SimpleTask], maxResource: CPIntVar,origin:String) {
     CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleTasks.map(
-      s => CumulativeTask(s.start, Some(s.duration), s.end, amount = s.isNeeded, origin)
+      s => CumulativeTask(s.start, s.duration, s.end, amount = s.isNeeded, origin)
     ), maxResource, origin)
   }
 }

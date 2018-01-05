@@ -1,27 +1,28 @@
 {
    "timeUnit":"us",
    "dataUnit":"8*32bit",
+   "info":"multi-core model of aquascan, with a single multi-core of 4 cores",
+   "processingElementClasses":
+   [
+      {
+         "monoTaskSwitchingTask":
+         {
+            "name":"cpu",
+            "resources":[],
+            "properties":[],
+            "switchingDelay":0
+         }
+      }
+   ],
    "hardwareModel":
    {
       "name":"ExampleHardware1",
-      "processingElementClasses":
-      [
-         {
-            "monoTaskSwitchingTask":
-            {
-               "name":"cpu",
-               "resources":[],
-               "properties":[],
-               "switchingDelay":0
-            }
-         }
-      ],
       "processingElements":
       [
          {
             "processorClass":"cpu",
             "name":"MultiCore1",
-            "memSize":1048576,
+            "memSize":131072,
             "resources":[],
             "properties":[],
             "powerModel":"0",
@@ -978,6 +979,7 @@
             "size":624,
             "timing":"Sticky"
          },
+
          {
             "name":"Digit2ExtractionToDigit2FinalCut",
             "source":"Digit2Extraction",
@@ -1190,8 +1192,6 @@
             "size":1,
             "timing":"Sticky"
          },
-         
-         
          {
             "name":"BarcodeDecodeToOutput",
             "source":"BarcodeDecode",
@@ -1218,6 +1218,6 @@
    "constraints":[],
    "goal":
    {
-      "simpleObjective":"sat"
+      "simpleObjective":"minMakespan"
    }
 }
