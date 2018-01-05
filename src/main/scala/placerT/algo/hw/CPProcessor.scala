@@ -21,7 +21,8 @@ package placerT.algo.hw
 
 import oscar.cp
 import oscar.cp._
-import oscar.cp.core.{CPOutcome, NoSolutionException}
+import oscar.cp.constraints.Or
+import oscar.cp.core.NoSolutionException
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper}
@@ -29,11 +30,11 @@ import placerT.metadata.hw.ProcessingElement
 import placerT.metadata.sw.TransmissionTiming._
 
 /**
- * @param id
- * @param p
- * @param memSize the memory used for storing incoming and outgoing data, also used for computation memory of tasks te memory for data in and out is maintained during task execution.
- * @param mapper
- */
+  * @param id
+  * @param p
+  * @param memSize the memory used for storing incoming and outgoing data, also used for computation memory of tasks te memory for data in and out is maintained during task execution.
+  * @param mapper
+  */
 abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, mapper: Mapper) {
 
   implicit val solver = mapper.solver
@@ -65,55 +66,66 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
         task.taskDuration,
         task.end,
         isTaskExecutedHere * task.computationMemory,
-        "temporary storage of " + task.explanation)
+        "working memory of task " + task.explanation)
     }
   }
 
   protected def accumulateTransmissionStorageOnTask(task: CPTask) {
     val isTaskExecutedHere = task.isRunningOnProcessor(this.id)
 
+    //if transmission is a self-loop, is is constrained to occur
     if (!isTaskExecutedHere.isFalse) {
       //true or not decided yet; if false, we have nothing to do
 
       // the code here  ensures that the storage is maintained during the execution of the task.
       //storage of incoming transmissions
       for (incomingTransmission <- task.incomingCPTransmissions) {
-        val storageStart = incomingTransmission.start
-        val storageDuration = task.start - 1 - incomingTransmission.start
-        val storageEnd = task.start - 1
+        //buffer for incoming data
 
         accumulateTemporaryStorage(
-          storageStart,
-          storageDuration,
-          storageEnd,
+          incomingTransmission.start,
+           task.start - incomingTransmission.start,
+          task.start,
           isTaskExecutedHere * incomingTransmission.size,
-          "incoming data from " + incomingTransmission.explanation + " before start of " + task.explanation)
+          "data buffer of incoming transmission " + incomingTransmission.explanation + " waiting for task " + task.explanation)
 
         incomingTransmission.timing match {
           case Alap => //we have to constraint the arrival time here
-            addDocumented(new oscar.cp.constraints.Eq(incomingTransmission.end,task.start - 1),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
+            addDocumented(incomingTransmission.end === (task.start),"ALAP constraint on transmission " + incomingTransmission.transmission.name)
+          case Sticky =>
+            addDocumented(
+              new Or(Array(
+                incomingTransmission.end ?=== (task.start),
+                incomingTransmission.start ?=== (incomingTransmission.from.end)))
+              ,"Sticky constraint on transmission " + incomingTransmission.transmission.name)
+
           case _ =>
             //we are on the other side, the simple constraint is enough
-            addDocumented(incomingTransmission.end < task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)
+            //notice that it must be a <= because global timing is computed in this way!
+            addDocumented(incomingTransmission.end <= task.start,"precedence constraint on incoming transmission " + incomingTransmission.transmission.name)
         }
       }
 
       //storage of outgoing transmissions
       for (outGoingTransmission <- task.outgoingCPTransmissions) {
+
+        //buffer for outgoing data.
         accumulateTemporaryStorage(
-          task.end + 1,
-          duration = outGoingTransmission.end - task.end - 1,
+          task.end,
+          outGoingTransmission.end - task.end,
           outGoingTransmission.end,
-          isTaskExecutedHere * outGoingTransmission.size,
-          "outgoing data from " + task.explanation + " before transmission " + outGoingTransmission.explanation)
+          isTaskExecutedHere * outGoingTransmission.isSelfLoopTransmission.not * outGoingTransmission.size,
+          "data buffer outgoing task " + task.explanation + " before transmission " + outGoingTransmission.explanation)
 
         outGoingTransmission.timing match {
           case Asap =>
             //we have to constraint the departure time here
-            addDocumented(new oscar.cp.constraints.Eq(outGoingTransmission.start,task.end + 1),"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
+            addDocumented(task.end === outGoingTransmission.start,"ASAP constraint on transmission " + outGoingTransmission.transmission.name)
           case _ =>
+            //Sticky or asap
             //we are on the other side, the simple constraint is enough
-            addDocumented(task.end < outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)
+            //notice that it must be a <= because global timing is computed in this way!
+            addDocumented(task.end <= outGoingTransmission.start,"precedence constraint on outgoing transmission " + outGoingTransmission.transmission.name + " task.end:" + task.end + " outGoingTransmission.start:" + outGoingTransmission.start)
         }
       }
     }
@@ -123,17 +135,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     if (temporaryStorages.isEmpty) {
       System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
-
-      val trimmedMemSize = memSize
-/*
-      val summedMems = temporaryStorages.map(_.amount.max).sum
-      if(trimmedMemSize < memSize){
-        System.err.println("trimmed memSize of " + p.name + " from " + memSize + " to " + trimmedMemSize)
-      }else{
-        System.err.println("summedMems of " + p.name + ":" + summedMems)
-      }
-      */
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(trimmedMemSize),"temporary storage for processor " + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(memSize),"temporary storage for processor " + p.name)
     }
   }
 

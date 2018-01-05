@@ -32,25 +32,108 @@ object Extractor {
   implicit val formats = DefaultFormats
 
   // Brings in default date formats etc.
-  def extractProblem(jValue: JValue,verbose:Boolean = true): MappingProblem = {
-    jValue.extract[EMappingProblem].extract(verbose)
+  def extractProblem(jValue:JValue,fileName:String,verbose:Boolean = true): MappingProblem = {
+    jValue.extract[EMappingProblem].extract(verbose,fileName)
   }
 }
 
 case class EMappingProblem(timeUnit:String,
-                            dataUnit:String,
-                            softwareModel: ESoftwareModel,
-                            hardwareModel: EHardwareModel,
-                            properties: List[ENameValue] = List.empty,
-                            goal: EGoal) {
+                           dataUnit:String,
+                           info:Option[String],
+                           processingElementClasses:Array[EProcessingElementClass],
+                           softwareModel: ESoftwareModel,
+                           hardwareModel: EHardwareModel,
+                           constraints:List[EMappingConstraint],
+                           properties: List[ENameValue] = List.empty,
+                           goal:EGoal) {
 
-  def extract(verbose:Boolean) = {
-    val hw = hardwareModel.extract
+  require(processingElementClasses.nonEmpty,"no procesing element class specified in input file")
+  def extract(verbose:Boolean,fileName:String) = {
+    val cl = processingElementClasses.map(_.extract)
+    Checker.checkDuplicates(cl.map(_.name),"processing element class")
+
+    val hw = hardwareModel.extract(cl)
     val sw = softwareModel.extract(hw,verbose)
 
-    MappingProblem(timeUnit,dataUnit,SortedMap.empty[String, Int] ++ properties.map(_.toCouple),sw, hw, goal.extract)
+    MappingProblem(
+      timeUnit,
+      dataUnit,
+      info match{case None => fileName; case Some(i) => i},
+      SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
+      cl,
+      sw,
+      hw,
+      constraints.map(_.extract(hw,sw)),
+      goal.extract)
   }
 }
+
+case class EMappingConstraint(runOn:Option[ERunOn],
+                              notRunOn:Option[ERunOn],
+                              samePE:Option[List[String]],
+                              notSamePE:Option[List[String]],
+                              mustBeUsed:Option[String],
+                              mustNotBeUsed:Option[String],
+                              symmetricPE:Option[List[String]]){
+  def extract(hw:HardwareModel,sw:SoftwareModel):MappingConstraint = {
+
+    def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
+      val processor = hw.processors.find(p => p.name equals c.processingElement) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find processor" + c.processingElement + " used in mappingConstraint " + c)}
+
+      val process = sw.simpleProcesses.find(p => p.name equals c.task) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find process " + c.task + " used in mappingConstraint " + c)}
+
+      RunOnConstraint(processor,process,value)
+    }
+
+    def extractSameCore(c:List[String],value:Boolean):MappingConstraint = {
+      val processes = c.map(process => sw.simpleProcesses.find(p => p.name equals process) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find process " + process + " used in mappingConstraint " + c)})
+
+      CoreSharingConstraint(processes,value)
+    }
+
+    def extractMustBeUsed(processorName:String,value:Boolean):MustBeUsedConstraint = {
+      val processor = hw.processors.find(p => p.name equals processorName) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")}
+      MustBeUsedConstraint(processor,value)
+    }
+
+    def extractPESymmetry(symmetricPENames:List[String]):SymmetricPEConstraint = {
+      val processors = symmetricPENames.map(processorName => hw.processors.find(p => p.name equals processorName) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")})
+
+      SymmetricPEConstraint(processors)
+    }
+
+    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,mustNotBeUsed,symmetricPE) match {
+      case (Some(s),None,None,None,None,None,None) =>
+        extractRunOn(s,true)
+      case (None,Some(s),None,None,None,None,None) =>
+        extractRunOn(s,false)
+      case (None,None,Some(s),None,None,None,None) =>
+        extractSameCore(s,true)
+      case (None,None,None,Some(s),None,None,None) =>
+        extractSameCore(s,false)
+      case (None,None,None,None,Some(s),None,None) =>
+        extractMustBeUsed(s,true)
+      case (None,None,None,None,None,Some(s),None) =>
+        extractMustBeUsed(s,false)
+      case (None,None,None,None,None,None,Some(s)) =>
+        extractPESymmetry(s)
+
+      case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)
+    }
+  }
+}
+
+case class ERunOn(task:String,processingElement:String)
 
 case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
   def extract:MappingGoal = {
@@ -65,18 +148,26 @@ case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
 }
 
 object EGoal{
-  def extractSimple(name:String):SimpleMappingGoal = {
+  def extractSimple(name:String):MappingGoal = {
     name match{
       case "minEnergy" => MinEnergy()
-      case "minMakeSpan" => MinMakeSpan()
+      case "minMakespan" => MinMakeSpan()
       case "minFrame" => MinFrame()
+      case "sat" => Sat()
       case _ => throw new Error("unknown simple mapping goal:" + name)
+    }
+  }
+
+  def extractSimpleExpectSimple(name:String):SimpleMappingGoal = {
+    extractSimple(name:String) match{
+      case s:SimpleMappingGoal => s
+      case x => throw new Error("expected simple mappinggoal, got " + x)
     }
   }
 }
 
 case class EPareto(a:String,b:String){
-  def extract:Pareto = Pareto(EGoal.extractSimple(a), EGoal.extractSimple(b))
+  def extract:Pareto = Pareto(EGoal.extractSimpleExpectSimple(a), EGoal.extractSimpleExpectSimple(b))
 }
 
 case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
@@ -108,8 +199,8 @@ case class ESoftwareClass(oneShotSoftware: Option[EOneShotSoftware],
   }
 }
 
-case class EOneShotSoftware(maxDelay: Option[Int]) {
-  def extract = OneShotSoftware(maxDelay)
+case class EOneShotSoftware(maxMakespan: Option[Int]) {
+  def extract = OneShotSoftware(maxMakespan)
 }
 
 case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int]){
@@ -139,13 +230,22 @@ case class EParametricImplementation(name: String,
   val parsedComputationMemory = FormulaParser(computationMemory)
   val parsedDuration = FormulaParser(duration)
 
-  def extract(hw: HardwareModel) =
-    ParametricImplementation(name,
-      hw.processorClasses.find(_.name equals target)match{case Some(x) => x ; case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)},
-      SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract),
+  val parsedResources = SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract)
+
+  def extract(hw: HardwareModel) = {
+    val targetClass = hw.processorClasses.find(_.name equals target) match {
+      case Some(x) => x;
+      case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)
+    }
+    require(targetClass.resources equals parsedResources.keySet,"error in declared resources of " + name)
+    ParametricImplementation(
+      name,
+      targetClass,
+      parsedResources,
       parsedComputationMemory,
       parsedDuration,
       SortedMap.empty[String, Iterable[Int]] ++ parameters.map(_.extract))
+  }
 }
 
 case class ENameValues(name: String, values: List[Int]) {
@@ -172,6 +272,7 @@ case class ETransmission(source: String,
         case "Asap" => Asap
         case "Alap" => Alap
         case "Free" => Free
+        case "Sticky" => Sticky
         case _ => throw new Error("undefined timing constraint " + timing + " in transmission " + name)
       },
       name)
@@ -206,7 +307,7 @@ case class EProcessingElement(processorClass: String,
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = ProcessingElement(
     pc.find(_.name equals processorClass)match{
-      case None => throw new Error("cannot find processing element class " + processorClass + " used in processing element" + name)
+      case None => throw new Error("cannot find processing element class " + processorClass + " used in processing element: " + name)
       case Some(x) => x
     },
     SortedMap.empty[String, Int] ++ resources.map(_.toCouple),
@@ -256,19 +357,16 @@ case class ESingleWayBus(from: List[String],
 }
 
 case class EHardwareModel(name: String,
-                          processingElementClasses: Array[EProcessingElementClass],
                           processingElements: Array[EProcessingElement],
                           busses: Array[EBus],
                           properties: List[ENameValue],
                           powerCap: Option[Int],
                           energyCap: Option[Int]) {
-  def extract = {
-    val pc = processingElementClasses.map(_.extract)
-    Checker.checkDuplicates(pc.map(_.name),"processing element class")
+  def extract(pc:Array[ProcessingElementClass]) = {
     val p = processingElements.map(_.extract(pc))
     Checker.checkDuplicates(p.map(_.name),"processing element")
     val b = busses.map(_.extract(p))
-    Checker.checkDuplicates(p.map(_.name),"bus")
+    Checker.checkDuplicates(b.map(_.name),"bus")
     HardwareModel(
       name,
       pc,

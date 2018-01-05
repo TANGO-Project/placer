@@ -31,7 +31,7 @@ import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
  * @param p the processing element, to get more info
  * @param memSize the max mem size, taken from p
  */
-class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switchingDelay: Int, mapper: Mapper)
+class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
   require(p.processorClass.isInstanceOf[MonoTaskSwitchingTask])
 
@@ -39,7 +39,10 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
   var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
+
     accumulateTransmissionStorageOnTask(task)
+    accumulateComputationMemoryOnProcessor(task)
+
     val isTaskExecutedHere = task.isRunningOnProcessor(id)
 
     if (!isTaskExecutedHere.isFalse) {
@@ -59,7 +62,6 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, switching
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)
     else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere)
   }
-
 
   override def close() {
     SimpleTask.postUnaryResourceFromSimpleTasks(allSimpleTasksPotentiallyExecutingHere, switchingDelay,origin="usage of CPMonoTaskProcessor" + p.name)

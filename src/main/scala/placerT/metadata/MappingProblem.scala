@@ -21,8 +21,8 @@
 package placerT.metadata
 
 import placerT.io.JSonHelper
-import placerT.metadata.hw.HardwareModel
-import placerT.metadata.sw.SoftwareModel
+import placerT.metadata.hw.{HardwareModel, ProcessingElement, ProcessingElementClass}
+import placerT.metadata.sw.{AtomicTask, SoftwareModel}
 
 import scala.collection.immutable.SortedMap
 
@@ -34,9 +34,12 @@ import scala.collection.immutable.SortedMap
  */
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
+                          info:String,
                           properties:SortedMap[String,Int],
+                          processorClasses: Array[ProcessingElementClass],
                           softwareModel: SoftwareModel,
                           hardwareModel: HardwareModel,
+                          constraints:List[MappingConstraint],
                           goal: MappingGoal) {
 
   for (task <- softwareModel.simpleProcesses)
@@ -54,4 +57,37 @@ case class MappingProblem(timeUnit:String,
     JSonHelper.complex("softwareModel", softwareModel.toJSon) + "," +
     JSonHelper.complex("hardwareModel", hardwareModel.toJSon) + "," +
     JSonHelper.complex("goal", goal.toJSon) + "}"
+}
+
+abstract sealed class MappingConstraint
+case class RunOnConstraint(processor:ProcessingElement,
+                             process:AtomicTask,
+                             value:Boolean) extends MappingConstraint{
+  override def toString: String = {
+    (if (value) "MustRunOn(" else "MustNotRunOn(") + process.name + "," + processor.name + ")"
+  }
+}
+case class CoreSharingConstraint(processes:List[AtomicTask],
+                                 value:Boolean) extends MappingConstraint{
+  override def toString: String = {
+    (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
+  }
+}
+case class MustBeUsedConstraint(processor:ProcessingElement,value:Boolean) extends MappingConstraint {
+  override def toString: String = (if(value) "MustBeUsed(" else "MustNotBeUsed(") + processor.name + ")"
+}
+
+case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:SymmetricPEConstraintType.Value = SymmetricPEConstraintType.Workload) extends MappingConstraint {
+
+  require(processors.size > 1,"SymmetricPEConstraint cannot be specified with fewer that two processing elements")
+  val witnessPE = processors.head
+  for(p <- processors.tail){
+    require(witnessPE symmetricTo p, "different processing elements specified in SymmetricPEConstraint:" + witnessPE.name + " and " + p.name)
+  }
+
+  override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
+}
+
+object SymmetricPEConstraintType extends Enumeration {
+  val Workload,LongTask = Value
 }

@@ -1,3 +1,12 @@
+beta1 release:
+---------------
+modified the JSon format:
+processing element classes are in the mapping problem
+improved a lot the search strategy
+solved a lot of bugs related to the time model and a bug with underlying constraint
+uses latest OscaR.cp model
+rewrote the model so that it better scales up
+added LNS
 
 alpha6 release:
 ---------------

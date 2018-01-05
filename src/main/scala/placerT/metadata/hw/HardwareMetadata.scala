@@ -32,10 +32,10 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 
 
 /**
- * @param name
- * @param resources
- * @param properties
- */
+  * @param name
+  * @param resources
+  * @param properties
+  */
 abstract class ProcessingElementClass(val name: String,
                                       val resources: SortedSet[String],
                                       val properties: SortedSet[String])
@@ -58,10 +58,10 @@ abstract class ProcessingElementClass(val name: String,
 
 
 /**
- * like a FPGA: can perform many tasks at the same time, but cannot be re-fitted with other tasks (approximation)
- * we do not have switching in this case because switching can be performed only when all tasks are competed,
- * and it is very difficult to represent this in the optimization model
- */
+  * like a FPGA: can perform many tasks at the same time, but cannot be re-fitted with other tasks (approximation)
+  * we do not have switching in this case because switching can be performed only when all tasks are competed,
+  * and it is very difficult to represent this in the optimization model
+  */
 //bin-packing non-timed (since permanent use), but task still have duration
 case class MultiTaskPermanentTasks(override val name: String, override val resources: SortedSet[String], override val properties: SortedSet[String])
   extends ProcessingElementClass(name: String, resources: SortedSet[String], properties: SortedSet[String]) {
@@ -83,10 +83,10 @@ case class MultiTaskPermanentTasks(override val name: String, override val resou
 }
 
 /**
- * can only perform a single task at a time, and there is a delay to switch to another task.
- * during this delay, it does nothing
- * @param switchingDelay
- */
+  * can only perform a single task at a time, and there is a delay to switch to another task.
+  * during this delay, it does nothing
+  * @param switchingDelay
+  */
 // unaryResource(starts: Array[CPIntVar], durations: Array[CPIntVar], ends: Array[CPIntVar], required: Array[CPBoolVar])
 case class MonoTaskSwitchingTask(override val name: String, override val resources: SortedSet[String], override val properties: SortedSet[String], switchingDelay: Int)
   extends ProcessingElementClass(name: String, resources: SortedSet[String], properties: SortedSet[String]) {
@@ -111,12 +111,12 @@ case class MonoTaskSwitchingTask(override val name: String, override val resourc
 }
 
 /**
- * @param processorClass
- * @param resources
- * @param name
- * @param memSize
- * @param powerModel is the power that the processor consumes. dimensions are set to zero when nothing executes. must be linear for multiTask processors
- */
+  * @param processorClass
+  * @param resources
+  * @param name
+  * @param memSize
+  * @param powerModel is the power that the processor consumes. dimensions are set to zero when nothing executes. must be linear for multiTask processors
+  */
 case class ProcessingElement(processorClass: ProcessingElementClass,
                              resources: SortedMap[String, Int],
                              properties: SortedMap[String, Int],
@@ -166,6 +166,14 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
       JSonHelper.multiples("properties", properties.toList.map({ case (p, a) => "{" + JSonHelper.string("name", p) + "," + JSonHelper.int("value", a) + "}" })) + "," +
       JSonHelper.string("powerModel", powerModel.prettyPrint()) + "}"
   }
+
+  def symmetricTo(that:ProcessingElement):Boolean = {
+    ((this.processorClass == that.processorClass) &&
+      (this.resources equals that.resources) &&
+      (this.properties equals that.properties) &&
+      (this.memSize == that.memSize) &&
+      (this.powerModel equals that.powerModel))
+  }
 }
 
 
@@ -193,11 +201,11 @@ sealed abstract class Bus(val name: String, val timeUnitPerDataUnit: Int, val la
   def sendingToProcessors: Set[ProcessingElement]
 
   /**
-   * compute the duration for transmissing a certain amount of data.
-   * delay + size * timeUnitPerBit
-   * @param size
-   * @return
-   */
+    * compute the duration for transmissing a certain amount of data.
+    * delay + size * timeUnitPerBit
+    * @param size
+    * @return
+    */
   def transmissionDuration(size: Int): Int = latency + size * timeUnitPerDataUnit
 
   def toJSon: String
@@ -208,7 +216,7 @@ case class HalfDuplexBus(relatedProcessors: List[ProcessingElement],
                          override val latency: Int,
                          override val name: String)
   extends Bus(name, timeUnitPerDataUnit, latency) {
-  require(timeUnitPerDataUnit > 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit + "; should be >= 1")
+  require(timeUnitPerDataUnit >= 0, "creating bus " + name + " with unauthorized timeUnitPerDataUnit:" + timeUnitPerDataUnit + "; should be >= 1")
 
   override def toString: String = "HalfDuplexBus(" +
     name + " processors:{" + relatedProcessors.map(_.name).mkString(",") + "} timeUnitPerDataUnit:" +

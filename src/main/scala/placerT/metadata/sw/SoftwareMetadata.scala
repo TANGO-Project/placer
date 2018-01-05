@@ -40,7 +40,6 @@ case class FlattenedImplementation(name: String,
                                    duration: Formula,
                                    originImplementation: ParametricImplementation = null,
                                    parameterValues: SortedMap[String, Int] = null) extends Indiced {
-
   require(resourceUsage.keySet subsetOf target.resources, "unknown resources specified in implementation " + target + ": " + (resourceUsage.keySet -- target.resources).mkString(","))
   require(duration.terms subsetOf target.properties, "duration is defined based on unknown features in implementation " + target + ": " + (duration.terms -- target.properties).mkString(","))
 
@@ -154,6 +153,7 @@ case class AtomicTask(implementations: List[ParametricImplementation],
             return true
           }
         }
+        return false
       case _ => throw new Error("internal error")
     }
     throw new Error("internal error")
@@ -188,7 +188,7 @@ case class AtomicTask(implementations: List[ParametricImplementation],
 
 object TransmissionTiming extends Enumeration {
   type TransmissionTiming = Value
-  val Asap, Alap, Free = Value
+  val Asap, Alap, Free, Sticky = Value
 }
 
 import placerT.metadata.sw.TransmissionTiming._
@@ -274,12 +274,13 @@ case class SoftwareModel(simpleProcesses: Array[AtomicTask],
 
 abstract sealed class SoftwareClass() {
   def toJSon: String
+  def maxMakespan:Option[Int]
 }
 
-case class OneShotSoftware(maxDelayRequirement: Option[Int]) extends SoftwareClass() {
-  override def toString: String = "OneShotSoftware(maxDelayRequirement:" + maxDelayRequirement + ")"
+case class OneShotSoftware(maxMakespan: Option[Int]) extends SoftwareClass() {
+  override def toString: String = "OneShotSoftware(maxDelayRequirement:" + maxMakespan + ")"
 
-  override def toJSon: String = "{" + JSonHelper.complex("oneShotSoftware", "{" + (maxDelayRequirement match {
+  override def toJSon: String = "{" + JSonHelper.complex("oneShotSoftware", "{" + (maxMakespan match {
     case None => "";
     case Some(t: Int) => JSonHelper.int("maxDelay", t)
   }) + "}") + "}"

@@ -17,18 +17,26 @@
  *
  */
 
+package placerT.algo
 
-package placerT.algo.sw
+/**
+ * Created by rdl on 31-08-17.
+ */
+object Pairs {
 
-import oscar.cp.core.variables.CPIntVar
-import placerT.algo.Mapper
+  def makeAllSortedPairs[T](l:List[T]):List[(T,T)] = {
+    def makeAllSortedPairsWithHead(head:T,
+                                   tail:List[T],
+                                   toAppend:List[(T,T)]):List[(T,T)] = {
+      tail match{
+        case Nil => toAppend
+        case other::newTail => (head,other) :: makeAllSortedPairsWithHead(head,newTail,toAppend)
+      }
+    }
+    l match{
+      case Nil => Nil
+      case h::t => makeAllSortedPairsWithHead(h,t,makeAllSortedPairs(t))
+    }
+  }
 
-abstract class CPAbstractTask(mapper: Mapper) {
-  def start: CPIntVar
-
-  def end: CPIntVar
-
-  def variablesToDistribute: Iterable[CPIntVar]
-
-  def variablesToSave: Iterable[CPIntVar]
 }

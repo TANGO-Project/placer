@@ -20,12 +20,12 @@
 package placerT.algo
 
 import oscar.cp._
-import oscar.cp.core.CPOutcome
+import oscar.cp.core.CPPropagStrength
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 
 
-case class SimpleTask(start: CPIntVar, duration: CPIntVar, end: CPIntVar, isNeeded: CPBoolVar)
+case class SimpleTask(start:CPIntVar, duration: CPIntVar, end: CPIntVar, isNeeded: CPBoolVar)
 
 object SimpleTask extends Constraints {
 
@@ -45,9 +45,11 @@ object SimpleTask extends Constraints {
           i <- startTimeArray.indices
           j <- i + 1 until startTimeArray.length
         } {
-          if(CPOutcome.Failure == cp.add((!isNeededArray(i)) || (!isNeededArray(j)) || (endArray(j) + switchingDelay <== startTimeArray(i)) || (endArray(i) + switchingDelay <== startTimeArray(j)))){
-            throw new NoSolutionException("no solution when posting switchingDelay on " + origin)
-          }
+          cp.add(
+            ((!isNeededArray(i))
+            || (!isNeededArray(j))
+            || ((endArray(j) + switchingDelay) ?<= startTimeArray(i))
+            || ((endArray(i) + switchingDelay) ?<= startTimeArray(j))))
         }
       }
     } else {
@@ -56,9 +58,12 @@ object SimpleTask extends Constraints {
         durationArray(t) = durationArray(t) + switchingDelay
       }
     }
-    if(CPOutcome.Failure == cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))){
-      throw new NoSolutionException("no solution when posting cumulative co for " + origin)
+    //needed because there is a bug in resource constraint when duration is unset and negative
+    for(duration <- durationArray){
+      cp.add(duration >= 0)
     }
+
+    cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))
   }
 
   def resourceWidthOfUse(simpleTasks: List[SimpleTask]):CPIntVar = {
@@ -115,20 +120,32 @@ object CumulativeTask extends Constraints {
    * @param cumulativeTasks a set of cumulative tasks, which require a certain amount of resource (zero means that it does not use the resource, actually)
    * @param maxResource the maximal amount of available resources
    */
-
   def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String) {
-    val simpleTasksArray = cumulativeTasks.filter(!_.amount.isBoundTo(0)).toArray
-    if (simpleTasksArray.length != 0) {
-      val startTimeArray = simpleTasksArray.map(_.start)
-      val endArray = simpleTasksArray.map(_.end)
-      val durationArray = simpleTasksArray.map(_.duration)
-      val amountArray = simpleTasksArray.map(_.amount)
-      val cp = startTimeArray(0).store
-      if(CPOutcome.Failure == cp.add(maxCumulativeResource(startTimeArray, durationArray, endArray, amountArray, maxResource)))
-        throw new NoSolutionException("error on constraint " + origin)
+    val simpleTasksArray = cumulativeTasks.filter(t => !t.amount.isBoundTo(0)).toArray
+    val summedMaxAmount = simpleTasksArray.map(_.amount.max).sum
+    if (summedMaxAmount < maxResource.min) {
+      println("INFO: skipping tautological cumulative constraint: " + origin + ", summedMaxAmount:" + summedMaxAmount + ", min available resource:" + maxResource.min)
+    } else {
+      if (simpleTasksArray.length != 0) {
+        val startTimeArray = simpleTasksArray.map(_.start)
+        val endArray = simpleTasksArray.map(_.end)
+        val durationArray = simpleTasksArray.map(_.duration)
+
+        val amountArray = simpleTasksArray.map(_.amount)
+        val cp = startTimeArray(0).store
+
+        //needed because there is a bug in resource constraint when duration is unset and negative
+        for(duration <- durationArray){
+          cp.add(duration >=0)
+        }
+
+        cp.add(maxCumulativeResource(startTimeArray, durationArray, endArray, amountArray, maxResource))
+      }
     }
   }
 }
 
-case class CumulativeTask(start: CPIntVar, duration: CPIntVar, end: CPIntVar, amount: CPIntVar, explanation: String)
+case class CumulativeTask(start:CPIntVar, duration:CPIntVar, end: CPIntVar, amount: CPIntVar, explanation: String){
+
+}
 

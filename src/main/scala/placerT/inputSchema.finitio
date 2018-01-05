@@ -22,7 +22,6 @@ HardwareModel = {
     name:String
     powerCap:?Integer
     energyCap:?Integer
-    processingElementClasses:[ProcessingElementClass]
     processingElements:[ProcessingElement]
     busses:[Bus]
     properties:[NameValue]
@@ -54,7 +53,6 @@ SingleWayBus = {
     latency:Integer
 }
 
-
 #referencing a processing element that is declared in HardwareModel/processingElements
 ProcessingElementRef = String
 
@@ -84,7 +82,7 @@ SoftwareModel =  {
     simpleProcesses:[SimpleProcess]
     transmissions:[Transmission]
     softwareClass:SoftwareClass
-    properties:[NameValue]
+    properties:?[NameValue]
 }
 
 SimpleProcess = {
@@ -145,7 +143,7 @@ IterativeSoftware={
 }
 
 OneShotSoftware = {
-    maxDelay:?Integer
+    maxMakespan:?Integer
 }
 
 MappingGoal =
@@ -160,11 +158,27 @@ MultiObjectiveGoal = {
     b:SimpleGoal
 }
 
+TaskPE = {
+    task:String
+    processingElement:String
+}
+
+Constraint = {mustBeUsed:String}
+   | {mustNotBeUsed:String}
+   | {samePE:[String]}
+   | {notSamePE:[String]}
+   | {symmetricPE:[String]}
+   | {runOn:TaskPE}
+   | {notRunOn:TaskPE}
+
 Main = {
+    info:?String
     timeUnit:String
     dataUnit:String
+    processingElementClasses:[ProcessingElementClass]
     hardwareModel:HardwareModel
     softwareModel:SoftwareModel
     goal:MappingGoal
-    properties:[NameValue]
+    properties:?[NameValue]
+    constraints:?[Constraint]
 }

@@ -14,16 +14,6 @@
       }
     },
     {
-      "monoTaskSwitchingTask":{
-        "name":"gpgpu",
-        "resources":[
-          "core"
-        ],
-        "properties":[],
-        "switchingDelay":1
-      }
-    },
-    {
       "multiTaskPermanentTasks":{
         "name":"fpga",
         "resources":[
@@ -57,19 +47,6 @@
           }
         ],
         "powerModel":"buzy*mflops*30+5"
-      },
-      {
-        "processorClass":"gpgpu",
-        "name":"GPGPU1",
-        "memSize":2000,
-        "resources":[
-          {
-            "name":"core",
-            "value":110
-          }
-        ],
-        "properties":[],
-        "powerModel":"core*5+10"
       },
       {
         "processorClass":"cpu",
@@ -117,33 +94,10 @@
           "name":"globalBus",
           "relatedProcessors":[
             "procA",
-            "GPGPU1",
             "procB",
             "FPGA1"
           ],
           "timeUnitPerDataUnit":3,
-          "latency":1
-        }
-      },
-      {
-        "halfDuplexBus":{
-          "name":"busAtoGPGPU",
-          "relatedProcessors":[
-            "procA",
-            "GPGPU1"
-          ],
-          "timeUnitPerDataUnit":1,
-          "latency":1
-        }
-      },
-      {
-        "halfDuplexBus":{
-          "name":"busBToGPGPU",
-          "relatedProcessors":[
-            "GPGPU1",
-            "procB"
-          ],
-          "timeUnitPerDataUnit":2,
           "latency":1
         }
       },
@@ -163,7 +117,6 @@
           "name":"globalBus2",
           "relatedProcessors":[
             "procA",
-            "GPGPU1",
             "procB",
             "FPGA1"
           ],
@@ -246,19 +199,6 @@
             ],
             "computationMemory":"10",
             "duration":"1000/frequency"
-          },
-          {
-            "name":"gpgpu_standard",
-            "target":"gpgpu",
-            "parameters":[],
-            "resourceUsage":[
-              {
-                "name":"core",
-                "formula":"100"
-              }
-            ],
-            "computationMemory":"10",
-            "duration":"10"
           }
         ]
       },
@@ -272,19 +212,6 @@
             "resourceUsage":[],
             "computationMemory":"10",
             "duration":"110/mflops+1000/mips"
-          },
-          {
-            "name":"gpgpu_standard",
-            "target":"gpgpu",
-            "parameters":[],
-            "resourceUsage":[
-              {
-                "name":"core",
-                "formula":"1"
-              }
-            ],
-            "computationMemory":"10",
-            "duration":"10"
           }
         ]
       },
@@ -298,19 +225,6 @@
             "resourceUsage":[],
             "computationMemory":"10",
             "duration":"110/mflops+1000/mips"
-          },
-          {
-            "name":"gpgpu_standard",
-            "target":"gpgpu",
-            "parameters":[],
-            "resourceUsage":[
-              {
-                "name":"core",
-                "formula":"1"
-              }
-            ],
-            "computationMemory":"10",
-            "duration":"10"
           }
         ]
       },
@@ -358,19 +272,6 @@
             ],
             "computationMemory":"10",
             "duration":"101/frequency"
-          },
-          {
-            "name":"gpgpu_standard",
-            "target":"gpgpu",
-            "parameters":[],
-            "resourceUsage":[
-              {
-                "name":"core",
-                "formula":"100"
-              }
-            ],
-            "computationMemory":"10",
-            "duration":"10"
           }
         ]
       },

@@ -20,13 +20,10 @@
 package placerT.metadata
 
 import placerT.io.JSonHelper
-import placerT.metadata.hw.{Bus, ProcessingElement}
+import placerT.metadata.hw.{SelfLoopBus, Bus, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, Transmission}
 
-
-case class Mapping(timeUnit:String,
-                   dataUnit:String,
-                   hardwareName: String,
+case class Mapping(hardwareName: String,
                    taskMapping: Array[(AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)],
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
                    makeSpan: Int,
@@ -37,13 +34,31 @@ case class Mapping(timeUnit:String,
 
   private def nStrings(n: Int, s: String): String = if (n <= 0) "" else s + nStrings(n - 1, s)
 
+  def coreUsages:List[String] = {
+    val coreAndTaskAndDuration = taskMapping.map({case (task:AtomicTask,pe:ProcessingElement,i,s,d,e) => (pe.name,task.name + "(dur:" + d + ")",d)}).toList
+    val coreToTask = coreAndTaskAndDuration.groupBy(_._1).toList.sortBy(_._1)
+    coreToTask.map({case (core,tasks) => "" + core +":" + tasks.map(_._3).sum + ":" + tasks.map(_._2).mkString(",")}).toList
+  }
+
+  def busUsages:List[String] = {
+    val busAndDuration = transmissionMapping.toList.flatMap{
+      {case (trans,pr1,pe2,bus,s,d,e) =>
+        bus match{
+          case s:SelfLoopBus => None
+          case b:Bus => Some(b.name,d)
+        }
+      }
+    }
+    val busToDurations = busAndDuration.groupBy(_._1).toList.sortBy(_._1)
+    busToDurations.map({case(bus,durs) => "" + bus + ":" + durs.map(_._2).sum }).toList
+  }
 
   override def toString: String = "Mapping(\n\t" +
     taskMapping.map(
     { case (task, pe, implem, start, dur, end) =>
       padToLength(task.name, 22) + "implem:" + padToLength(implem.description, 22) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4)
     }).mkString("\n\t") + "\n\t" +
-    transmissionMapping.map(
+    transmissionMapping.filter(p => p._2.id != p._3.id).map(
     { case (trans, fromPE, toPE, bus, start, dur, end) =>
       padToLength(trans.name, 21) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4)
     }).mkString("\n\t") + "\n)"
@@ -53,7 +68,7 @@ case class Mapping(timeUnit:String,
     { case (task, pe, implem, start, dur, end) =>
       (padToLength(task.name, 40) + "implem:" + padToLength(implem.description, 40) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
     }).toList ++
-      transmissionMapping.map(
+      transmissionMapping.filter(p => p._2.id != p._3.id).map(
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 31) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
       })
@@ -65,22 +80,22 @@ case class Mapping(timeUnit:String,
     { case (task, pe, implem, start, dur, end) =>
       (padToLength(task.name, 60) + " " + padToLength(pe.name + "(" + implem.description + ")", 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
     }).toList ++
-      transmissionMapping.map(
+      transmissionMapping.filter(p => p._2.id != p._3.id).map(
       { case (trans, fromPE, toPE, bus, start, dur, end) =>
         (padToLength(trans.name, 60) + " " + padToLength(bus.name, 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       })
-    "Mapping(timeUnit:" + timeUnit + " dataUnit:" + dataUnit + " hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
+    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
 
+  def usages:String = "usages{" + coreUsages.mkString("\n\t","\n\t","") + busUsages.mkString("\n\t","\n\t","\n") + "}"
+
   def toJSon: String = "{" +
-    JSonHelper.string("timeUnit", timeUnit) + "," +
-    JSonHelper.string("dataUnit", dataUnit) + "," +
     JSonHelper.string("hardwareName", hardwareName) + "," +
     JSonHelper.int("makeSpan", makeSpan) + "," +
     JSonHelper.optionIntComa("width", width) +
     JSonHelper.int("energy", energy) + "," +
     JSonHelper.multiples("taskMapping", taskMapping.map(taskMappingToJSon)) + "," +
-    JSonHelper.multiples("transmissionMapping", transmissionMapping.map(transmissionMappingToJSon)) + "}"
+    JSonHelper.multiples("transmissionMapping", transmissionMapping.filter(p => p._2.id != p._3.id).map(transmissionMappingToJSon)) + "}"
 
   private def taskMappingToJSon(m: (AtomicTask, ProcessingElement, FlattenedImplementation, Int, Int, Int)): String = {
     "{" + JSonHelper.string("task", m._1.name) + "," +
@@ -104,15 +119,24 @@ case class Mapping(timeUnit:String,
   }
 }
 
-
-case class Mappings(mapping: Iterable[Mapping]) {
+case class Mappings(timeUnit:String,
+                    dataUnit:String,
+                    info:String,
+                    mapping: Iterable[Mapping]) {
   def toJSon: String = {
-    "{" + JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
+    "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
+      JSonHelper.string("dataUnit",dataUnit) + "," +
+      JSonHelper.string("info",info) + "," +
+      JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
   }
 
   override def toString: String = {
-    "Mappings(nbMapping:" + mapping.size + "\n" +
-      mapping.map(_.toStringSortedLight).mkString("\n") + "\n)"
+    "Mappings(" +
+      "\n\tnbMapping:" + mapping.size +
+      "\n\tinfo:" + info +
+      "\n\ttimeUnit:" + timeUnit +
+      "\n\tdataUnit:" + dataUnit + "\n" +
+    mapping.map(l => l.toStringSortedLight + l.usages).mkString("\n\n") + "\n)"
   }
 
 }

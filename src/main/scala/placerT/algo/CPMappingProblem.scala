@@ -28,7 +28,6 @@ import placerT.metadata.{MappingProblem, Mapping}
 import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.FlattenedImplementation
 
-
 case class CPMappingProblem(mappingProblem: MappingProblem,
                             hardwareName: String,
                             cpTasks: Array[CPTask],
@@ -37,7 +36,8 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
                             cpTransmissions: Array[CPTransmission],
                             makeSpan: CPIntVar,
                             energy: CPIntVar,
-                            widthVar:Option[CPIntVar]) {
+                            widthVar:Option[CPIntVar],
+                            processorLoadArrayUnderApprox:Array[CPIntVar]) {
 
   def getMapping(sol: CPSol): Mapping = {
 
@@ -55,15 +55,15 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
     val transmissionMapping = cpTransmissions.map(trans =>
       (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), trans.transmissionDuration(sol), sol(trans.end)))
 
-    new Mapping(mappingProblem.timeUnit,mappingProblem.dataUnit,hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
+    new Mapping(hardwareName, taskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
   }
 
   def varsToDistribute: List[CPIntVar] = {
     List.empty ++
-      cpTasks.flatMap(_.variablesToDistribute) ++
-      cpTransmissions.flatMap(_.variablesToDistribute)
+      cpTasks.flatMap(task => List(task.start,task.implementationID,task.processorID)) ++
+      cpTransmissions.flatMap(_.variablesToDistribute) //  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
   }
 
-  def varsToSave: List[CPIntVar] = makeSpan :: energy :: varsToDistribute ++ widthVar
+  def varsToSave: List[CPIntVar] = List(makeSpan,energy) ++ cpTasks.flatMap(_.variablesToSave) ++ cpTransmissions.flatMap(_.variablesToSave) ++ widthVar
 
 }

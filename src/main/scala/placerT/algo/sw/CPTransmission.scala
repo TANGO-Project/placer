@@ -20,13 +20,15 @@
 
 package placerT.algo.sw
 
+import oscar.cp
 import oscar.cp._
 import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import placerT.algo.Mapper
 import placerT.algo.hw.CPBus
-import placerT.metadata.sw.Transmission
+import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
+import placerT.metadata.sw.{TransmissionTiming, Transmission}
 import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
 
 case class CPTransmission(id: Int,
@@ -39,8 +41,14 @@ case class CPTransmission(id: Int,
                           timing: TransmissionTiming,
                           mapper: Mapper,
                           maxHorizon: Int,
-                          processorToBusToProcessorAdjacency: Iterable[(Int, Int, Int)])
+                          processorToBusToProcessorAdjacency: Iterable[(Int, Int, Int)],
+                          localLoopBusses:Set[Int])
   extends CPAbstractTask(mapper) with Constraints{
+
+  //  println("instantiating transmission " + transmission.name)
+  // println("from occuring where:" + from.occuringOnProcDebugInfo)
+  //  println("to occuring where:" + to.occuringOnProcDebugInfo)
+
   implicit val solver = mapper.solver
 
   val start: CPIntVar = CPIntVar(0, maxHorizon)
@@ -49,44 +57,45 @@ case class CPTransmission(id: Int,
   val busID: CPIntVar = CPIntVar.sparse(busses.indices)
   val isOccurringOnBus: Array[CPBoolVar] = busses.map(bus => busID isEq bus.id)
 
+  val isSelfLoopTransmission:CPBoolVar = busID.isIn(localLoopBusses)
+
+  def occuringOnBussesDebugInfo1:String = "occuringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
+
   val originProcessorID = from.processorID
   val destinationProcessorID = to.processorID
 
   add(table(originProcessorID, busID, destinationProcessorID, processorToBusToProcessorAdjacency))
 
-  val busAndDuration = busses.toList.map(bus => (bus.id, bus.transmissionDuration(transmission.size)))
-  val busAndDurationNZ = busAndDuration.filter(_._2!=0)
+  val busToDuration = Array.tabulate(busses.length)(busID => busses(busID).transmissionDuration(transmission.size))
 
-  val possibleDurationsNZ = busAndDurationNZ.map(_._2)
-  val stubValueForDurationNZ = possibleDurationsNZ.min
+  val minDuration = busToDuration.min
+  val maxDuration = busToDuration.max
 
-  val busWithTransmissionNZ = busAndDurationNZ.map(_._1).toSet
-  val busWithTransmissionZ = busAndDuration.filter(_._2==0).map(_._1).toSet
+  val transmissionDuration: CPIntVar = CPIntVar(minDuration,maxDuration)
 
-  val busAndDurationNZWithStub = busAndDurationNZ.toList ::: busWithTransmissionZ.toList.map(bus => (bus,stubValueForDurationNZ))
+  add(element(busToDuration,busID,transmissionDuration))
 
-  val transmissionDurationNZ2: CPIntVar = CPIntVar(possibleDurationsNZ)
-
-  add(table(busID, transmissionDurationNZ2, busAndDurationNZWithStub))
-
-  add(or(List(busID isIn busWithTransmissionZ,end isEq (start + transmissionDurationNZ2))))
-  add(or(List(busID isIn busWithTransmissionNZ,end isEq start)))
-
-  //This is to be used to represent usage of regular busses
-  val endNZ: CPIntVar = start + transmissionDurationNZ2
+  add(end === (start + transmissionDuration))
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
 
-  //these are redundant, since the timing is also constrained by the storage task on both side of the transmission
-  add(from.end < start)
-  add(end < to.start)
+  add(from.end <= start)
+  add(end <= to.start)
 
-  def transmissionDuration(sol:CPSol):Int = {
-    val selectedBusID = sol(busID)
-    if(busWithTransmissionZ contains selectedBusID) 0
-    else sol(transmissionDurationNZ2)
+  timing match{
+    case TransmissionTiming.Free | TransmissionTiming.Sticky =>
+      //if localLoop then force asap
+      add(isSelfLoopTransmission implies (start ?=== (from.end)))
+    case _ => ;
   }
 
-  override def variablesToDistribute: Iterable[CPIntVar] = List(start, end, transmissionDurationNZ2, busID)
+  def transmissionDuration(sol:CPSol):Int = {
+    busToDuration(sol(busID))
+  }
+
+  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
+
+  override def variablesToSave: Iterable[cp.CPIntVar] = List(start, end, transmissionDuration, busID)
 }
+
