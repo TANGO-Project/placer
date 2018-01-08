@@ -28,7 +28,6 @@ import placerT.metadata.MappingProblem
 
 import scala.io.Source
 
-
 case class Config(in: File = new File("."),
                   out: File = new File("."),
                   verbose: Boolean = false,
@@ -44,7 +43,7 @@ case class Config(in: File = new File("."),
 object Main extends App {
 
   val parser = new scopt.OptionParser[Config]("placer") {
-    head("placer", "beta1")
+    head("placer", "beta2")
 
     opt[File]("in").required().valueName("<file>").
       action((x, c) => c.copy(in = x)).

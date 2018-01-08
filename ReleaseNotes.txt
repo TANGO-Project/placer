@@ -1,3 +1,9 @@
+beta2 release:
+--------------
+added multiCore and multitread
+added version tag in Json file format
+improved reference document
+
 beta1 release:
 ---------------
 modified the JSon format:
