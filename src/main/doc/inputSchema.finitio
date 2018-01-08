@@ -34,6 +34,7 @@ ProcessingElement = {
     resources:[NameValue]
     properties:[NameValue]
     powerModel:Formula
+    multiCore:?Int
 }
 
 Bus = {halfDuplexBus:HalfDuplexBus}|{singleWayBus:SingleWayBus}
@@ -171,8 +172,12 @@ Constraint = {mustBeUsed:String}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
 
+#jsonFormat documents the version of the Json file used.
+#this document describes the format "PlacerBeta2"
+
 Main = {
     info:?String
+    jsonFormat:String
     timeUnit:String
     dataUnit:String
     processingElementClasses:[ProcessingElementClass]
