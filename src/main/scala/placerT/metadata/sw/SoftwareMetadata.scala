@@ -43,7 +43,7 @@ case class FlattenedImplementation(name: String,
                                    parameterValues: SortedMap[String, Int] = null) extends Indiced {
   require(resourceUsage.keySet subsetOf target.resources, "unknown resources specified in implementation " + target + ": " + (resourceUsage.keySet -- target.resources).mkString(","))
   require(duration.terms subsetOf target.properties, "duration is defined based on unknown features in implementation " + target + ": " + (duration.terms -- target.properties).mkString(","))
-  require(target match{case _:MonoTaskSwitchingTask => true; case _ => nbThreads == 1},"mult thread can only be specified for implem running on switchig task PE")
+  require(target match{case _:SwitchingTask => true; case _ => nbThreads == 1},"mult thread can only be specified for implem running on switchig task PE")
 
   override def toString: String = {
     "Implementation(" + name +

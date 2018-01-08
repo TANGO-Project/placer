@@ -5,7 +5,7 @@
    "processingElementClasses":
    [
       {
-         "monoTaskSwitchingTask":
+         "switchingTask":
          {
             "name":"cpu",
             "resources":[],

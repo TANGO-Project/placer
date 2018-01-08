@@ -6,7 +6,7 @@
    "processingElementClasses":
    [
       {
-         "monoTaskSwitchingTask":
+         "switchingTask":
          {
             "name":"cpu",
             "switchingDelay":0

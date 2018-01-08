@@ -48,21 +48,6 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
     val firstTaskMapping = cpTasks.map(cpTask =>
       TaskMapping(cpTask.task, proc(cpTask.processorID), implem(cpTask),sol(cpTask.start), sol(cpTask.taskDuration), sol(cpTask.end)))
 
-    /*
-    val coreToTasks = firstTaskMapping.map(f => (f._2.id,f)).groupBy(_._1).toList.map({case (id:Int,l) => (cpProcessors(id).p,l)})
-
-    val coreToTaskSpread = coreToTasks.flatMap({ case (core,taskList) =>
-      core.nbCore match{
-
-        case Some(x) if x > 1 =>
-          val cleanedTaskList = taskList.toList.map(_._2)
-          spreadTasksOnMultiCore(core,cleanedTaskList)
-        case _ => Some((core,taskList))
-    }})
-
-    println(coreToTasks)
-*/
-
     def bus(cPTransmission: CPTransmission): Bus = cPTransmission.busses(sol(cPTransmission.busID)) match {
       case c: CPSelfLoopBus => c.selfLoopBus
       case b: CPRegularBus => b.bus
@@ -73,16 +58,6 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
 
     new Mapping(hardwareName, firstTaskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
   }
-
-  /*
-  private def spreadTasksOnMultiCore(core:ProcessingElement,taskList:List[(AtomicTask,ProcessingElement,FlattenedImplementation,Int,Int,Int)]):
-      List[(ProcessingElement,List[(AtomicTask,ProcessingElement,FlattenedImplementation,Int,Int,Int)])] = {
-
-    val nbCores = core.nbCore
-
-    val instantiatedCores = Array.tabulate(nbCores)(subID => core.)
-  }*/
-
 
   def varsToDistribute: List[CPIntVar] = {
     List.empty ++

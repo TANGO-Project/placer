@@ -285,9 +285,9 @@ case class ETransmission(source: String,
       name)
 }
 
-case class EProcessingElementClass(multiTaskPermanentTasks: Option[EMultiTaskPermanentTasks], monoTaskSwitchingTask: Option[EMonoTaskSwitchingTask]) {
+case class EProcessingElementClass(multiTaskPermanentTasks: Option[EMultiTaskPermanentTasks], switchingTask: Option[ESwitchingTask]) {
   def extract: ProcessingElementClass = {
-    (multiTaskPermanentTasks, monoTaskSwitchingTask) match {
+    (multiTaskPermanentTasks, switchingTask) match {
       case (None, None) => throw new Error("empty definition of processing element class")
       case (Some(a), None) => a.extract
       case (None, Some(a)) => a.extract
@@ -300,8 +300,8 @@ case class EMultiTaskPermanentTasks(name: String, resources: List[String], prope
   def extract: MultiTaskPermanentTasks = MultiTaskPermanentTasks(name, SortedSet.empty[String] ++ resources, SortedSet.empty[String] ++ properties)
 }
 
-case class EMonoTaskSwitchingTask(name: String, resources: List[String], properties: List[String], switchingDelay: Int) {
-  def extract: MonoTaskSwitchingTask = MonoTaskSwitchingTask(name, SortedSet.empty[String] ++ resources, SortedSet.empty[String] ++ properties, switchingDelay)
+case class ESwitchingTask(name: String, resources: List[String], properties: List[String]) {
+  def extract: SwitchingTask = SwitchingTask(name, SortedSet.empty[String] ++ resources, SortedSet.empty[String] ++ properties)
 }
 
 case class EProcessingElement(processorClass: String,
@@ -310,7 +310,8 @@ case class EProcessingElement(processorClass: String,
                               name: String,
                               memSize: Int = 0,
                               multiCore:Option[Int],
-                              powerModel: String = "0") {
+                              powerModel: String = "0",
+                              switchingDelay: Option[Int]) {
   val parsedPowerModel = FormulaParser(powerModel)
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = {
@@ -321,8 +322,15 @@ case class EProcessingElement(processorClass: String,
     val nbCore = multiCore match{
       case None => None
       case Some(n) =>
-        require(peClass.isInstanceOf[MonoTaskSwitchingTask],"multi core model can onky be declared for switching cores")
+        require(peClass.isInstanceOf[SwitchingTask],"multi core model can only be declared for MonoTaskSwitchingTask PE")
         Some(n)
+    }
+
+    val switchingDelayParsed = switchingDelay match{
+      case None => None
+      case Some(delay) =>
+        require(peClass.isInstanceOf[SwitchingTask],"switchingDelay can only be specified for MonoTaskSwitchingTask PE")
+        Some(delay)
     }
     ProcessingElement(
       peClass,
@@ -331,7 +339,8 @@ case class EProcessingElement(processorClass: String,
       name,
       memSize,
       parsedPowerModel,
-      nbCore
+      nbCore,
+      switchingDelayParsed
     )
   }
 }

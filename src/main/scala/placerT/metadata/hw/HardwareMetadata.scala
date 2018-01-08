@@ -85,15 +85,14 @@ case class MultiTaskPermanentTasks(override val name: String, override val resou
 /**
   * can only perform a single task at a time, and there is a delay to switch to another task.
   * during this delay, it does nothing
-  * @param switchingDelay
   */
 // unaryResource(starts: Array[CPIntVar], durations: Array[CPIntVar], ends: Array[CPIntVar], required: Array[CPBoolVar])
-case class MonoTaskSwitchingTask(override val name: String, override val resources: SortedSet[String], override val properties: SortedSet[String], switchingDelay: Int)
+case class SwitchingTask(override val name: String, override val resources: SortedSet[String], override val properties: SortedSet[String])
   extends ProcessingElementClass(name: String, resources: SortedSet[String], properties: SortedSet[String]) {
 
   def checkPowerModel(powerModel: Formula) {}
 
-  override def toString: String = "MonoTaskSwitchingTask(" + super.toString + " delay:" + switchingDelay + ")"
+  override def toString: String = "MonoTaskSwitchingTask(" + super.toString + ")"
 
   override def allAttributes: SortedSet[String] = super.allAttributes + "buzy"
 
@@ -101,11 +100,10 @@ case class MonoTaskSwitchingTask(override val name: String, override val resourc
 
   override def toJSon: String = {
     "{" +
-      JSonHelper.complex("monoTaskSwitchingTask", "{" +
+      JSonHelper.complex("switchingTask", "{" +
         JSonHelper.string("name", name) + "," +
         JSonHelper.strings("resources", resources) + "," +
         JSonHelper.strings("properties", properties) + "," +
-        JSonHelper.int("switchingDelay", switchingDelay) +
         "}") + "}"
   }
 }
@@ -123,11 +121,16 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
                              name: String,
                              memSize: Int,
                              powerModel: Formula,
-                             nbCore:Option[Int] = None) //expressed in term of resource usage and features
+                             nbCore:Option[Int] = None,
+                             switchingDelay:Option[Int]) //expressed in term of resource usage and features
   extends Indiced() with Ordered[ProcessingElement] {
 
+  switchingDelay match{
+    case Some(delay) => require(processorClass.isInstanceOf[SwitchingTask],"switching delay can only be declared for switching task PE")
+    case _ => ;
+  }
   nbCore match{
-    case Some(_) => require(processorClass.isInstanceOf[MonoTaskSwitchingTask],"multi cores can only be declared for switching task processing element classes")
+    case Some(_) => require(processorClass.isInstanceOf[SwitchingTask],"multi cores can only be declared for switching task PE")
     case _ => ;
   }
 

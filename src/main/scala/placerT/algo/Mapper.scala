@@ -89,10 +89,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val summedMaxTransmissionTimes =
       softwareModel.transmissions.map(flow => hardwareModel.busses.map(bus => bus.transmissionDuration(flow.size)).max).sum
 
-    val summedMaxSwitchingTimes = hardwareModel.processorClasses.map(_ match {
-      case m: MultiTaskPermanentTasks => 0
-      case m: MonoTaskSwitchingTask => m.switchingDelay
-    }).max * softwareModel.simpleProcesses.length
+    val summedMaxSwitchingTimes = hardwareModel.processors.map(_.switchingDelay.getOrElse(0)).max * softwareModel.simpleProcesses.length
 
     val staticMaxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes + summedMaxSwitchingTimes
     val maxHorizon = softwareModel.softwareClass.maxMakespan match{
@@ -120,7 +117,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val cpProcessors = hardwareModel.processors.map(
       processor => processor.processorClass match {
         case m: MultiTaskPermanentTasks => new CPMultiTaskProcessor(processor.id, processor, processor.memSize, this)
-        case m: MonoTaskSwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, m.switchingDelay, processor.nbCore.getOrElse(1), this)
+        case m: SwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, processor.switchingDelay.getOrElse(0), processor.nbCore.getOrElse(1), this)
       })
 
     reportProgress("constants about adjacency")
@@ -613,7 +610,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       println("relaxation " + currentRelaxation)
       constraintBuffer.clear()
       val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
-        for (TaskMapping(task, pe, implem, s, d, e,_) <- bestSolution.get.taskMapping) {
+        for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
           if(!allProcessesInSamePEConstraints.contains(task.id)) {
             if (scala.math.random * 100 > relaxProba) {
               constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)

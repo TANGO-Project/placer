@@ -23,7 +23,7 @@ package placerT.algo.hw
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper, SimpleTask}
-import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
+import placerT.metadata.hw.{SwitchingTask, ProcessingElement}
 
 /**
  * these are represented as unary resources. furthermore, only tasks that can fit on this processor are allowed, statically
@@ -33,7 +33,7 @@ import placerT.metadata.hw.{MonoTaskSwitchingTask, ProcessingElement}
  */
 class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, val nbCores:Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
-  require(p.processorClass.isInstanceOf[MonoTaskSwitchingTask])
+  require(p.processorClass.isInstanceOf[SwitchingTask])
   require(nbCores ==1 || switchingDelay==0, "cannot have switching delay with multi cores")
 
   var allSimpleTasksPotentiallyExecutingHere: List[CumulativeTask] = List.empty

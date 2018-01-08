@@ -4,7 +4,7 @@
   "jsonFormat":"PlacerBeta2",
   "processingElementClasses":[
     {
-      "monoTaskSwitchingTask":{
+      "switchingTask":{
         "name":"cpu",
         "resources":[],
         "properties":[
@@ -15,7 +15,7 @@
       }
     },
     {
-      "monoTaskSwitchingTask":{
+      "switchingTask":{
         "name":"gpgpu",
         "resources":[
           "core"
