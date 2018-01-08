@@ -35,6 +35,7 @@ ProcessingElement = {
     properties:[NameValue]
     powerModel:Formula
     multiCore:?Int
+    switchingDelay:?Integer
 }
 
 Bus = {halfDuplexBus:HalfDuplexBus}|{singleWayBus:SingleWayBus}
@@ -63,14 +64,13 @@ NameValue = {
 }
 
 ProcessingElementClass =
-    {monoTaskSwitchingTask:MonoTaskSwitchingTaskClass}
+    {switchingTask:switchingTaskClass}
     | {multiTaskPermanentTasks:MultiTaskPermanentTasksClass}
 
-MonoTaskSwitchingTaskClass = {
+switchingTaskClass = {
     name:String
     resources:[String]
     properties:[String]
-    switchingDelay:?Integer
 }
 
 MultiTaskPermanentTasksClass ={
@@ -98,6 +98,7 @@ Implementation = {
     resourceUsage:[NameFormula]
     computationMemory:Formula
     duration:Formula
+    nbThreads:?Formula
 }
 
 NameFormula = {
@@ -173,7 +174,7 @@ Constraint = {mustBeUsed:String}
    | {notRunOn:TaskPE}
 
 #jsonFormat documents the version of the Json file used.
-#this document describes the format "PlacerBeta2"
+#this document describes the format "PlacerBeta3"
 
 Main = {
     info:?String

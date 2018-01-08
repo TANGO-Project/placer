@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"the simple unconstrained aquascan model",
-   "jsonFormat":"PlacerBeta2",
+   "jsonFormat":"PlacerBeta3",
    "processingElementClasses":
    [
       {

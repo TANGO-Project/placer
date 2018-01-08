@@ -79,6 +79,17 @@ case class FlattenedImplementation(name: String,
 }
 
 
+abstract sealed class Implementation{
+  def toJSon: String
+  def implementations: Iterable[FlattenedImplementation]
+}
+
+case class ReferenceToStandardImplementation(p:ParametricImplementation) extends Implementation{
+  require(p.target.isInstanceOf[MultiTaskPermanentTasks],"reference to standard implementation should only refer to MultiTaskPermanentTasks")
+  override def toJSon: String = "{" + JSonHelper.string("standardImplementation", p.name) + "}"
+  override def implementations: Iterable[FlattenedImplementation] = p.implementations
+}
+
 /**
  * @param target
  * @param resourceUsage
@@ -91,9 +102,9 @@ case class ParametricImplementation(name: String,
                                     resourceUsage: SortedMap[String, Formula],
                                     computationMemory: Formula,
                                     duration: Formula,
-                                    parameters: SortedMap[String, Iterable[Int]]) {
+                                    parameters: SortedMap[String, Iterable[Int]]) extends Implementation {
 
-  def implementations: Iterable[FlattenedImplementation] = {
+  lazy val implementations: Iterable[FlattenedImplementation] = {
     parameterize(parameters.toList, SortedMap.empty[String, Int])
   }
 
@@ -136,11 +147,11 @@ case class ParametricImplementation(name: String,
     JSonHelper.string("duration", duration.prettyPrint()) + "}"
 }
 
-
-case class AtomicTask(implementations: List[ParametricImplementation],
+case class AtomicTask(implementations: List[Implementation],
                       name: String) extends Indiced() with IndiceMaker {
 
   val implementationArray: Array[FlattenedImplementation] = implementations.flatMap(_.implementations).toArray
+
   setIndices(implementationArray)
   val computingHardwareToImplementations: Map[ProcessingElementClass, List[FlattenedImplementation]] = implementationArray.toList.groupBy(_.target)
 
@@ -230,7 +241,8 @@ case class Transmission(source: AtomicTask,
  * @param transmissions the transmissions between processes
  * @param softwareClass the class of software, and its time requirements
  */
-case class SoftwareModel(simpleProcesses: Array[AtomicTask],
+case class SoftwareModel(standardImplementation:Array[FlattenedImplementation],
+                         simpleProcesses: Array[AtomicTask],
                          transmissions: Array[Transmission],
                          softwareClass: SoftwareClass,
                          properties:SortedMap[String,Int],

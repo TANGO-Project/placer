@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"the simple aquascan with transmissions set to free instead of sticky",
-   "jsonFormat":"PlacerBeta2",
+   "jsonFormat":"PlacerBeta3",
    "processingElementClasses":
    [
       {

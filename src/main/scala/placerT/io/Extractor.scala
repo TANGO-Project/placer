@@ -46,7 +46,7 @@ case class EMappingProblem(timeUnit:String,
                            properties:List[ENameValue],
                            goal:EGoal) {
 
-  val currentFormat = "PlacerBeta2"
+  val currentFormat = "PlacerBeta3"
   require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
 
@@ -175,6 +175,7 @@ case class EPareto(a:String,b:String){
 
 case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
                           transmissions: Array[ETransmission],
+                          standardImplementations:List[EParametricImplementation],
                           properties:List[ENameValue] = List.empty,
                           softwareClass: ESoftwareClass) {
   def extract(hw: HardwareModel,verbose:Boolean) = {
@@ -182,8 +183,11 @@ case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
     Checker.checkDuplicates(simpleProcesses.map(_.name),"task")
     Checker.checkDuplicates(transmissions.map(_.name),"transmission")
 
+    val standardImplems = standardImplementations.flatMap(_.extract(hw).implementations).toArray
+
     val proc = simpleProcesses.map(task => task.extract(hw))
     SoftwareModel(
+      standardImplems,
       proc,
       transmissions.map(_.extract(proc)),
       softwareClass.extract,
@@ -216,7 +220,7 @@ case class EAtomicTask(name: String,
   require(implementations.nonEmpty,"task " + name + " has no implementation")
 
   def extract(hw: HardwareModel) = {
-    val translatedImplems = implementations.map(_.extract(hw))
+    val translatedImplems = implementations.map(implementation => implementation.extract(hw))
     AtomicTask(translatedImplems, name)
   }
 }
@@ -238,11 +242,12 @@ case class EParametricImplementation(name: String,
   val parsedResources = SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract)
   val parsedNbThreads = nbThreads match{case None => Const(1); case Some(f) => FormulaParser(f)}
 
-  def extract(hw: HardwareModel) = {
+  def extract(hw:HardwareModel) = {
     val targetClass = hw.processorClasses.find(_.name equals target) match {
       case Some(x) => x;
       case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)
     }
+
     require(targetClass.resources equals parsedResources.keySet,"error in declared resources of " + name)
     ParametricImplementation(
       name,

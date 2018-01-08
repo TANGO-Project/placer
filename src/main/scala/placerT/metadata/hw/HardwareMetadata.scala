@@ -27,6 +27,7 @@ package placerT.metadata.hw
 
 import placerT.io.JSonHelper
 import placerT.metadata._
+import placerT.metadata.sw.ParametricImplementation
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
@@ -63,7 +64,9 @@ abstract class ProcessingElementClass(val name: String,
   * and it is very difficult to represent this in the optimization model
   */
 //bin-packing non-timed (since permanent use), but task still have duration
-case class MultiTaskPermanentTasks(override val name: String, override val resources: SortedSet[String], override val properties: SortedSet[String])
+case class MultiTaskPermanentTasks(override val name: String,
+                                   override val resources: SortedSet[String],
+                                   override val properties: SortedSet[String])
   extends ProcessingElementClass(name: String, resources: SortedSet[String], properties: SortedSet[String]) {
   def checkPowerModel(powerModel: Formula) {
     //must be linear with respect to metric usage

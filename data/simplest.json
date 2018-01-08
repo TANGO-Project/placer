@@ -2,7 +2,7 @@
   "timeUnit":"ms",
   "dataUnit":"bit",
   "info":"simplest example with two tasks and a transmission",
-  "jsonFormat":"PlacerBeta2",
+  "jsonFormat":"PlacerBeta3",
   "processingElementClasses":[
     {
       "switchingTask":{
