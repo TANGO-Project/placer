@@ -2,6 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"aquascan with an FPGA added",
+   "jsonFormat":"PlacerBeta2",
    "processingElementClasses":
    [
       {

@@ -85,11 +85,11 @@ case class Mapping(hardwareName: String,
   def toStringSortedLight: String = {
     val stringAndStart = taskMapping.map(
       { case TaskMapping(task, pe, implem, start, dur, end) =>
-        (padToLength(task.name, 60) + " " + padToLength(pe.name + "(" + implem.description + ")", 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
+        (padToLength(task.name, 60) + " " + padToLength(pe.name + "(" + implem.description + ")", 60) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
       }).toList ++
       transmissionMapping.filter(p => p._2.id != p._3.id).map(
         { case (trans, fromPE, toPE, bus, start, dur, end) =>
-          (padToLength(trans.name, 60) + " " + padToLength(bus.name, 45) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
+          (padToLength(trans.name, 60) + " " + padToLength(bus.name, 60) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
         })
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
   }
@@ -136,7 +136,7 @@ case class Mappings(timeUnit:String,
   def toJSon: String = {
     "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +
-      JSonHelper.string("info",info.split("\\\\").mkString("\\\\")) + "," +
+      JSonHelper.string("info",info) + "," +
       JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
   }
 

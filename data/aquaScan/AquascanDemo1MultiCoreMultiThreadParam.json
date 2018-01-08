@@ -2,6 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"multi-core model of aquascan, with a single multi-core of 4 cores and a parametric multi-thread implem for task OrientationEstimation",
+   "jsonFormat":"PlacerBeta2",
    "processingElementClasses":
    [
       {
@@ -127,7 +128,7 @@
                   "nbThreads":"nbThreadParam",
                   "target":"cpu",
                   "computationMemory":"2",
-                  "duration":"6690/nbThreadParam"
+                  "duration":"1000+5690/nbThreadParam"
                }
             ]
          },
@@ -1108,7 +1109,7 @@
       {
          "oneShotSoftware":
          {
-           "maxMakespan":82747
+           "maxMakespanOFF":82747
          }
       }
    },

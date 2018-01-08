@@ -30,26 +30,27 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 
 object Extractor {
   implicit val formats = DefaultFormats
-
-  // Brings in default date formats etc.
-  def extractProblem(jValue:JValue,fileName:String,verbose:Boolean = true): MappingProblem = {
-    jValue.extract[EMappingProblem].extract(verbose,fileName)
+  def extractProblem(jValue:JValue,verbose:Boolean = true): MappingProblem = {
+    jValue.extract[EMappingProblem].extract(verbose)
   }
 }
 
 case class EMappingProblem(timeUnit:String,
                            dataUnit:String,
                            info:Option[String],
+                           jsonFormat:String,
                            processingElementClasses:Array[EProcessingElementClass],
-                           softwareModel: ESoftwareModel,
-                           hardwareModel: EHardwareModel,
+                           softwareModel:ESoftwareModel,
+                           hardwareModel:EHardwareModel,
                            constraints:List[EMappingConstraint],
-                           properties: List[ENameValue],
+                           properties:List[ENameValue],
                            goal:EGoal) {
 
+  val currentFormat = "PlacerBeta2"
+  require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
 
-  def extract(verbose:Boolean,fileName:String) = {
+  def extract(verbose:Boolean) = {
     val cl = processingElementClasses.map(_.extract)
     Checker.checkDuplicates(cl.map(_.name),"processing element class")
 
@@ -59,7 +60,7 @@ case class EMappingProblem(timeUnit:String,
     MappingProblem(
       timeUnit,
       dataUnit,
-      info match{case None => fileName; case Some(i) => i},
+      info match{case None => ""; case Some(i) => i},
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
       cl,
       sw,

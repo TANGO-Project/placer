@@ -2,6 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"multi-core model of aquascan, with a single multi-core of 4 cores",
+   "jsonFormat":"PlacerBeta2",
    "processingElementClasses":
    [
       {

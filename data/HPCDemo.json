@@ -1,6 +1,7 @@
 {
    "timeUnit":"us",
    "dataUnit":"byte",
+   "jsonFormat":"PlacerBeta2",
    "processingElementClasses":
    [
       {

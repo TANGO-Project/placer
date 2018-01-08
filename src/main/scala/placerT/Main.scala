@@ -123,7 +123,7 @@ object Main extends App {
 
       val problemFile = Source.fromFile(config.in)
       val parsed = parse(problemFile.mkString)
-      val problem: MappingProblem = Extractor.extractProblem(parsed,config.in.getPath,verbose)
+      val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
       if (config.verbose) println(problem)
 

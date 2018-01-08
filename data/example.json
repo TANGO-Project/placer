@@ -1,6 +1,7 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
+  "jsonFormat":"PlacerBeta2",
   "processingElementClasses":[
     {
       "monoTaskSwitchingTask":{
