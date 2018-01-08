@@ -50,6 +50,11 @@ object JSonHelper {
     """"""" + attribute + """":""" + value
   }
 
+  def intOpt(attribute: String, value: Option[Int],default:Int): String = {
+    """"""" + attribute + """":""" + value.getOrElse(default)
+  }
+
+
   def optionIntComa(name:String,value:Option[Int]):String = {
     value match{case None => "" case Some(v) => int(name,v) + ","}
   }

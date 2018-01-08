@@ -320,17 +320,17 @@ case class EProcessingElement(processorClass: String,
       case Some(x) => x
     }
     val nbCore = multiCore match{
-      case None => None
+      case None => 1
       case Some(n) =>
         require(peClass.isInstanceOf[SwitchingTask],"multi core model can only be declared for MonoTaskSwitchingTask PE")
-        Some(n)
+        n
     }
 
     val switchingDelayParsed = switchingDelay match{
-      case None => None
+      case None => 0
       case Some(delay) =>
         require(peClass.isInstanceOf[SwitchingTask],"switchingDelay can only be specified for MonoTaskSwitchingTask PE")
-        Some(delay)
+        delay
     }
     ProcessingElement(
       peClass,

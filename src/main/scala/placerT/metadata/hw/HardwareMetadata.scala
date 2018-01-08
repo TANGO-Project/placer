@@ -92,7 +92,7 @@ case class SwitchingTask(override val name: String, override val resources: Sort
 
   def checkPowerModel(powerModel: Formula) {}
 
-  override def toString: String = "MonoTaskSwitchingTask(" + super.toString + ")"
+  override def toString: String = "switchingTask(" + super.toString + ")"
 
   override def allAttributes: SortedSet[String] = super.allAttributes + "buzy"
 
@@ -121,18 +121,12 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
                              name: String,
                              memSize: Int,
                              powerModel: Formula,
-                             nbCore:Option[Int] = None,
-                             switchingDelay:Option[Int]) //expressed in term of resource usage and features
+                             nbCore:Int,
+                             switchingDelay:Int) //expressed in term of resource usage and features
   extends Indiced() with Ordered[ProcessingElement] {
 
-  switchingDelay match{
-    case Some(delay) => require(processorClass.isInstanceOf[SwitchingTask],"switching delay can only be declared for switching task PE")
-    case _ => ;
-  }
-  nbCore match{
-    case Some(_) => require(processorClass.isInstanceOf[SwitchingTask],"multi cores can only be declared for switching task PE")
-    case _ => ;
-  }
+  require(switchingDelay !=0 || processorClass.isInstanceOf[SwitchingTask],"switching delay can only be declared for switching task PE")
+  require(nbCore == 1 || processorClass.isInstanceOf[SwitchingTask],"multi cores can only be declared for switching task PE")
 
   val simplifiedPowerModel = Formula.simplifyConstants(powerModel, properties)
   val (constantPower: Const, powerModelForTaskTmp: Formula) = Formula.splitConstant(simplifiedPowerModel)
@@ -173,7 +167,9 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
       JSonHelper.int("memSize", memSize) + "," +
       JSonHelper.multiples("resources", resources.toList.map({ case (r, a) => "{" + JSonHelper.string("name", r) + "," + JSonHelper.int("value", a) + "}" })) + "," +
       JSonHelper.multiples("properties", properties.toList.map({ case (p, a) => "{" + JSonHelper.string("name", p) + "," + JSonHelper.int("value", a) + "}" })) + "," +
-      JSonHelper.string("powerModel", powerModel.prettyPrint()) + "}"
+      JSonHelper.string("powerModel", powerModel.prettyPrint()) + "," +
+      JSonHelper.int("nbCores", nbCore) + "," +
+      JSonHelper.int("switchingDelay", switchingDelay) + "}"
   }
 
   def symmetricTo(that:ProcessingElement):Boolean = {
