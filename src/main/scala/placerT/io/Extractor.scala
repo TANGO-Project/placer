@@ -216,28 +216,28 @@ case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int])
 
 case class EAtomicTask(name: String,
                        implementations: List[EParametricImplementation],
-                       sharedImplementation:List[EReferenceImplem]) {
+                       sharedImplementation:List[String]) {
   Checker.checkDuplicates(implementations.map(_.name),"implementation of task " + name)
   require(implementations.nonEmpty,"task " + name + " has no implementation")
 
   def extract(hw: HardwareModel,standardImplems:Array[ParametricImplementation]) = {
     val translatedImplems = implementations.map(implementation => implementation.extract(hw))
-    val transaltedSharedImplementation = sharedImplementation.map(si => si.extract(standardImplems))
+
+    def extractReferenceImplem(sharedImplementation:String):ReferenceToStandardImplementation = {
+      standardImplems.find(_.name equals sharedImplementation) match {
+        case Some(x) => ReferenceToStandardImplementation(x);
+        case None => throw new Error("cannot find reference implementation " + sharedImplementation)
+      }
+    }
+
+    val transaltedSharedImplementation = sharedImplementation.map(si => extractReferenceImplem(si))
+
     AtomicTask(translatedImplems, transaltedSharedImplementation, name)
   }
 }
 
 case class ENameValue(name: String, value: Int) {
   def toCouple: (String, Int) = (name, value)
-}
-
-case class EReferenceImplem(sharedImplementation:String){
-  def extract(standardImplems:Array[ParametricImplementation]):ReferenceToStandardImplementation = {
-    standardImplems.find(_.name equals sharedImplementation) match {
-      case Some(x) => ReferenceToStandardImplementation(x);
-      case None => throw new Error("cannot find reference implementation " + sharedImplementation)
-    }
-  }
 }
 
 case class EParametricImplementation(name: String,

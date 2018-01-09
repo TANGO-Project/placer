@@ -354,11 +354,7 @@
             "duration":"13"
           }
         ],
-        "sharedImplementation":[
-          {
-            "sharedImplementation":"FpgaDigitCorrelation"
-          }
-        ]
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit1FinalCut",
@@ -415,11 +411,7 @@
             "duration":"43205"
           }
         ],
-        "sharedImplementation":[
-          {
-            "sharedImplementation":"FpgaDigitCorrelation"
-          }
-        ]
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit1PatternsIdentification",
@@ -532,11 +524,7 @@
             "duration":"43205"
           }
         ],
-        "sharedImplementation":[
-          {
-            "sharedImplementation":"FpgaDigitCorrelation"
-          }
-        ]
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit2PatternsIdentification",
@@ -649,11 +637,7 @@
             "duration":"43205"
           }
         ],
-        "sharedImplementation":[
-          {
-            "sharedImplementation":"FpgaDigitCorrelation"
-          }
-        ]
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit3PatternsIdentification",
@@ -766,11 +750,7 @@
             "duration":"43205"
           }
         ],
-        "sharedImplementation":[
-          {
-            "sharedImplementation":"FpgaDigitCorrelation"
-          }
-        ]
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit4PatternsIdentification",
