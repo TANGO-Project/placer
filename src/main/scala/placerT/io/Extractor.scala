@@ -233,9 +233,9 @@ case class ENameValue(name: String, value: Int) {
 
 case class EReferenceImplem(sharedImplementation:String){
   def extract(standardImplems:Array[ParametricImplementation]):ReferenceToStandardImplementation = {
-    standardImplems.find(_.name equals referenceImplementation) match {
+    standardImplems.find(_.name equals sharedImplementation) match {
       case Some(x) => ReferenceToStandardImplementation(x);
-      case None => throw new Error("cannot find reference implementation " + referenceImplementation)
+      case None => throw new Error("cannot find reference implementation " + sharedImplementation)
     }
   }
 }
