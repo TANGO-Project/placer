@@ -43,6 +43,8 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
     accumulateTransmissionStorageOnTask(task)
+    accumulateComputationMemoryOnProcessor(task)
+
     val isTaskExecutedHere = task.isRunningOnProcessor(id)
     if (!isTaskExecutedHere.isFalse) {
       tasksPotentiallyExecutingHere = task :: tasksPotentiallyExecutingHere

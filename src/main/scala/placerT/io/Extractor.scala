@@ -173,9 +173,9 @@ case class EPareto(a:String,b:String){
   def extract:Pareto = Pareto(EGoal.extractSimpleExpectSimple(a), EGoal.extractSimpleExpectSimple(b))
 }
 
-case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
+case class ESoftwareModel(sharedPermanentFunctions:List[EParametricImplementation],
+                          simpleProcesses: Array[EAtomicTask],
                           transmissions: Array[ETransmission],
-                          standardImplementations:List[EParametricImplementation],
                           properties:List[ENameValue] = List.empty,
                           softwareClass: ESoftwareClass) {
   def extract(hw: HardwareModel,verbose:Boolean) = {
@@ -183,9 +183,9 @@ case class ESoftwareModel(simpleProcesses: Array[EAtomicTask],
     Checker.checkDuplicates(simpleProcesses.map(_.name),"task")
     Checker.checkDuplicates(transmissions.map(_.name),"transmission")
 
-    val standardImplems = standardImplementations.flatMap(_.extract(hw).implementations).toArray
+    val standardImplems = sharedPermanentFunctions.map(_.extract(hw)).toArray
 
-    val proc = simpleProcesses.map(task => task.extract(hw))
+    val proc = simpleProcesses.map(task => task.extract(hw,standardImplems))
     SoftwareModel(
       standardImplems,
       proc,
@@ -215,18 +215,29 @@ case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int])
 }
 
 case class EAtomicTask(name: String,
-                       implementations: List[EParametricImplementation]) {
+                       implementations: List[EParametricImplementation],
+                       sharedImplementation:List[EReferenceImplem]) {
   Checker.checkDuplicates(implementations.map(_.name),"implementation of task " + name)
   require(implementations.nonEmpty,"task " + name + " has no implementation")
 
-  def extract(hw: HardwareModel) = {
+  def extract(hw: HardwareModel,standardImplems:Array[ParametricImplementation]) = {
     val translatedImplems = implementations.map(implementation => implementation.extract(hw))
-    AtomicTask(translatedImplems, name)
+    val transaltedSharedImplementation = sharedImplementation.map(si => si.extract(standardImplems))
+    AtomicTask(translatedImplems, transaltedSharedImplementation, name)
   }
 }
 
 case class ENameValue(name: String, value: Int) {
   def toCouple: (String, Int) = (name, value)
+}
+
+case class EReferenceImplem(sharedImplementation:String){
+  def extract(standardImplems:Array[ParametricImplementation]):ReferenceToStandardImplementation = {
+    standardImplems.find(_.name equals referenceImplementation) match {
+      case Some(x) => ReferenceToStandardImplementation(x);
+      case None => throw new Error("cannot find reference implementation " + referenceImplementation)
+    }
+  }
 }
 
 case class EParametricImplementation(name: String,
@@ -235,7 +246,7 @@ case class EParametricImplementation(name: String,
                                      resourceUsage: List[ENameFormula],
                                      computationMemory: String = "0",
                                      duration: String,
-                                     parameters: List[ENameValues]) {
+                                     parameters: List[ENameValues]){
   val parsedComputationMemory = FormulaParser(computationMemory)
   val parsedDuration = FormulaParser(duration)
 

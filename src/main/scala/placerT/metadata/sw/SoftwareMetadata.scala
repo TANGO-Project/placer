@@ -148,6 +148,7 @@ case class ParametricImplementation(name: String,
 }
 
 case class AtomicTask(implementations: List[Implementation],
+                      sharedImplementations:List[ReferenceToStandardImplementation],
                       name: String) extends Indiced() with IndiceMaker {
 
   val implementationArray: Array[FlattenedImplementation] = implementations.flatMap(_.implementations).toArray
@@ -241,7 +242,7 @@ case class Transmission(source: AtomicTask,
  * @param transmissions the transmissions between processes
  * @param softwareClass the class of software, and its time requirements
  */
-case class SoftwareModel(standardImplementation:Array[FlattenedImplementation],
+case class SoftwareModel(sharedPermanentFunctions:Array[ParametricImplementation],
                          simpleProcesses: Array[AtomicTask],
                          transmissions: Array[Transmission],
                          softwareClass: SoftwareClass,

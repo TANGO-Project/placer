@@ -128,7 +128,7 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
                              switchingDelay:Int) //expressed in term of resource usage and features
   extends Indiced() with Ordered[ProcessingElement] {
 
-  require(switchingDelay !=0 || processorClass.isInstanceOf[SwitchingTask],"switching delay can only be declared for switching task PE")
+  require(switchingDelay ==0 || processorClass.isInstanceOf[SwitchingTask],"switching delay can only be declared for switching task PE")
   require(nbCore == 1 || processorClass.isInstanceOf[SwitchingTask],"multi cores can only be declared for switching task PE")
 
   val simplifiedPowerModel = Formula.simplifyConstants(powerModel, properties)
