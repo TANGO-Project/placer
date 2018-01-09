@@ -22,9 +22,10 @@ package placerT.algo.hw
 import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.{SimpleTask, Mapper}
+import placerT.algo.{Mapper, SimpleTask}
 import placerT.algo.sw.CPTask
 import placerT.metadata.hw.{MultiTaskPermanentTasks, ProcessingElement}
+import placerT.metadata.sw.FlattenedImplementation
 
 import scala.collection.immutable.SortedMap
 
@@ -34,12 +35,16 @@ import scala.collection.immutable.SortedMap
  * @param p
  * @param memSize
  */
-class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: Mapper) extends CPProcessor(id, p, memSize, mapper) {
+class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: Mapper) extends CPProcessor(id, p, memSize, mapper) {
   require(p.processorClass.isInstanceOf[MultiTaskPermanentTasks])
 
   var tasksPotentiallyExecutingHere: List[CPTask] = List.empty
 
   val resourceToUsage: SortedMap[String, CPIntVar] = p.resources.mapValues(maxValue => CPIntVar(0, maxValue))
+
+  def accumulateExecutionConstraintOnSharedImplementation(virtualProcessor:CPInstantiatedPermanentFunction){
+    ???
+  }
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
     accumulateTransmissionStorageOnTask(task)
@@ -73,3 +78,4 @@ class CPMultiTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: 
     else SimpleTask.resourceWidthOfUse(simpleTasks)
   }
 }
+

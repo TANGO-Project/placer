@@ -131,11 +131,11 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     }
   }
 
-  def closeTransmissionAndComputationMemory(): Unit = {
+  def closeTransmissionAndComputationMemory(memoryVar:CPIntVar = CPIntVar(memSize)): Unit = {
     if (temporaryStorages.isEmpty) {
       System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, CPIntVar(memSize),"temporary storage for processor " + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, memoryVar,"temporary storage for processor " + p.name)
     }
   }
 

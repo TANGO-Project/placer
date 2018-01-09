@@ -60,6 +60,10 @@ case class FlattenedImplementation(name: String,
     tmp
   }
 
+  def canRunOn(p: ProcessingElement): Boolean = {
+    p.processorClass == this.target && resourceUsage.forall({case (dim, req) => p.resources.get(dim).head >= req})
+  }
+
   def description: String = name + "(" + parameterValues.toList.map(nv => nv._1 + ":" + nv._2).mkString(",") + ")"
 
   def toJSon: String = "{" +

@@ -114,11 +114,25 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     reportProgress("creating processors")
 
     //creating the CPPRocessors
-    val cpProcessors = hardwareModel.processors.map(
+    val cpProcessorsSimple:List[CPProcessor] = hardwareModel.processors.toList.map(
       processor => processor.processorClass match {
-        case m: MultiTaskPermanentTasks => new CPMultiTaskProcessor(processor.id, processor, processor.memSize, this)
-        case m: SwitchingTask => new CPMonoTaskProcessor(processor.id, processor, processor.memSize, processor.switchingDelay, processor.nbCore, this)
+        case m: MultiTaskPermanentTasks => new CPPermanentTaskProcessor(processor.id, processor, processor.memSize, this)
+        case m: SwitchingTask => new CPSwitchingTaskProcessor(processor.id, processor, processor.memSize, processor.switchingDelay, processor.nbCore, this)
       })
+
+    var processorIDCounter = hardwareModel.processors.size
+    def nextProcessorID() = {
+      processorIDCounter+=1
+      processorIDCounter
+    }
+
+    val cpProcessorsVirtual:List[CPProcessor] = softwareModel.sharedPermanentFunctions.toList.flatMap(_.implementations).flatMap((sharedImplementation:FlattenedImplementation) => {
+      val aceptedCPPEs = cpProcessorsSimple.filter(cpps => sharedImplementation.canRunOn(cpps.p))
+      val maxInstances = 5
+      aceptedCPPEs.map(acceptedPE => new CPInstantiatedPermanentFunction(nextProcessorID(), acceptedPE.asInstanceOf[CPPermanentTaskProcessor],acceptedPE.p, acceptedPE.p.memSize, maxInstances,this))
+    })
+
+    val cpProcesors = (cpProcessorsSimple ++ cpProcessorsVirtual).toArray
 
     reportProgress("constants about adjacency")
 
@@ -231,7 +245,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     //does not work for multi-cores becauze of rounding stuff.
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(
       (processorID:Int) => cpProcessors(processorID) match {
-        case m: CPMonoTaskProcessor => CPIntVar(0, maxHorizon * m.nbCores)
+        case m: CPSwitchingTaskProcessor => CPIntVar(0, maxHorizon * m.nbCores)
         case _ => CPIntVar(0, maxHorizon)
       })
 
@@ -240,7 +254,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     //this one assumes adjusted minDuration per processor
     for (processorID <- cpProcessors.indices) {
       cpProcessors(processorID) match{
-        case m:CPMonoTaskProcessor =>
+        case m:CPSwitchingTaskProcessor =>
           val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
           val switchingDelay = m.switchingDelay
           val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)

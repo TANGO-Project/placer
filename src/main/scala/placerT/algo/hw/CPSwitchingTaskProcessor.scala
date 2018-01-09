@@ -25,14 +25,27 @@ import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper, SimpleTask}
 import placerT.metadata.hw.{SwitchingTask, ProcessingElement}
 
+class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p: ProcessingElement, maxMemSize:Int, maxCores:Int, mapper: Mapper)
+  extends CPSwitchingTaskProcessor(id, p, 0, 0, 0, mapper){
+
+  def usedMem = CPIntVar(0,maxMemSize)
+  def nbInstances = CPIntVar(0,maxCores)
+
+  override def close() {
+    CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name)
+    closeTransmissionAndComputationMemory(usedMem)
+  }
+}
+
 /**
  * these are represented as unary resources. furthermore, only tasks that can fit on this processor are allowed, statically
  * @param id the ID of the processor (unique, etc) inherited from p
  * @param p the processing element, to get more info
  * @param memSize the max mem size, taken from p
  */
-class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, val nbCores:Int, mapper: Mapper)
+class CPSwitchingTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, val nbCores:Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
+
   require(p.processorClass.isInstanceOf[SwitchingTask])
   require(nbCores ==1 || switchingDelay==0, "cannot have switching delay with multi cores")
 
@@ -67,9 +80,9 @@ class CPMonoTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switc
 
   override def close() {
     if(nbCores == 1) {
-      SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))), switchingDelay, origin = "usage of CPMonoTaskProcessor" + p.name)
+      SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))), switchingDelay, origin = "usage of CPSwitchingTaskProcessor" + p.name)
     }else{
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores),origin = "usage of CPMonoTaskProcessor" + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores),origin = "usage of CPSwitchingTaskProcessor" + p.name)
     }
     closeTransmissionAndComputationMemory()
   }
