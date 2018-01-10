@@ -20,29 +20,52 @@
 
 package placerT.algo.hw
 
+import oscar.cp.CPBoolVar
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper, SimpleTask}
-import placerT.metadata.hw.{SwitchingTask, ProcessingElement}
+import placerT.metadata.hw.{ProcessingElement, SwitchingTask}
+import placerT.metadata.sw.FlattenedImplementation
 
-class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p: ProcessingElement, maxMemSize:Int, maxCores:Int, mapper: Mapper)
+import scala.collection.immutable.SortedMap
+
+class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p: ProcessingElement, sharedImplementation:FlattenedImplementation, maxMemSize:Int, maxCores:Int, mapper: Mapper)
   extends CPSwitchingTaskProcessor(id, p, 0, 0, 0, mapper){
 
   def usedMem = CPIntVar(0,maxMemSize)
   def nbInstances = CPIntVar(0,maxCores)
 
+  //we need to check this because there are two possible closing fo this PE class
+  var isClosed = false
+
   override def close() {
+    require(!isClosed)
     CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name)
     closeTransmissionAndComputationMemory(usedMem)
+    isClosed = true
+  }
+
+  def nbInstanceAndResourceUsage: (CPIntVar, SortedMap[String, Int]) = {
+    (nbInstances,sharedImplementation.resourceUsage)
+  }
+
+  def varsToDistribute:List[CPIntVar] = List(nbInstances)
+
+  //we do not consider these here since they are considered at the level of the hosting PE
+  override def accumulateTransmissionStorageOnTask(task:CPTask,processorID:Int = id){
+    host.accumulateTransmissionStorageOnTask(task,this.id)
+  }
+  override def accumulateComputationMemoryOnProcessor(task:CPTask,processorID:Int = id){
+    host.accumulateComputationMemoryOnProcessor(task,this.id)
   }
 }
 
 /**
- * these are represented as unary resources. furthermore, only tasks that can fit on this processor are allowed, statically
- * @param id the ID of the processor (unique, etc) inherited from p
- * @param p the processing element, to get more info
- * @param memSize the max mem size, taken from p
- */
+  * these are represented as unary resources. furthermore, only tasks that can fit on this processor are allowed, statically
+  * @param id the ID of the processor (unique, etc) inherited from p
+  * @param p the processing element, to get more info
+  * @param memSize the max mem size, taken from p
+  */
 class CPSwitchingTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, val nbCores:Int, mapper: Mapper)
   extends CPProcessor(id, p, memSize, mapper) {
 

@@ -127,12 +127,16 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     }
 
     val cpProcessorsVirtual:List[CPProcessor] = softwareModel.sharedPermanentFunctions.toList.flatMap(_.implementations).flatMap((sharedImplementation:FlattenedImplementation) => {
-      val aceptedCPPEs = cpProcessorsSimple.filter(cpps => sharedImplementation.canRunOn(cpps.p))
-      val maxInstances = 5
-      aceptedCPPEs.map(acceptedPE => new CPInstantiatedPermanentFunction(nextProcessorID(), acceptedPE.asInstanceOf[CPPermanentTaskProcessor],acceptedPE.p, acceptedPE.p.memSize, maxInstances,this))
-    })
+      val potentialHosts = cpProcessorsSimple.filter(cpps => sharedImplementation.canRunOn(cpps.p))
+      potentialHosts.map({case (hostPE:CPPermanentTaskProcessor) =>
+        //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
+        val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedImplementation, hostPE.p.memSize, Int.MaxValue , this)
+        hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
+        dedicatedSwitchingPE
+      })
+      })
 
-    val cpProcesors = (cpProcessorsSimple ++ cpProcessorsVirtual).toArray
+    val cpProcessors:Array[CPProcessor] = (cpProcessorsSimple ++ cpProcessorsVirtual).toArray
 
     reportProgress("constants about adjacency")
 
@@ -228,8 +232,12 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           widthVarList = proc.timeWidth :: widthVarList //TODO: add proc.temporaryStorageWidth
         case _ => ;
       }
+    }
+    //processors are closed in a second round because of the shared implementations.
+    for (proc <- cpProcessors) {
       proc.close()
     }
+
 
     widthVar match{
       case Some(w) =>

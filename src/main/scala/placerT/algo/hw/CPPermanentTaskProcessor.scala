@@ -40,10 +40,13 @@ class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapp
 
   var tasksPotentiallyExecutingHere: List[CPTask] = List.empty
 
+  //kept in a separated list because the resources must be counted differently and multiplied by the number of instances located on this PE
+  var hostedSharedImplementations: List[CPInstantiatedPermanentFunction] = List.empty
+
   val resourceToUsage: SortedMap[String, CPIntVar] = p.resources.mapValues(maxValue => CPIntVar(0, maxValue))
 
   def accumulateExecutionConstraintOnSharedImplementation(virtualProcessor:CPInstantiatedPermanentFunction){
-    ???
+    hostedSharedImplementations = virtualProcessor :: hostedSharedImplementations
   }
 
   override def accumulateExecutionConstraintsOnTask(task: CPTask) {
@@ -57,14 +60,29 @@ class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapp
   }
 
   override def close() {
+
+    require(hostedSharedImplementations.forall(_.isClosed))
+
+    //for non shared implems
     val x: List[(Array[CPBoolVar], SortedMap[String, Array[Int]])] =
       tasksPotentiallyExecutingHere.flatMap(t => t.buildArrayImplemAndMetricUsage(this))
 
-    val isImplemSelectedSubArray = x.flatMap(_._1).toArray.asInstanceOf[Array[CPIntVar]]
+    val isImplemSelected:List[CPIntVar] = x.flatMap(_._1)
+
+    //for shared implems
+    val y:List[(CPIntVar,SortedMap[String,Int])] = hostedSharedImplementations.map(_.nbInstanceAndResourceUsage)
+
+    val nbInstancesOfSharedImplems = y.map(_._1)
+    val requirementsForSharedImplems = y.map(_._2)
 
     for ((resource, maxSize) <- p.resources) {
-      val metricsForThisDimensionSubArray = x.flatMap(_._2.get(resource).get).toArray
-      solver.add(weightedSum(metricsForThisDimensionSubArray, isImplemSelectedSubArray, resourceToUsage(resource)))
+      val requirementsForThisDimensionUsedByNonSharedImplems:List[Int] = x.flatMap(_._2.get(resource).get)
+      val requirementsForThisDimensionUsedBySharedImplems:List[Int] = requirementsForSharedImplems.map(_.get(resource).getOrElse(0))
+      val concatenatedRequirementsArray:Array[Int] = (requirementsForThisDimensionUsedByNonSharedImplems ++ requirementsForThisDimensionUsedBySharedImplems).toArray
+
+      val concatenatedUsageArray:Array[CPIntVar] = (isImplemSelected ++ nbInstancesOfSharedImplems).toArray
+
+      solver.add(weightedSum(concatenatedRequirementsArray,concatenatedUsageArray,resourceToUsage(resource)))
     }
 
     closeTransmissionAndComputationMemory()

@@ -58,8 +58,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
 
   def accumulateExecutionConstraintsOnTask(task: CPTask)
 
-  def accumulateComputationMemoryOnProcessor(task: CPTask) {
-    val isTaskExecutedHere = task.isRunningOnProcessor(this.id)
+  def accumulateComputationMemoryOnProcessor(task: CPTask,processorID:Int = id) {
+    val isTaskExecutedHere = task.isRunningOnProcessor(processorID)
     if (!isTaskExecutedHere.isFalse) {
       accumulateTemporaryStorage(
         task.start,
@@ -70,8 +70,8 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     }
   }
 
-  protected def accumulateTransmissionStorageOnTask(task: CPTask) {
-    val isTaskExecutedHere = task.isRunningOnProcessor(this.id)
+  def accumulateTransmissionStorageOnTask(task: CPTask, processorID:Int = id) {
+    val isTaskExecutedHere = task.isRunningOnProcessor(processorID)
 
     //if transmission is a self-loop, is is constrained to occur
     if (!isTaskExecutedHere.isFalse) {
