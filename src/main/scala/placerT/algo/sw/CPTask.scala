@@ -24,36 +24,40 @@ import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
-import placerT.algo.hw.CPProcessor
+import placerT.algo.hw.{CPHardwareModel, CPProcessor}
 import placerT.metadata.Formula
-import placerT.metadata.sw.{TransmissionTiming, AtomicTask, FlattenedImplementation}
+import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, TransmissionTiming}
 
 import scala.collection.immutable.SortedMap
 
 case class CPTask(id: Int,
                   task: AtomicTask,
                   explanation: String,
-                  mapper: Mapper,
-                  maxHorizon: Int)
-  extends CPAbstractTask(mapper) {
-  implicit val solver = mapper.solver
+                  chHardwareModel:CPHardwareModel,
+                  mapper:Mapper)
+  extends CPAbstractTask() {
+
+
+  implicit val store:CPStore = chHardwareModel.store
+  val maxHorizon = chHardwareModel.maxHorizon
+  val cpProcessors = chHardwareModel.cpProcessors
 
   def occuringOnProcDebugInfo = task.name + " runing on proc:[" +  isRunningOnProcessor.mkString(",") + "]"
 
   val start: CPIntVar = CPIntVar(0, maxHorizon)
   val end: CPIntVar = CPIntVar(0, maxHorizon)
 
-  val processorID: CPIntVar = CPIntVar.sparse(mapper.hardwareModel.processors.indices)
+  val processorID: CPIntVar = CPIntVar.sparse(cpProcessors.indices)
   val implementationID: CPIntVar = CPIntVar.sparse(task.implementationArray.indices)
 
-  val isRunningOnProcessor: Array[CPBoolVar] = mapper.hardwareModel.processors.map(processor => processorID isEq processor.id)
+  val isRunningOnProcessor: Array[CPBoolVar] = cpProcessors.map(processor => processorID isEq processor.id)
   val isImplementationSelected: Array[CPBoolVar] = task.implementationArray.map(implementation => implementationID isEq implementation.id)
 
-  for (processor <- mapper.hardwareModel.processors) {
-    if (!task.canRunOn(processor)) {
+  for (processor <- cpProcessors) {
+    if (!task.canRunOn(processor.p)) {
       isRunningOnProcessor.apply(processor.id).variable.assignFalse()
-      if(task.anyImplementationFor(processor)){
-        System.err.println("INFO: task" + task + " cannot run on processor " + processor.name + " for lack of resources although it has an available implementation")
+      if(task.anyImplementationFor(processor.p)){
+        System.err.println("INFO: task" + task + " cannot run on processor " + processor.p.name + " for lack of resources although it has an available implementation")
       }
     }
   }
@@ -77,15 +81,15 @@ case class CPTask(id: Int,
 
   val implemAndProcessorAndDurationAndEnergyAndPower: Iterable[ImplemAndProcessorAndDurationAndEnergyAndPower] =
     task.implementationArray.flatMap(
-      implem => mapper.hardwareModel.processors.toList.
-        filter(p => p.processorClass equals implem.target).
+      implem => cpProcessors.toList.
+        filter(p => p.p.processorClass equals implem.target).
         map(p => {
-          val durationPI = implem.duration(p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
-          require(durationPI>=0,"duration of implementation " + implem.name + " on processor " + p.name + " is negative:" + durationPI)
-          val power = Formula.eval(p.powerModelForTask, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties ++ p.processorClass.zeroResources ++ implem.resourceUsage)
-          require(power>=0,"power of implementation " + implem.name + " on processor " + p.name + " is negative:" + power)
+          val durationPI = implem.duration(p.p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
+          require(durationPI>=0,"duration of implementation " + implem.name + " on processor " + p.p.name + " is negative:" + durationPI)
+          val power = Formula.eval(p.p.powerModelForTask, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties ++ p.p.processorClass.zeroResources ++ implem.resourceUsage)
+          require(power>=0,"power of implementation " + implem.name + " on processor " + p.p.name + " is negative:" + power)
           val energy = durationPI * power
-            require(energy>=0,"energy usage of implementation " + implem.name + " on processor " + p.name + " is negative:" + energy)
+            require(energy>=0,"energy usage of implementation " + implem.name + " on processor " + p.p.name + " is negative:" + energy)
           ImplemAndProcessorAndDurationAndEnergyAndPower(
             implem=implem.id,
             processor=p.id,
@@ -114,9 +118,9 @@ case class CPTask(id: Int,
   private val indiceToDuration = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.duration)))
   val taskDuration: CPIntVar = CPIntVar(minDuration,maxDuration)
 
-  add(element(indiceToDuration,processorImplementationCombo,taskDuration))
+  store.add(element(indiceToDuration,processorImplementationCombo,taskDuration))
 
-  add(end === (start + taskDuration))
+  store.add(end === (start + taskDuration))
 
   //energy
   private val possibleEnergies = implemAndProcessorAndDurationAndEnergyAndPower.map(_.energy)
@@ -126,7 +130,7 @@ case class CPTask(id: Int,
   private val indiceToEnergy = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.energy)))
   val energy: CPIntVar = CPIntVar(minEnergy,maxEnergy)
 
-  add(element(indiceToEnergy,processorImplementationCombo,energy))
+  store.add(element(indiceToEnergy,processorImplementationCombo,energy))
 
   //power
   val possiblePower = implemAndProcessorAndDurationAndEnergyAndPower.map(_.power)
@@ -136,7 +140,7 @@ case class CPTask(id: Int,
   private val indiceToPower = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.power)))
   val power: CPIntVar = CPIntVar(minPower,maxPower)
 
-  add(element(indiceToPower,processorImplementationCombo,power))
+  store.add(element(indiceToPower,processorImplementationCombo,power))
 
 
   //nbThreads
@@ -146,12 +150,12 @@ case class CPTask(id: Int,
   private val indiceToThreads = couplesToArray(implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.indice,x.nbThreads)))
   val nbThreads: CPIntVar = CPIntVar(minThread,maxThread)
 
-  add(element(indiceToThreads,processorImplementationCombo,nbThreads))
+  store.add(element(indiceToThreads,processorImplementationCombo,nbThreads))
 
   //all other stuff, with a table constraint
   private val implemAndProcessorAndIndice = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.implem,x.processor,x.indice))
 
-  add(table(implementationID, processorID, processorImplementationCombo,implemAndProcessorAndIndice))
+  store.add(table(implementationID, processorID, processorImplementationCombo,implemAndProcessorAndIndice))
 
   private val possibleProcessorAndDuration = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.processor,x.duration))
   private val possibleProcessorToMinDuration = possibleProcessorAndDuration.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
@@ -186,7 +190,7 @@ case class CPTask(id: Int,
   val computationMemoryAndImplementation = task.implementationArray.map(i => (i.computationMemory, i.id))
   val computationMemories = computationMemoryAndImplementation.map(_._1)
   val computationMemory = CPIntVar.sparse(computationMemories)
-  add(table(computationMemory, implementationID, computationMemoryAndImplementation))
+  store.add(table(computationMemory, implementationID, computationMemoryAndImplementation))
 
   /**
    * given a target, we want an array, and a map from metric to array. all arays range on implementations

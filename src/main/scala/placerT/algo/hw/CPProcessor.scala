@@ -35,7 +35,7 @@ import placerT.metadata.sw.TransmissionTiming._
   * @param memSize the memory used for storing incoming and outgoing data, also used for computation memory of tasks te memory for data in and out is maintained during task execution.
   * @param mapper
   */
-abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, mapper: Mapper) {
+abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Option[Int], mapper: Mapper) {
 
   implicit val solver = mapper.solver
 
@@ -131,7 +131,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
     }
   }
 
-  def closeTransmissionAndComputationMemory(memoryVar:CPIntVar = CPIntVar(memSize)): Unit = {
+  def closeTransmissionAndComputationMemory(memoryVar:CPIntVar = CPIntVar(memSize.get)): Unit = {
     if (temporaryStorages.isEmpty) {
       System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
@@ -142,7 +142,7 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Int, 
   def temporaryStorageWidth:CPIntVar = {
     //TODO: this is redundant with the "postCumulativeForSimpleCumulativeTasks" in closeTransmissionAndComputationMemory
     if(temporaryStorages.isEmpty) CPIntVar(0)
-    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize),"temporaryStorageWidth for processor " + p.name)
+    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize.get),"temporaryStorageWidth for processor " + p.name)
   }
 
   def timeWidth:CPIntVar

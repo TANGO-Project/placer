@@ -17,18 +17,17 @@
  *
  */
 
+package placerT.algo.hw
 
-package placerT.algo.sw
+import oscar.cp.CPStore
 
-import oscar.cp.core.variables.CPIntVar
-import placerT.algo.Mapper
+import scala.collection.immutable.SortedSet
 
-abstract class CPAbstractTask {
-  def start: CPIntVar
+case class CPHardwareModel(cpProcessors:Array[CPProcessor],
+                      cpBusses: Array[CPBus],
+                      processorToBusToProcessorAdjacency: Set[(Int, Int, Int)],
+                      selfLoopBussesID:SortedSet[Int],
+                      store:CPStore,
+                      maxHorizon:Int) {
 
-  def end: CPIntVar
-
-  def variablesToDistribute: Iterable[CPIntVar]
-
-  def variablesToSave: Iterable[CPIntVar]
 }

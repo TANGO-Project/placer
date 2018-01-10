@@ -65,6 +65,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
   val softwareModel = problem.softwareModel
   val hardwareModel = problem.hardwareModel
+  var nbProcessorsHWAndVirtual:Int = Int.MinValue
   val goal = problem.goal
 
   val store:CPStore = this.solver
@@ -104,13 +105,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     println("nbTasks:" + softwareModel.simpleProcesses.length)
     println("nbTransmissions:" + softwareModel.transmissions.length)
 
-    reportProgress("creating tasks")
-
-    //creating the CPTasks
-    val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
-      process => new CPTask(process.id, process, process.name, this, maxHorizon)
-    )
-
     reportProgress("creating processors")
 
     //creating the CPPRocessors
@@ -120,7 +114,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         case m: SwitchingTask => new CPSwitchingTaskProcessor(processor.id, processor, processor.memSize, processor.switchingDelay, processor.nbCore, this)
       })
 
-    var processorIDCounter = hardwareModel.processors.size
+    var processorIDCounter = hardwareModel.processors.size-1
     def nextProcessorID() = {
       processorIDCounter+=1
       processorIDCounter
@@ -130,13 +124,15 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       val potentialHosts = cpProcessorsSimple.filter(cpps => sharedImplementation.canRunOn(cpps.p))
       potentialHosts.map({case (hostPE:CPPermanentTaskProcessor) =>
         //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
-        val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedImplementation, hostPE.p.memSize, Int.MaxValue , this)
+        val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedImplementation, hostPE.p.memSize, Int.MaxValue/10 , this)
         hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
         dedicatedSwitchingPE
       })
-      })
+    })
 
     val cpProcessors:Array[CPProcessor] = (cpProcessorsSimple ++ cpProcessorsVirtual).toArray
+    nbProcessorsHWAndVirtual = cpProcessors.length
+
 
     reportProgress("constants about adjacency")
 
@@ -170,18 +166,31 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       bus => new CPRegularBus(bus.id, bus, this)
     ) ++ selfLoopBusses).toArray
 
+
+    val cpHardwareModel = new CPHardwareModel(
+      cpProcessors:Array[CPProcessor],
+      cpBusses: Array[CPBus],
+      processorToBusToProcessorAdjacency: Set[(Int, Int, Int)],
+      selfLoopBussesID:SortedSet[Int],
+      store,
+      maxHorizon)
+
+
+    reportProgress("creating tasks")
+
+    //creating the CPTasks
+    val cpTasks: Array[CPTask] = softwareModel.simpleProcesses.map(
+      atomicTask => new CPTask(atomicTask.id, atomicTask, atomicTask.name, cpHardwareModel,this)
+    )
+
     reportProgress("creating transmissions")
 
     //creating the CPtransmissions
     val cpTransmissions: Array[CPTransmission] = softwareModel.transmissions.map(
-      flow => new CPTransmission(flow.id, flow,
+      (flow:Transmission) => new CPTransmission(flow.id, flow,
         cpTasks(flow.source.id), cpTasks(flow.target.id),
-        cpBusses,
-        flow.size, flow.name, flow.timing,
-        this,
-        maxHorizon,
-        processorToBusToProcessorAdjacency,
-        selfLoopBussesID)
+        cpHardwareModel,
+        flow.size, flow.name, flow.timing)
     )
 
     //creating the width var, in case needed for modulo scheduling
@@ -234,10 +243,13 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }
     }
     //processors are closed in a second round because of the shared implementations.
-    for (proc <- cpProcessors) {
+    for (proc <- cpProcessorsVirtual) {
       proc.close()
     }
 
+    for (proc <- cpProcessorsSimple) {
+      proc.close()
+    }
 
     widthVar match{
       case Some(w) =>
@@ -494,7 +506,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         //binaryFirstFail(allVars)
         //splitLastConflict(allVars)
         val processorIDArray = problem.cpTasks.map(_.processorID)
-//        conflictOrderingSearch(processorIDArray,processorIDArray(_).min,processorIDArray(_).min) ++ conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
+        //        conflictOrderingSearch(processorIDArray,processorIDArray(_).min,processorIDArray(_).min) ++ conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
 
         val processorIDChoices = problem.cpTasks.map(task => task.processorID)
         val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
@@ -570,7 +582,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       //binaryFirstFail(allVars)
       //splitLastConflict(allVars)
       val processorIDArray = problem.cpTasks.map(_.processorID)
-     // conflictOrderingSearch(processorIDArray, processorIDArray(_).min, processorIDArray(_).min) ++ conflictOrderingSearch(allVars, allVars(_).min, allVars(_).min)
+      // conflictOrderingSearch(processorIDArray, processorIDArray(_).min, processorIDArray(_).min) ++ conflictOrderingSearch(allVars, allVars(_).min, allVars(_).min)
 
       val processorIDChoices = problem.cpTasks.map(task => task.processorID)
       val taskMaxDurations = problem.cpTasks.map(task => task.taskDuration.max)
@@ -603,8 +615,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
 
-      println("stat of initial solution: ")
-      println(stat)
+    println("stat of initial solution: ")
+    println(stat)
 
     bestSolution match{
       case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")

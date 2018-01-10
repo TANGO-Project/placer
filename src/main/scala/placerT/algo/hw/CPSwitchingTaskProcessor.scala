@@ -29,19 +29,54 @@ import placerT.metadata.sw.FlattenedImplementation
 
 import scala.collection.immutable.SortedMap
 
-class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p: ProcessingElement, sharedImplementation:FlattenedImplementation, maxMemSize:Int, maxCores:Int, mapper: Mapper)
-  extends CPSwitchingTaskProcessor(id, p, 0, 0, 0, mapper){
 
-  def usedMem = CPIntVar(0,maxMemSize)
-  def nbInstances = CPIntVar(0,maxCores)
+abstract class AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, memSize: Option[Int], mapper: Mapper)
+  extends CPProcessor(id, p, memSize, mapper) {
+
+  var allSimpleTasksPotentiallyExecutingHere: List[CumulativeTask] = List.empty
+  var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
+
+  override def accumulateExecutionConstraintsOnTask(task: CPTask) {
+
+    accumulateTransmissionStorageOnTask(task)
+    accumulateComputationMemoryOnProcessor(task)
+
+    val isTaskExecutedHere = task.isRunningOnProcessor(id)
+
+    if (!isTaskExecutedHere.isFalse) {
+      //could be true, or unbound yet
+
+      allTasksPotentiallyExecutingHere = task :: allTasksPotentiallyExecutingHere
+
+      allSimpleTasksPotentiallyExecutingHere = CumulativeTask(
+        task.start,
+        task.taskDuration,
+        task.end,
+        isTaskExecutedHere * task.nbThreads,
+        "threads of task " + task.task.name) :: allSimpleTasksPotentiallyExecutingHere
+    }
+  }
+
+  override def timeWidth: CPIntVar = {
+    if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)
+    else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))))
+  }
+}
+
+class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p: ProcessingElement, sharedImplementation:FlattenedImplementation, maxMemSize:Int, maxCores:Int, mapper: Mapper)
+  extends AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, None, mapper: Mapper){
+
+  val usedMem = CPIntVar(0,maxMemSize)
+  val nbInstances = CPIntVar(0,maxCores)
 
   //we need to check this because there are two possible closing fo this PE class
   var isClosed = false
 
   override def close() {
     require(!isClosed)
-    CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name)
-    closeTransmissionAndComputationMemory(usedMem)
+    if(allSimpleTasksPotentiallyExecutingHere.isEmpty) nbInstances.assign(0)
+    else CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name)
+    //we do not close anything about memory since this is incorporated into the hosting PE
     isClosed = true
   }
 
@@ -67,34 +102,10 @@ class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p:
   * @param memSize the max mem size, taken from p
   */
 class CPSwitchingTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val switchingDelay: Int, val nbCores:Int, mapper: Mapper)
-  extends CPProcessor(id, p, memSize, mapper) {
+  extends AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, Some(memSize), mapper: Mapper){
 
   require(p.processorClass.isInstanceOf[SwitchingTask])
   require(nbCores ==1 || switchingDelay==0, "cannot have switching delay with multi cores")
-
-  var allSimpleTasksPotentiallyExecutingHere: List[CumulativeTask] = List.empty
-  var allTasksPotentiallyExecutingHere: List[CPTask] = List.empty
-
-  override def accumulateExecutionConstraintsOnTask(task: CPTask) {
-
-    accumulateTransmissionStorageOnTask(task)
-    accumulateComputationMemoryOnProcessor(task)
-
-    val isTaskExecutedHere = task.isRunningOnProcessor(id)
-
-    if (!isTaskExecutedHere.isFalse) {
-      //could be true, or unbound yet
-
-      allTasksPotentiallyExecutingHere = task :: allTasksPotentiallyExecutingHere
-
-      allSimpleTasksPotentiallyExecutingHere = CumulativeTask(
-        task.start,
-        task.taskDuration,
-        task.end,
-        isTaskExecutedHere * task.nbThreads,
-        "threads of task " + task.task.name) :: allSimpleTasksPotentiallyExecutingHere
-    }
-  }
 
   override def timeWidth: CPIntVar = {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)

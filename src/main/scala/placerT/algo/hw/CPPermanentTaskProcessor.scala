@@ -35,7 +35,7 @@ import scala.collection.immutable.SortedMap
  * @param p
  * @param memSize
  */
-class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: Mapper) extends CPProcessor(id, p, memSize, mapper) {
+class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapper: Mapper) extends CPProcessor(id, p, Some(memSize), mapper) {
   require(p.processorClass.isInstanceOf[MultiTaskPermanentTasks])
 
   var tasksPotentiallyExecutingHere: List[CPTask] = List.empty
@@ -82,6 +82,7 @@ class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapp
 
       val concatenatedUsageArray:Array[CPIntVar] = (isImplemSelected ++ nbInstancesOfSharedImplems).toArray
 
+      println("isFailed:" + solver.isFailed)
       solver.add(weightedSum(concatenatedRequirementsArray,concatenatedUsageArray,resourceToUsage(resource)))
     }
 

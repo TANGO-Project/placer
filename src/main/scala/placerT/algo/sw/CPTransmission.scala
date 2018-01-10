@@ -25,31 +25,26 @@ import oscar.cp._
 import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
-import placerT.algo.Mapper
-import placerT.algo.hw.CPBus
+import placerT.algo.hw.CPHardwareModel
 import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
-import placerT.metadata.sw.{TransmissionTiming, Transmission}
-import placerT.metadata.sw.TransmissionTiming.TransmissionTiming
+import placerT.metadata.sw.{Transmission, TransmissionTiming}
+
 
 case class CPTransmission(id: Int,
                           transmission: Transmission,
                           from: CPTask,
                           to: CPTask,
-                          busses: Array[CPBus],
+                          cpHardwareModel:CPHardwareModel,
                           size: Int,
                           explanation: String,
-                          timing: TransmissionTiming,
-                          mapper: Mapper,
-                          maxHorizon: Int,
-                          processorToBusToProcessorAdjacency: Iterable[(Int, Int, Int)],
-                          localLoopBusses:Set[Int])
-  extends CPAbstractTask(mapper) with Constraints{
+                          timing: TransmissionTiming)
+  extends CPAbstractTask() with Constraints{
 
-  //  println("instantiating transmission " + transmission.name)
-  // println("from occuring where:" + from.occuringOnProcDebugInfo)
-  //  println("to occuring where:" + to.occuringOnProcDebugInfo)
-
-  implicit val solver = mapper.solver
+  implicit val store = cpHardwareModel.store
+  val maxHorizon  = cpHardwareModel.maxHorizon
+  val busses = cpHardwareModel.cpBusses
+  val localLoopBusses = cpHardwareModel.selfLoopBussesID
+  val processorToBusToProcessorAdjacency = cpHardwareModel.processorToBusToProcessorAdjacency
 
   val start: CPIntVar = CPIntVar(0, maxHorizon)
   val end: CPIntVar = CPIntVar(0, maxHorizon)
@@ -64,7 +59,7 @@ case class CPTransmission(id: Int,
   val originProcessorID = from.processorID
   val destinationProcessorID = to.processorID
 
-  add(table(originProcessorID, busID, destinationProcessorID, processorToBusToProcessorAdjacency))
+  store.add(table(originProcessorID, busID, destinationProcessorID, processorToBusToProcessorAdjacency))
 
   val busToDuration = Array.tabulate(busses.length)(busID => busses(busID).transmissionDuration(transmission.size))
 
@@ -73,20 +68,20 @@ case class CPTransmission(id: Int,
 
   val transmissionDuration: CPIntVar = CPIntVar(minDuration,maxDuration)
 
-  add(element(busToDuration,busID,transmissionDuration))
+  store.add(element(busToDuration,busID,transmissionDuration))
 
-  add(end === (start + transmissionDuration))
+  store.add(end === (start + transmissionDuration))
 
   from.addOutgoingTransmission(this)
   to.addIncomingTransmission(this)
 
-  add(from.end <= start)
-  add(end <= to.start)
+  store.add(from.end <= start)
+  store.add(end <= to.start)
 
   timing match{
     case TransmissionTiming.Free | TransmissionTiming.Sticky =>
       //if localLoop then force asap
-      add(isSelfLoopTransmission implies (start ?=== (from.end)))
+      store.add(isSelfLoopTransmission implies (start ?=== (from.end)))
     case _ => ;
   }
 
