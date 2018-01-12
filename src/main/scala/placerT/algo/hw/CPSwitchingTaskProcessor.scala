@@ -25,7 +25,7 @@ import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper, SimpleTask}
 import placerT.metadata.hw.{ProcessingElement, SwitchingTask}
-import placerT.metadata.sw.FlattenedImplementation
+import placerT.metadata.sw.{FlattenedImplementation, FlattenedImplementationConcrete}
 
 import scala.collection.immutable.SortedMap
 
@@ -63,7 +63,7 @@ abstract class AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, m
   }
 }
 
-class CPInstantiatedPermanentFunction(id: Int, host:CPPermanentTaskProcessor, p: ProcessingElement, sharedImplementation:FlattenedImplementation, maxMemSize:Int, maxCores:Int, mapper: Mapper)
+class CPInstantiatedPermanentFunction(id: Int, val host:CPPermanentTaskProcessor, p: ProcessingElement, sharedImplementation:FlattenedImplementationConcrete, maxMemSize:Int, maxCores:Int, mapper: Mapper)
   extends AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, None, mapper: Mapper){
 
   val usedMem = CPIntVar(0,maxMemSize)

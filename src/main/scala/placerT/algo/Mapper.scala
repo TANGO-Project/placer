@@ -28,7 +28,7 @@ import placerT.metadata.hw._
 import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.collection.mutable.ArrayBuffer
 
 case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,
@@ -120,19 +120,25 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       processorIDCounter
     }
 
-    val cpProcessorsVirtual:List[CPProcessor] = softwareModel.sharedPermanentFunctions.toList.flatMap(_.implementations).flatMap((sharedImplementation:FlattenedImplementation) => {
-      val potentialHosts = cpProcessorsSimple.filter(cpps => sharedImplementation.canRunOn(cpps.p))
-      potentialHosts.map({case (hostPE:CPPermanentTaskProcessor) =>
-        //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
-        val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedImplementation, hostPE.p.memSize, Int.MaxValue/10 , this)
-        hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
-        dedicatedSwitchingPE
+    val sharedImplementationIDToFlattenedAndVirtualCores:Array[List[(FlattenedImplementationConcrete,CPInstantiatedPermanentFunction)]] = {
+      softwareModel.sharedPermanentFunctions.map(parametricSharedFunction => {
+        val flattenedImplementations:List[FlattenedImplementationConcrete] = parametricSharedFunction.implementations.toList
+        flattenedImplementations.flatMap((sharedFlattenedImplementation:FlattenedImplementationConcrete) => {
+          val potentialHosts = cpProcessorsSimple.filter(cpps => sharedFlattenedImplementation.canRunOn(cpps.p))
+          potentialHosts.map({case (hostPE:CPPermanentTaskProcessor) =>
+          //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
+          val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedFlattenedImplementation, hostPE.p.memSize, Int.MaxValue/10 , this)
+          hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
+            (sharedFlattenedImplementation,dedicatedSwitchingPE)
+        })
       })
-    })
+      })}
+
+    val cpProcessorsVirtual:List[CPProcessor] = sharedImplementationIDToFlattenedAndVirtualCores.toList.
+      flatMap((l:List[(FlattenedImplementation,CPInstantiatedPermanentFunction)]) => l.map(_._2))
 
     val cpProcessors:Array[CPProcessor] = (cpProcessorsSimple ++ cpProcessorsVirtual).toArray
     nbProcessorsHWAndVirtual = cpProcessors.length
-
 
     reportProgress("constants about adjacency")
 
@@ -173,8 +179,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       processorToBusToProcessorAdjacency: Set[(Int, Int, Int)],
       selfLoopBussesID:SortedSet[Int],
       store,
-      maxHorizon)
-
+      maxHorizon,
+      sharedImplementationIDToFlattenedAndVirtualCores)
 
     reportProgress("creating tasks")
 

@@ -19,6 +19,7 @@
 
 package placerT.metadata.sw
 
+import placerT.algo.hw.{CPHardwareModel, CPInstantiatedPermanentFunction}
 import placerT.io.JSonHelper
 import placerT.metadata._
 import placerT.metadata.hw._
@@ -26,21 +27,51 @@ import placerT.metadata.hw._
 import scala.collection.immutable.SortedMap
 import scala.reflect.macros.whitebox
 
+
+
+abstract sealed class FlattenedImplementation() extends Indiced{
+
+  def description: String
+
+  def toJSon: String
+
+  def computationMemory:Int
+}
+
+
+case class ReferenceToSharedFlattenedImplementationConcrete(f:FlattenedImplementationConcrete,target:CPInstantiatedPermanentFunction) extends FlattenedImplementation{
+  require(f.target.isInstanceOf[MultiTaskPermanentTasks],"reference to standard implementation should only refer to MultiTaskPermanentTasks")
+  override def toJSon: String = f.name
+
+  def durationOnFinalHardware(proc: ProcessingElement, properties: SortedMap[String, Int]): Int = f.duration(proc,properties)
+
+  def canRunOnFinalHardare(proc: ProcessingElement): Boolean = f.canRunOn(proc)
+
+  override def description: String = "shared implementation " + f.name + " on " + target.host
+
+  def name = f.name
+
+  override def computationMemory:Int = f.computationMemory
+
+}
+
+
 /**
- * @param target the PE class that can run it
- * @param resourceUsage the usage of resource, can only mention resources declared in the PE class
- * @param computationMemory is the memory needed to perform the computation.
- *                          We consider that the memory tat stores input and output data is allocated for the duration of the task.
- * @param duration the duration of the implementation when executed on the specified target
- */
-case class FlattenedImplementation(name: String,
-                                   target: ProcessingElementClass,
-                                   nbThreads:Int,
-                                   resourceUsage: SortedMap[String, Int],
-                                   computationMemory: Int,
-                                   duration: Formula,
-                                   originImplementation: ParametricImplementation = null,
-                                   parameterValues: SortedMap[String, Int] = null) extends Indiced {
+  * @param target the PE class that can run it
+  * @param resourceUsage the usage of resource, can only mention resources declared in the PE class
+  * @param computationMemory is the memory needed to perform the computation.
+  *                          We consider that the memory tat stores input and output data is allocated for the duration of the task.
+  * @param duration the duration of the implementation when executed on the specified target
+  */
+case class FlattenedImplementationConcrete(name: String,
+                                           target: ProcessingElementClass,
+                                           nbThreads:Int,
+                                           resourceUsage: SortedMap[String, Int],
+                                           computationMemory: Int,
+                                           duration: Formula,
+                                           originImplementation: ParametricImplementation = null,
+                                           parameterValues: SortedMap[String, Int] = null) extends FlattenedImplementation {
+
   require(resourceUsage.keySet subsetOf target.resources, "unknown resources specified in implementation " + target + ": " + (resourceUsage.keySet -- target.resources).mkString(","))
   require(duration.terms subsetOf target.properties, "duration is defined based on unknown features in implementation " + target + ": " + (duration.terms -- target.properties).mkString(","))
   require(target match{case _:SwitchingTask => true; case _ => nbThreads == 1},"mult thread can only be specified for implem running on switchig task PE")
@@ -83,23 +114,26 @@ case class FlattenedImplementation(name: String,
 }
 
 
-abstract sealed class Implementation{
+abstract sealed class Implementation extends Indiced() {
   def toJSon: String
-  def implementations: Iterable[FlattenedImplementation]
 }
 
-case class ReferenceToStandardImplementation(p:ParametricImplementation) extends Implementation{
+case class ReferenceToSharedParametricImplementation(p:ParametricImplementation) extends Implementation{
   require(p.target.isInstanceOf[MultiTaskPermanentTasks],"reference to standard implementation should only refer to MultiTaskPermanentTasks")
+
   override def toJSon: String = "{" + JSonHelper.string("standardImplementation", p.name) + "}"
-  override def implementations: Iterable[FlattenedImplementation] = p.implementations
+
+  def sharedFlattenedImplementations: Iterable[FlattenedImplementationConcrete] = {
+    p.implementations
+  }
 }
 
 /**
- * @param target
- * @param resourceUsage
- * @param computationMemory is the memory needed toperform the computation. We consider that the memory tat stores input and output data is allocated for the duration of the task.
- * @param duration the duration of the implementation when executed on the specified target
- */
+  * @param target
+  * @param resourceUsage
+  * @param computationMemory is the memory needed toperform the computation. We consider that the memory tat stores input and output data is allocated for the duration of the task.
+  * @param duration the duration of the implementation when executed on the specified target
+  */
 case class ParametricImplementation(name: String,
                                     target: ProcessingElementClass,
                                     nbThreads:Formula,
@@ -108,11 +142,11 @@ case class ParametricImplementation(name: String,
                                     duration: Formula,
                                     parameters: SortedMap[String, Iterable[Int]]) extends Implementation {
 
-  lazy val implementations: Iterable[FlattenedImplementation] = {
+  def implementations:Iterable[FlattenedImplementationConcrete] = {
     parameterize(parameters.toList, SortedMap.empty[String, Int])
   }
 
-  private def parameterize(freeParameters: List[(String, Iterable[Int])], setParameters: SortedMap[String, Int]): Iterable[FlattenedImplementation] = {
+  private def parameterize(freeParameters: List[(String, Iterable[Int])], setParameters: SortedMap[String, Int]): Iterable[FlattenedImplementationConcrete] = {
     def resolve(f: Formula): Int = Formula.simplifyConstants(f, setParameters) match {
       case Const(c) => c
       case _ => throw new Error("cannot simplify formula to constant")
@@ -120,7 +154,7 @@ case class ParametricImplementation(name: String,
     def simplify(f: Formula): Formula = Formula.simplifyConstants(f, setParameters)
     freeParameters match {
       case Nil =>
-        Some(FlattenedImplementation(name,
+        Some(FlattenedImplementationConcrete(name,
           target,
           simplify(nbThreads) match {
             case Const(c) => c
@@ -151,14 +185,11 @@ case class ParametricImplementation(name: String,
     JSonHelper.string("duration", duration.prettyPrint()) + "}"
 }
 
-case class AtomicTask(implementations: List[Implementation],
-                      sharedImplementations:List[ReferenceToStandardImplementation],
+case class AtomicTask(implementations: List[ParametricImplementation],
+                      sharedImplementations:List[ReferenceToSharedParametricImplementation],
                       name: String) extends Indiced() with IndiceMaker {
 
-  val implementationArray: Array[FlattenedImplementation] = implementations.flatMap(_.implementations).toArray
-
-  setIndices(implementationArray)
-  val computingHardwareToImplementations: Map[ProcessingElementClass, List[FlattenedImplementation]] = implementationArray.toList.groupBy(_.target)
+  val flattenedNonSharedImplementations:Iterable[FlattenedImplementationConcrete] = implementations.flatMap(_.implementations)
 
   //  println("\n" + implementationArray.toList.mkString("\n") + "\n")
 
@@ -166,41 +197,29 @@ case class AtomicTask(implementations: List[Implementation],
 
   def multiString: List[String] = ("Task(" + name) :: "\t implems:{" :: implementations.map(i => "\t\t" + i.toString)
 
-  def canRunOn(p: ProcessingElement): Boolean = {
-    computingHardwareToImplementations.get(p.processorClass) match {
-      case None => return false
-      case Some(Nil) => return false
-      case Some(implementationList) =>
-        for (implementation <- implementationList) {
-          val metrics = implementation.resourceUsage
-          if (metrics.forall({ case (dim, req) => p.resources.get(dim).head >= req })) {
-            return true
-          }
-        }
-        return false
-      case _ => throw new Error("internal error")
-    }
-    throw new Error("internal error")
-    false
-  }
-
-  def anyImplementationFor(p: ProcessingElement): Boolean = {
-    computingHardwareToImplementations.get(p.processorClass) match {
-      case None => false
-      case Some(Nil) => false
-      case Some(implementationList) => true
-      case _ => throw new Error("internal error")
-    }
-  }
-
   def maxDuration(procs: Iterable[ProcessingElement], properties: SortedMap[String, Int]): Int = {
     var maxDur = 0
     for (proc <- procs) {
-      for (implem <- computingHardwareToImplementations.getOrElse(proc.processorClass, List.empty)) {
-        val dur = implem.duration(proc, properties)
-        if (dur > maxDur) maxDur = dur
+      for (implem <- flattenedNonSharedImplementations) {
+        if (implem.canRunOn(proc)) {
+          val dur = implem.duration(proc, properties)
+          if (dur > maxDur) maxDur = dur
+        }
       }
     }
+
+    //we make a second loop with proc and implem swapped because we generate the flattened implementations, actually
+    for (sharedImplemRef <- sharedImplementations){
+      for(implem <- sharedImplemRef.sharedFlattenedImplementations){
+        for (proc <- procs) {
+          if (implem.canRunOn(proc)) {
+            val dur = implem.duration(proc, properties)
+            if (dur > maxDur) maxDur = dur
+          }
+        }
+      }
+    }
+
     maxDur
   }
 
@@ -241,11 +260,11 @@ case class Transmission(source: AtomicTask,
 }
 
 /**
- *
- * @param simpleProcesses the processes
- * @param transmissions the transmissions between processes
- * @param softwareClass the class of software, and its time requirements
- */
+  *
+  * @param simpleProcesses the processes
+  * @param transmissions the transmissions between processes
+  * @param softwareClass the class of software, and its time requirements
+  */
 case class SoftwareModel(sharedPermanentFunctions:Array[ParametricImplementation],
                          simpleProcesses: Array[AtomicTask],
                          transmissions: Array[Transmission],
@@ -254,6 +273,7 @@ case class SoftwareModel(sharedPermanentFunctions:Array[ParametricImplementation
                          verbose:Boolean = true) extends IndiceMaker {
   setIndices(simpleProcesses)
   setIndices(transmissions)
+  setIndices(sharedPermanentFunctions)
 
   val nbTransmissions = transmissions.length
 

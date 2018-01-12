@@ -20,14 +20,16 @@
 package placerT.algo.hw
 
 import oscar.cp.CPStore
+import placerT.metadata.sw.FlattenedImplementationConcrete
 
 import scala.collection.immutable.SortedSet
 
 case class CPHardwareModel(cpProcessors:Array[CPProcessor],
-                      cpBusses: Array[CPBus],
-                      processorToBusToProcessorAdjacency: Set[(Int, Int, Int)],
-                      selfLoopBussesID:SortedSet[Int],
-                      store:CPStore,
-                      maxHorizon:Int) {
+                           cpBusses: Array[CPBus],
+                           processorToBusToProcessorAdjacency: Set[(Int, Int, Int)],
+                           selfLoopBussesID:SortedSet[Int],
+                           store:CPStore,
+                           maxHorizon:Int,
+                           sharedImplementationIDToFlattenedAndVirtualCores:Array[List[(FlattenedImplementationConcrete,CPInstantiatedPermanentFunction)]]) {
 
 }

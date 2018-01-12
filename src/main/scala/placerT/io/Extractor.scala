@@ -223,9 +223,9 @@ case class EAtomicTask(name: String,
   def extract(hw: HardwareModel,standardImplems:Array[ParametricImplementation]) = {
     val translatedImplems = implementations.map(implementation => implementation.extract(hw))
 
-    def extractReferenceImplem(sharedImplementation:String):ReferenceToStandardImplementation = {
+    def extractReferenceImplem(sharedImplementation:String):ReferenceToSharedParametricImplementation = {
       standardImplems.find(_.name equals sharedImplementation) match {
-        case Some(x) => ReferenceToStandardImplementation(x);
+        case Some(x) => ReferenceToSharedParametricImplementation(x);
         case None => throw new Error("cannot find reference implementation " + sharedImplementation)
       }
     }

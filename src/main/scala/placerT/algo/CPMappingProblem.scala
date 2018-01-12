@@ -17,7 +17,6 @@
  *
  */
 
-
 package placerT.algo
 
 import oscar.cp._
@@ -27,8 +26,6 @@ import placerT.algo.sw.{CPTask, CPTransmission}
 import placerT.metadata.{Mapping, MappingProblem, TaskMapping}
 import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.FlattenedImplementation
-
-
 
 case class CPMappingProblem(mappingProblem: MappingProblem,
                             hardwareName: String,
