@@ -198,9 +198,9 @@ case class AtomicTask(implementations: List[ParametricImplementation],
 
   //  println("\n" + implementationArray.toList.mkString("\n") + "\n")
 
-  override def toString: String = "Task(" + name + " implems:{" + implementations.mkString("") + "})"
+  override def toString: String = "Task(" + name + " implems:{" + implementations.mkString("") + "} sharedImplems:{" + sharedImplementations.mkString(",") + "})"
 
-  def multiString: List[String] = ("Task(" + name) :: "\t implems:{" :: implementations.map(i => "\t\t" + i.toString)
+  def multiString: List[String] = ("Task(" + name) :: "\t implems:{" :: (implementations.map(i => "\t\t" + i.toString) ::: List("\t }")) ::: ("\t sharedImplems:{" :: sharedImplementations.map(i => "\t\t" + i.p.name) ::: List("\t }"))
 
   def maxDuration(procs: Iterable[ProcessingElement], properties: SortedMap[String, Int]): Int = {
     var maxDur = 0
@@ -289,6 +289,7 @@ case class SoftwareModel(sharedPermanentFunctions:Array[ParametricImplementation
   require(transmissions.forall(f => f.source.id != -1 && f.target.id != -1), "some transmissions refer to non-registered tasks")
 
   override def toString: String = "SoftwareModel(\n" +
+    "\tsharedPermanentFunctions:[\n\t\t" + sharedPermanentFunctions.map(_.toString).mkString("\n\t\t") + "] \n" +
     "\ttasks:[\n\t\t" + simpleProcesses.flatMap(_.multiString).mkString("\n\t\t") + "] \n" +
     "\ttransmissions:[\n\t\t" + transmissions.mkString("\n\t\t") + "\n" +
     "\t" + softwareClass + "])"

@@ -38,7 +38,7 @@ case class CPTask(id: Int,
   extends CPAbstractTask() with IndiceMaker {
 
   val flattenedReferenceToImplementations = task.sharedImplementations.flatMap(sharedImplem => {
-    val implemAndVCoreList:List[(FlattenedImplementationConcrete,CPInstantiatedPermanentFunction)] = cpHardwareModel.sharedImplementationIDToFlattenedAndVirtualCores(this.id)
+    val implemAndVCoreList:List[(FlattenedImplementationConcrete,CPInstantiatedPermanentFunction)] = cpHardwareModel.sharedImplementationIDToFlattenedAndVirtualCores(sharedImplem.p.id)
     implemAndVCoreList.map({ case (flattenedImplem, vCore) =>
       ReferenceToSharedFlattenedImplementationConcrete(flattenedImplem, vCore)
     })})
