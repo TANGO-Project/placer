@@ -51,7 +51,7 @@ case class ReferenceToSharedFlattenedImplementationConcrete(f:FlattenedImplement
 
   def canRunOnFinalHardare(proc: ProcessingElement): Boolean = f.canRunOn(proc)
 
-  override def description: String = "shared implementation " + f.name + " on " + target.host
+  override def description: String = "shared:" + f.description
 
   def name = f.name
 

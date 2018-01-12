@@ -126,12 +126,13 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         flattenedImplementations.flatMap((sharedFlattenedImplementation:FlattenedImplementationConcrete) => {
           val potentialHosts = cpProcessorsSimple.filter(cpps => sharedFlattenedImplementation.canRunOn(cpps.p))
           potentialHosts.map({case (hostPE:CPPermanentTaskProcessor) =>
-          //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
-          val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedFlattenedImplementation, hostPE.p.memSize, Int.MaxValue/10 , this)
-          hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
+            //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
+            //todo: the max number of instance is to large, find the correct bound.
+            val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedFlattenedImplementation, hostPE.p.memSize, softwareModel.simpleProcesses.length , this)
+            hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
             (sharedFlattenedImplementation,dedicatedSwitchingPE)
+          })
         })
-      })
       })}
 
     val cpProcessorsVirtual:List[CPProcessor] = sharedImplementationIDToFlattenedAndVirtualCores.toList.
@@ -149,18 +150,31 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val busToProcessorAdjacencyNoSelfLoop: Set[(Int, Int)] =
       hardwareModel.busses.flatMap(bus => bus.sendingToProcessors.map(proc => (bus.id, proc.id))).toSet
 
+    val processorIDToProcessorIAndHostedVirtualProcessorID:Array[List[Int]] = Array.tabulate(cpProcessorsSimple.length)(List(_))
+    for(virtualProcesor <- cpProcessorsVirtual){
+      processorIDToProcessorIAndHostedVirtualProcessorID(virtualProcesor.p.id) = virtualProcesor.id :: processorIDToProcessorIAndHostedVirtualProcessorID(virtualProcesor.p.id)
+    }
+
     val processorToBusToProcessorAdjacencyNoSelfLoop: Set[(Int, Int, Int)] = hardwareModel.busses.flatMap(
-      bus => bus.receivingFromProcessors.flatMap(
-        receivingFrom => bus.sendingToProcessors.flatMap(
-          sendingTo =>
-            if (receivingFrom != sendingTo) Some((receivingFrom.id, bus.id, sendingTo.id))
-            else None))).toSet
+      bus => {
+        val receivingIDs = bus.receivingFromProcessors.flatMap(receivingFrom => processorIDToProcessorIAndHostedVirtualProcessorID(receivingFrom.id))
+        val sendingIDs = bus.sendingToProcessors.flatMap(sendingTo => processorIDToProcessorIAndHostedVirtualProcessorID(sendingTo.id))
+
+        receivingIDs.flatMap(receivingID => {
+          sendingIDs.flatMap(sendingID => {
+            if (receivingID != sendingID) Some((sendingID, bus.id, receivingID))
+            else None
+          })
+        })
+      }).toSet
 
     val selfLoopBusses = hardwareModel.processors.toList.map(
       proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, this))
 
+    //TODO: shared functions
     val selfLoopBussesID = SortedSet.empty[Int] ++ selfLoopBusses.map(_.id)
 
+    //TODO: shared functions
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
       processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
 
