@@ -36,6 +36,10 @@ abstract sealed class FlattenedImplementation() extends Indiced{
   def toJSon: String
 
   def computationMemory:Int
+
+  def name:String
+
+  def parameterValues: SortedMap[String, Int]
 }
 
 
@@ -53,6 +57,7 @@ case class ReferenceToSharedFlattenedImplementationConcrete(f:FlattenedImplement
 
   override def computationMemory:Int = f.computationMemory
 
+  override def parameterValues: SortedMap[String, Int] = f.parameterValues
 }
 
 

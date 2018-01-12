@@ -46,7 +46,6 @@ case class CPTask(id: Int,
   val allImplementationArray:Array[FlattenedImplementation] = (task.flattenedNonSharedImplementations ++ flattenedReferenceToImplementations).toArray
   setIndices(allImplementationArray)
 
-
   implicit val store:CPStore = cpHardwareModel.store
   val maxHorizon = cpHardwareModel.maxHorizon
   val cpProcessors = cpHardwareModel.cpProcessors
@@ -88,7 +87,10 @@ case class CPTask(id: Int,
                                                             energy:Int,
                                                             power:Int,
                                                             indice:Int,
-                                                            nbThreads:Int)
+                                                            nbThreads:Int){
+    if(duration==0)
+      System.err.println("WARNING: duration==0 for task " + task.name + " with implementation " + allImplementationArray(implem).name + " running on " + cpProcessors(processor).p.name)
+  }
 
   val implemAndProcessorAndDurationAndEnergyAndPower: Iterable[ImplemAndProcessorAndDurationAndEnergyAndPower] =
     allImplementationArray.flatMap((implem:FlattenedImplementation) => {

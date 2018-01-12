@@ -41,7 +41,7 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
   def getMapping(sol: CPSol): Mapping = {
 
     def proc(procID: CPIntVar): ProcessingElement = cpProcessors(sol(procID)).p
-    def implem(task: CPTask): FlattenedImplementation = task.task.implementationArray(sol(task.implementationID))
+    def implem(task: CPTask): FlattenedImplementation = task.allImplementationArray(sol(task.implementationID))
 
     val firstTaskMapping = cpTasks.map(cpTask =>
       TaskMapping(cpTask.task, proc(cpTask.processorID), implem(cpTask),sol(cpTask.start), sol(cpTask.taskDuration), sol(cpTask.end)))

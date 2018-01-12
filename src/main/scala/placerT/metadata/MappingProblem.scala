@@ -42,15 +42,6 @@ case class MappingProblem(timeUnit:String,
                           constraints:List[MappingConstraint],
                           goal: MappingGoal) {
 
-  for (task <- softwareModel.simpleProcesses)
-    for (implem <- task.implementationArray) {
-      val errorPE = hardwareModel.processors.filter(proc =>
-        implem.target == proc.processorClass && implem.duration(proc, properties ++ hardwareModel.properties ++ softwareModel.properties) ==0)
-      if (errorPE.nonEmpty){
-        System.err.println("WARNING: duration==0 for task " + task.name + " with implementation " + implem.name + " running on " + errorPE.toList.map(_.name).mkString(","))
-      }
-    }
-
   def toJSon: String = "{" +
     JSonHelper.string("timeUnit",timeUnit) + "," +
     JSonHelper.string("dataUnit",dataUnit) + "," +
