@@ -69,7 +69,7 @@ case class Mapping(hardwareName: String,
     busToDurations.map({case(bus,durs) => "" + bus + ":" + durs.map(_._2).sum }).toList
   }
 
-  def toStringSortedLight: String = {
+  override def toString: String = {
     val stringAndStart = taskMapping.map(
       { case TaskMapping(task, pe, implem, start, dur, end) =>
         (padToLength(task.name, 60) + " " + padToLength(pe.name + "(" + implem.description + ")", 60) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
@@ -78,13 +78,15 @@ case class Mapping(hardwareName: String,
         { case (trans, fromPE, toPE, bus, start, dur, end) =>
           (padToLength(trans.name, 60) + " " + padToLength(bus.name, 60) + " start:" + padToLength("" + start, 10) + " dur:" + padToLength("" + dur, 10) + "end:" + padToLength("" + end, 10), start)
         })
-    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
-  }
 
-  def usages:String = ("usages{" +
-    coreUsages.mkString("\n\t","\n\t","") +
-    (if(busUsages.nonEmpty) {busUsages.mkString("\n\t","\n\t","\n")} else "\n") + "}"
-    )
+    val usages = coreUsages.mkString("\n\t\t","\n\t\t","") +
+      (if(busUsages.nonEmpty) {busUsages.mkString("\n\t\t","\n\t\t","\n\t")} else "\n\t")
+
+    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + ")" +
+      "{\n\tsharedFunctions{\n\t\t" + sharedFunctionMapping.map(s => "(implem:" + s.implem.name + " pe:" + s.pe.name + " nbInstances:" + s.nbInstances + ")").mkString("\n\t\t") + "\n\t}" +
+      "\n\tschedule{\n\t\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t\t") + "\n\t}" +
+      "\n\tusages{" + usages + "}\n}"
+  }
 
   def toJSon: String = "{" +
     JSonHelper.string("hardwareName", hardwareName) + "," +
@@ -140,6 +142,6 @@ case class Mappings(timeUnit:String,
       "\n\tinfo:" + info +
       "\n\ttimeUnit:" + timeUnit +
       "\n\tdataUnit:" + dataUnit + "\n" +
-      mapping.map(l => l.toStringSortedLight + l.usages).mkString("\n\n") + "\n)"
+      mapping.map(l => l.toString).mkString("\n\n") + "\n)"
   }
 }
