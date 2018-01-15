@@ -93,10 +93,11 @@ case class CPRegularBus(override val id: Int, bus: Bus, mapper: Mapper) extends 
   }
 }
 
-case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
+case class CPSelfLoopBus(override val id: Int, processorFrom: ProcessingElement, processorTo: ProcessingElement, mapper: Mapper) extends CPBus(id: Int, mapper: Mapper) {
 
   val isSelfLoop:Boolean = true
-  val name = "SelfLoopBus on " + processor.name
+
+  val name = "SelfLoopBus on " + processorFrom.name + (if (processorFrom == processorTo) "" else (" and " + processorTo.name))
 
   override def transmissionDuration(size: Int): Int = 0
 
@@ -104,7 +105,7 @@ case class CPSelfLoopBus(override val id: Int, processor: ProcessingElement, map
 
   override def close() {}
 
-  def selfLoopBus = SelfLoopBus(processor)
+  def selfLoopBus = SelfLoopBus(processorFrom,processorTo)
 
   override def buildTimeWidth: CPIntVar = CPIntVar(0)(mapper.store)
 }

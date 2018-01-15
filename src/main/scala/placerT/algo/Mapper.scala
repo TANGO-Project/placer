@@ -170,15 +170,33 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         })
       }).toSet
 
-    val selfLoopBusses = hardwareModel.processors.toList.map(
-      proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, this))
-
     //TODO: shared functions
+//    val selfLoopBusses = hardwareModel.processors.toList.map(
+//      proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, proc, this))
+
+
+    var lastBusID:Int = hardwareModel.busses.length-1
+
+    def nextBusID(): Int ={
+      lastBusID+=1
+      lastBusID
+    }
+
+    val selfLoopBusses = processorIDToProcessorIAndHostedVirtualProcessorID.indices.flatMap(
+      procID => {
+        val otherProcessorsIDs = processorIDToProcessorIAndHostedVirtualProcessorID(procID)
+        otherProcessorsIDs.flatMap((otherProcID) => {
+          val busA = new CPSelfLoopBus(nextBusID(), cpProcessors(procID).p, cpProcessors(otherProcID).p, this)
+          if (procID == otherProcID) List(busA) else List(busA,new CPSelfLoopBus(nextBusID(), cpProcessors(otherProcID).p, cpProcessors(procID).p, this))
+        }
+        )
+      })
+
     val selfLoopBussesID = SortedSet.empty[Int] ++ selfLoopBusses.map(_.id)
 
     //TODO: shared functions
     val processorToBusToProcessorAdjacency: Set[(Int, Int, Int)] =
-      processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processor.id, bus.id, bus.processor.id))
+      processorToBusToProcessorAdjacencyNoSelfLoop ++ selfLoopBusses.map((bus: CPSelfLoopBus) => (bus.processorFrom.id, bus.id, bus.processorTo.id))
 
     //    println("processorToBusToProcessorAdjacency" + processorToBusToProcessorAdjacency)
 
@@ -623,8 +641,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         arrayOfNbInstancesOfSharedFunctions,
         (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
         (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-        )
-        ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
+      )
+        ++ binarySplit(taskStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
 
     } onSolution {

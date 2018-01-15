@@ -30,10 +30,9 @@ case class TaskMapping(task:AtomicTask,
                        d:Int,
                        e:Int)
 
-case class SharedFunctionMapping(
-                                  implem:FlattenedImplementation,
-                                  pe:ProcessingElement,
-                                  nbInstances:Int
+case class SharedFunctionMapping(implem:FlattenedImplementation,
+                                 pe:ProcessingElement,
+                                 nbInstances:Int
                                 ){
   require(nbInstances>0)
 }
@@ -83,7 +82,9 @@ case class Mapping(hardwareName: String,
       (if(busUsages.nonEmpty) {busUsages.mkString("\n\t\t","\n\t\t","\n\t")} else "\n\t")
 
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + ")" +
-      "{\n\tsharedFunctions{\n\t\t" + sharedFunctionMapping.map(s => "(implem:" + s.implem.name + " pe:" + s.pe.name + " nbInstances:" + s.nbInstances + ")").mkString("\n\t\t") + "\n\t}" +
+      "{\n\tsharedFunctions{\n\t\t" + sharedFunctionMapping.map(s => "(implem:" + s.implem.name +
+       "(" + s.implem.parameterValues.map({ case (name, value) => name + ":" + value}).mkString(",") + ")" +
+      " pe:" + s.pe.name + " nbInstances:" + s.nbInstances + ")").mkString("\n\t\t") + "\n\t}" +
       "\n\tschedule{\n\t\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t\t") + "\n\t}" +
       "\n\tusages{" + usages + "}\n}"
   }
@@ -99,6 +100,7 @@ case class Mapping(hardwareName: String,
 
   private def sharedFunctionToJSon(s:SharedFunctionMapping):String = {
     "{" + JSonHelper.string("sharedImplem",s.implem.name) + "," +
+      JSonHelper.multiples("parameters", s.implem.parameterValues.map({ case (name, value) => "{" + JSonHelper.string("name", name) + "," + JSonHelper.int("value", value) + "}" })) + "," +
       JSonHelper.int("nbInstance",s.nbInstances) + "," +
       JSonHelper.string("host",s.pe.name) + "}"
   }

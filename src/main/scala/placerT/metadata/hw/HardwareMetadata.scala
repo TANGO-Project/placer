@@ -293,19 +293,19 @@ case class SingleWayBus(private val from: List[ProcessingElement],
 }
 
 
-case class SelfLoopBus(proc: ProcessingElement) extends Bus("local loop on " + proc.name, 0, 0) {
+case class SelfLoopBus(procFrom: ProcessingElement, procTo: ProcessingElement) extends Bus("local loop on " + procFrom.name + (if(procFrom == procTo) "" else  (" and " + procTo.name)), 0, 0) {
 
-  override def toString: String = "local loop on " + proc.name
+  override def toString: String = "local loop on " + procFrom.name + (if(procFrom == procTo) "" else  (" and " + procTo.name))
 
   override def close() {}
 
-  override def sendingToProcessors: Set[ProcessingElement] = Set(proc)
+  override def sendingToProcessors: Set[ProcessingElement] = Set(procTo)
 
-  override def canSentFlowTo(p: ProcessingElement): Boolean = p == proc
+  override def canSentFlowTo(p: ProcessingElement): Boolean = p == procTo
 
-  override def receivingFromProcessors: Set[ProcessingElement] = Set(proc)
+  override def receivingFromProcessors: Set[ProcessingElement] = Set(procFrom)
 
-  override def canReceiveFlowFrom(p: ProcessingElement): Boolean = p == proc
+  override def canReceiveFlowFrom(p: ProcessingElement): Boolean = p == procFrom
 
   def toJSon: String = throw new Error("not supposed to be JSon serialized")
 }
