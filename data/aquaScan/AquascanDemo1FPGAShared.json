@@ -95,10 +95,10 @@
       {
         "name":"FpgaDigitCorrelation",
         "target":"fpga",
-        "parameters":[{"name":"toto", "values":[1,2,3]}],
-        "resourceUsage":[{"name":"gates", "formula":"200*toto"}],
-        "computationMemory":"2",
-        "duration":"2880/toto"
+        "parameters":[{"name":"blockSize", "values":[1,2,3]}],
+        "resourceUsage":[{"name":"gates", "formula":"300*blockSize"}],
+        "computationMemory":"2*blockSize",
+        "duration":"2880/blockSize"
       }
     ],
     "simpleProcesses":

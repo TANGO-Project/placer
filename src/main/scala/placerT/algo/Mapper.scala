@@ -206,7 +206,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       bus => new CPRegularBus(bus.id, bus, this)
     ) ++ selfLoopBusses).toArray
 
-
     val cpHardwareModel = new CPHardwareModel(
       cpProcessors:Array[CPProcessor],
       cpBusses: Array[CPBus],
@@ -682,6 +681,9 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       println("relaxation " + currentRelaxation)
       constraintBuffer.clear()
       val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
+        //relaxation strategy (actually it is more a non-relaxation strategy)
+
+
         for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
           if(!allProcessesInSamePEConstraints.contains(task.id)) {
             if (scala.math.random * 100 > relaxProba) {
@@ -690,6 +692,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           }
         }
 
+        //TODO: this is pointless, use sameCore (to constraint transmission), and also as a post-process of LNS decision, I do not see the point. maybe the decision should be on the  witness only
         for(samePEConstraint <- samePEConstraints){
           if (scala.math.random * 100 > relaxProba) {
             val witnessTaskID = samePEConstraint.processes.head.id
@@ -699,6 +702,9 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
             }
           }
         }
+
+        //TODO: add relaxation of sharedFunctionPE!
+
         add(constraintBuffer)
       }
 
