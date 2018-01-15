@@ -80,6 +80,7 @@ MultiTaskPermanentTasksClass ={
 }
 
 SoftwareModel =  {
+    sharedPermanentFunctions:[Implementation]
     simpleProcesses:[SimpleProcess]
     transmissions:[Transmission]
     softwareClass:SoftwareClass
@@ -89,7 +90,10 @@ SoftwareModel =  {
 SimpleProcess = {
     name:String
     implementations:[Implementation]
+    sharedImplementation:[SharedImplementationRef]
 }
+
+SharedImplementationRef = String
 
 Implementation = {
     name:String
