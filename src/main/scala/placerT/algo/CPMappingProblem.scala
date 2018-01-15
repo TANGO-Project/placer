@@ -80,7 +80,8 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
   def varsToDistribute: List[CPIntVar] = {
     List.empty ++
       cpTasks.flatMap(task => List(task.start,task.implementationID,task.processorID)) ++
-      cpTransmissions.flatMap(_.variablesToDistribute) //  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
+      cpTransmissions.flatMap(_.variablesToDistribute) ++
+      cpSharedFunctions.flatMap(_.varsToDistribute)
   }
 
   def varsToSave: List[CPIntVar] = List(makeSpan,energy) ++ cpTasks.flatMap(_.variablesToSave) ++ cpTransmissions.flatMap(_.variablesToSave) ++ widthVar ++ cpSharedFunctions.flatMap(_.variablesToSave)

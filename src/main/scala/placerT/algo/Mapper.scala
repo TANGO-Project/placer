@@ -514,9 +514,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     solver.addDecisionVariables(problem.varsToSave)
 
-    var secondLevels = 0
-    var thirdLevels = 0
-
     search {
       val allVars = problem.varsToDistribute.toArray
       if(isParetoSearch) {
@@ -540,14 +537,18 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
             problem.cpTransmissions.map(transmission => transmission.start)
           ).toArray
 
+        val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
+
         (conflictOrderingSearch(
           processorIDChoices,
           taskMaxDurations(_),
           processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-          ++ oscar.algo.search.Branching({secondLevels += 1; Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
-          //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
+          ++ conflictOrderingSearch(
+          arrayOfNbInstancesOfSharedFunctions,
+          (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
+          (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
+        )
           ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
-          ++ oscar.algo.search.Branching({thirdLevels += 1; /*println("second level");*/ Seq.empty}) //to know how many second levels (although I do not know how to interpret this yet)
           ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
       }
     } onSolution {
@@ -557,8 +558,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     val stat = start(nSols = if(isSearchOnlyOne)1 else Int.MaxValue,timeLimit = config.timeLimit)
     print(stat)
 
-    println("secondLevels:" + secondLevels)
-    println("thirdLevels:" + thirdLevels)
     println
 
     goal match {
@@ -593,9 +592,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     solver.addDecisionVariables(problem.varsToSave)
 
-    var secondLevels = 0
-    var thirdLevels = 0
-
     var bestSolution: Option[Mapping] = None
     var bestValue: Int = Int.MaxValue
 
@@ -617,18 +613,17 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         ).toArray
 
 
-      val ArrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
+      val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
 
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
         processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
         ++ conflictOrderingSearch(
-        ArrayOfNbInstancesOfSharedFunctions,
-        (fnID) => ArrayOfNbInstancesOfSharedFunctions(fnID).max,
-        (fnID) => ArrayOfNbInstancesOfSharedFunctions(fnID).min
+        arrayOfNbInstancesOfSharedFunctions,
+        (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
+        (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
         )
-        //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
         ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
 
