@@ -63,8 +63,8 @@ abstract class AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, m
   }
 }
 
-class CPInstantiatedPermanentFunction(id: Int, val host:CPPermanentTaskProcessor, p: ProcessingElement, sharedImplementation:FlattenedImplementationConcrete, maxMemSize:Int, maxCores:Int, mapper: Mapper)
-  extends AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, None, mapper: Mapper){
+case class CPInstantiatedPermanentFunction(override val id: Int, host:CPPermanentTaskProcessor, sharedImplementation:FlattenedImplementationConcrete, maxMemSize:Int, maxCores:Int, mapper: Mapper)
+  extends AbstractCPSwitchingTaskProcessor(id: Int, host.p, None, mapper: Mapper){
 
   val usedMem = CPIntVar(0,maxMemSize)
   val nbInstances = CPIntVar(0,maxCores)
@@ -85,6 +85,8 @@ class CPInstantiatedPermanentFunction(id: Int, val host:CPPermanentTaskProcessor
   }
 
   def varsToDistribute:List[CPIntVar] = List(nbInstances)
+
+  def variablesToSave:List[CPIntVar] = List(nbInstances)
 
   //we do not consider these here since they are considered at the level of the hosting PE
   override def accumulateTransmissionStorageOnTask(task:CPTask,processorID:Int = id){

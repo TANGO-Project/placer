@@ -30,7 +30,16 @@ case class TaskMapping(task:AtomicTask,
                        d:Int,
                        e:Int)
 
+case class SharedFunctionMapping(
+                                  implem:FlattenedImplementation,
+                                  pe:ProcessingElement,
+                                  nbInstances:Int
+                                ){
+  require(nbInstances>0)
+}
+
 case class Mapping(hardwareName: String,
+                   sharedFunctionMapping:Iterable[SharedFunctionMapping],
                    taskMapping: Array[TaskMapping],
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
                    makeSpan: Int,
@@ -60,28 +69,6 @@ case class Mapping(hardwareName: String,
     busToDurations.map({case(bus,durs) => "" + bus + ":" + durs.map(_._2).sum }).toList
   }
 
-  override def toString: String = "Mapping(\n\t" +
-    taskMapping.map(
-      { case TaskMapping(task, pe, implem, start, dur, end) =>
-        padToLength(task.name, 22) + "implem:" + padToLength(implem.description, 22) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4)
-      }).mkString("\n\t") + "\n\t" +
-    transmissionMapping.filter(p => p._2.id != p._3.id).map(
-      { case (trans, fromPE, toPE, bus, start, dur, end) =>
-        padToLength(trans.name, 21) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4)
-      }).mkString("\n\t") + "\n)"
-
-  def toStringSorted: String = {
-    val stringAndStart = taskMapping.map(
-      { case TaskMapping(task, pe, implem, start, dur, end) =>
-        (padToLength(task.name, 40) + "implem:" + padToLength(implem.description, 40) + " on:" + padToLength(pe.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
-      }).toList ++
-      transmissionMapping.filter(p => p._2.id != p._3.id).map(
-        { case (trans, fromPE, toPE, bus, start, dur, end) =>
-          (padToLength(trans.name, 31) + " from:" + padToLength(fromPE.name, 10) + " to:" + padToLength(toPE.name, 10) + " on:" + padToLength(bus.name, 15) + " start:" + padToLength("" + start, 4) + " dur:" + padToLength("" + dur, 4) + "end:" + padToLength("" + end, 4), start)
-        })
-    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + "){\n\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t") + "\n}"
-  }
-
   def toStringSortedLight: String = {
     val stringAndStart = taskMapping.map(
       { case TaskMapping(task, pe, implem, start, dur, end) =>
@@ -104,8 +91,15 @@ case class Mapping(hardwareName: String,
     JSonHelper.int("makeSpan", makeSpan) + "," +
     JSonHelper.optionIntComa("width", width) +
     JSonHelper.int("energy", energy) + "," +
+    JSonHelper.multiples("sharedFunctions", sharedFunctionMapping.map(sharedFunctionToJSon)) + "," +
     JSonHelper.multiples("taskMapping", taskMapping.map(taskMappingToJSon)) + "," +
     JSonHelper.multiples("transmissionMapping", transmissionMapping.filter(p => p._2.id != p._3.id).map(transmissionMappingToJSon)) + "}"
+
+  private def sharedFunctionToJSon(s:SharedFunctionMapping):String = {
+    "{" + JSonHelper.string("sharedImplem",s.implem.name) + "," +
+      JSonHelper.int("nbInstance",s.nbInstances) + "," +
+      JSonHelper.string("host",s.pe.name) + "}"
+  }
 
   private def taskMappingToJSon(m:TaskMapping): String = {
     "{" + JSonHelper.string("task", m.task.name) + "," +
@@ -146,6 +140,6 @@ case class Mappings(timeUnit:String,
       "\n\tinfo:" + info +
       "\n\ttimeUnit:" + timeUnit +
       "\n\tdataUnit:" + dataUnit + "\n" +
-    mapping.map(l => l.toStringSortedLight + l.usages).mkString("\n\n") + "\n)"
+      mapping.map(l => l.toStringSortedLight + l.usages).mkString("\n\n") + "\n)"
   }
 }

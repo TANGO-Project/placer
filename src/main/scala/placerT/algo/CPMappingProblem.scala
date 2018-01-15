@@ -21,14 +21,15 @@ package placerT.algo
 
 import oscar.cp._
 import oscar.cp.core.CPSol
-import placerT.algo.hw.{CPBus, CPProcessor, CPRegularBus, CPSelfLoopBus}
+import placerT.algo.hw._
 import placerT.algo.sw.{CPTask, CPTransmission}
-import placerT.metadata.{Mapping, MappingProblem, TaskMapping}
+import placerT.metadata.{Mapping, MappingProblem, SharedFunctionMapping, TaskMapping}
 import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.FlattenedImplementation
 
 case class CPMappingProblem(mappingProblem: MappingProblem,
                             hardwareName: String,
+                            cpSharedFunctions:Iterable[CPInstantiatedPermanentFunction],
                             cpTasks: Array[CPTask],
                             cpProcessors: Array[CPProcessor],
                             cpBusses: Array[CPBus],
@@ -54,7 +55,26 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
     val transmissionMapping = cpTransmissions.map(trans =>
       (trans.transmission, proc(trans.from.processorID), proc(trans.to.processorID), bus(trans), sol(trans.start), trans.transmissionDuration(sol), sol(trans.end)))
 
-    new Mapping(hardwareName, firstTaskMapping, transmissionMapping, sol(makeSpan), sol(energy),widthVar match{case None => None case Some(w) => Some(sol(w))})
+    val sharedFunctionMappings:Iterable[SharedFunctionMapping] = cpSharedFunctions.flatMap((sharedFunction:CPInstantiatedPermanentFunction) => {
+      val nbInstances = sol(sharedFunction.nbInstances)
+      if (nbInstances == 0) {
+        None
+      } else {
+        Some(SharedFunctionMapping(
+          implem = sharedFunction.sharedImplementation,
+          pe = sharedFunction.p,
+          nbInstances = nbInstances
+        ))
+      }
+    })
+
+    new Mapping(hardwareName,
+      sharedFunctionMappings,
+      firstTaskMapping,
+      transmissionMapping,
+      sol(makeSpan),
+      sol(energy),
+      widthVar match{case None => None case Some(w) => Some(sol(w))})
   }
 
   def varsToDistribute: List[CPIntVar] = {
@@ -63,6 +83,6 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
       cpTransmissions.flatMap(_.variablesToDistribute) //  override def variablesToDistribute: Iterable[CPIntVar] = List(start, busID)
   }
 
-  def varsToSave: List[CPIntVar] = List(makeSpan,energy) ++ cpTasks.flatMap(_.variablesToSave) ++ cpTransmissions.flatMap(_.variablesToSave) ++ widthVar
+  def varsToSave: List[CPIntVar] = List(makeSpan,energy) ++ cpTasks.flatMap(_.variablesToSave) ++ cpTransmissions.flatMap(_.variablesToSave) ++ widthVar ++ cpSharedFunctions.flatMap(_.variablesToSave)
 
 }

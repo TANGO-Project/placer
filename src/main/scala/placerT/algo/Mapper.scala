@@ -128,12 +128,14 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           potentialHosts.map({case (hostPE:CPPermanentTaskProcessor) =>
             //we do not care so much about providing a bound for the number of instances since the CP propagation will find out by itself anyway
             //todo: the max number of instance is to large, find the correct bound.
-            val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE,hostPE.p, sharedFlattenedImplementation, hostPE.p.memSize, softwareModel.simpleProcesses.length , this)
+            val dedicatedSwitchingPE = new CPInstantiatedPermanentFunction(nextProcessorID(), hostPE, sharedFlattenedImplementation, hostPE.p.memSize, softwareModel.simpleProcesses.length , this)
             hostPE.accumulateExecutionConstraintOnSharedImplementation(dedicatedSwitchingPE)
             (sharedFlattenedImplementation,dedicatedSwitchingPE)
           })
         })
       })}
+
+    val allCPSharedFunctions:Iterable[CPInstantiatedPermanentFunction] = sharedImplementationIDToFlattenedAndVirtualCores.flatMap(_.map(_._2))
 
     val cpProcessorsVirtual:List[CPProcessor] = sharedImplementationIDToFlattenedAndVirtualCores.toList.
       flatMap((l:List[(FlattenedImplementation,CPInstantiatedPermanentFunction)]) => l.map(_._2))
@@ -467,6 +469,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     CPMappingProblem(
       problem,
       hardwareModel.name,
+      allCPSharedFunctions,
       cpTasks,
       cpProcessors,
       cpBusses,
@@ -613,18 +616,20 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           problem.cpTransmissions.map(transmission => transmission.start)
         ).toArray
 
+
+      val ArrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
+
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
         processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-        ++ oscar.algo.search.Branching({
-        secondLevels += 1; Seq.empty
-      }) //to know how many second levels (although I do not know how to interpret this yet)
+        ++ conflictOrderingSearch(
+        ArrayOfNbInstancesOfSharedFunctions,
+        (fnID) => ArrayOfNbInstancesOfSharedFunctions(fnID).max,
+        (fnID) => ArrayOfNbInstancesOfSharedFunctions(fnID).min
+        )
         //  ++conflictOrderingSearch(taskStarts,minRegret(taskStarts),taskStarts(_).min)
         ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
-        ++ oscar.algo.search.Branching({
-        thirdLevels += 1; /*println("second level");*/ Seq.empty
-      }) //to know how many second levels (although I do not know how to interpret this yet)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
 
     } onSolution {
