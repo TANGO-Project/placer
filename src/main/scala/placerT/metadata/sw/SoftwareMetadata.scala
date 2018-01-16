@@ -19,13 +19,12 @@
 
 package placerT.metadata.sw
 
-import placerT.algo.hw.{CPHardwareModel, CPInstantiatedPermanentFunction}
+import placerT.algo.hw.CPInstantiatedPermanentFunction
 import placerT.io.JSonHelper
 import placerT.metadata._
 import placerT.metadata.hw._
 
 import scala.collection.immutable.SortedMap
-import scala.reflect.macros.whitebox
 
 
 

@@ -330,6 +330,20 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     //add(binPacking(cpTasks.map(_.processorID),cpTasks.map(_.taskDuration.min),processorLoadArrayUnderApprox2))
     //for(load <- processorLoadArrayUnderApprox2) add(load <== makeSpan)
 
+    reportProgress("sharedFunction log for LNS")
+
+    val pEToTasksOnFlexible:Array[List[CPTask]] = Array.fill(cpProcessorsSimple.length)(List.empty)
+    for(cpTask <- cpTasks) {
+      for (implem <- cpTask.allImplementationArray) {
+        implem match {
+          case r: ReferenceToSharedFlattenedImplementationConcrete =>
+            val peID = r.target.p.id
+            pEToTasksOnFlexible(peID) = cpTask :: pEToTasksOnFlexible(peID)
+          case _ => false
+        }
+      }
+    }
+
     reportProgress("redundant bin-packing constraint on usage per bus")
 
     for(cpBus <- cpBusses){
@@ -494,7 +508,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       makeSpan,
       energy,
       widthVar,
-      processorLoadArrayUnderApprox)
+      processorLoadArrayUnderApprox,
+      pEToTasksOnFlexible)
   }
 
   def solveMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
@@ -560,11 +575,11 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           processorIDChoices,
           taskMaxDurations(_),
           processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-          ++ conflictOrderingSearch(
+          ++ (if(arrayOfNbInstancesOfSharedFunctions.nonEmpty) conflictOrderingSearch(
           arrayOfNbInstancesOfSharedFunctions,
           (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
           (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-        )
+        ) else oscar.algo.search.Branching({Seq.empty}))
           ++ binarySplit(taskStarts,varHeuris = (cpVar => cpVar.max - cpVar.min))
           ++ discrepancy(conflictOrderingSearch(allVars,minRegret(allVars),allVars(_).min),config.maxDiscrepancy))
       }
@@ -635,14 +650,15 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       (conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
-        processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max))
-        ++ conflictOrderingSearch(
+        processorIDChoices(_).iterator.toList.maxBy(procID => problem.processorLoadArrayUnderApprox(procID).max)) //TODO: should consider the fastest implementation first!!
+        ++ (if(arrayOfNbInstancesOfSharedFunctions.nonEmpty) conflictOrderingSearch(
         arrayOfNbInstancesOfSharedFunctions,
         (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
         (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-      )
+      ) else oscar.algo.search.Branching({Seq.empty}))
         ++ binarySplit(taskStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
-        ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min))
+        ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
+        )
 
     } onSolution {
       bestSolution = Some(problem.getMapping(solver.lastSol))
@@ -683,18 +699,29 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
         //relaxation strategy (actually it is more a non-relaxation strategy)
 
+        val mustRelaxArray = Array.fill(cpProblem.cpTasks.length)(false)
 
+        for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
+          if (scala.math.random * 100 > relaxProba) {
+            //must relax
+            for(taskToRelaxAnyway <- listOFTaskOnSameFlexible){
+              mustRelaxArray(taskToRelaxAnyway.id) = true
+            }
+          }
+        }
+
+        //does not operate on SamePE constraints
         for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
-          if(!allProcessesInSamePEConstraints.contains(task.id)) {
+          if(!allProcessesInSamePEConstraints.contains(task.id) && !mustRelaxArray(task.id)) {
             if (scala.math.random * 100 > relaxProba) {
               constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)
             }
           }
         }
 
-        //TODO: this is pointless, use sameCore (to constraint transmission), and also as a post-process of LNS decision, I do not see the point. maybe the decision should be on the  witness only
         for(samePEConstraint <- samePEConstraints){
-          if (scala.math.random * 100 > relaxProba) {
+          val noMustRelax = samePEConstraint.processes.forall(process => !mustRelaxArray(process.id))
+          if (noMustRelax && scala.math.random * 100 > relaxProba) {
             val witnessTaskID = samePEConstraint.processes.head.id
             val processorID = problem.cpTasks(witnessTaskID).processorID
             for(task <- samePEConstraint.processes) {
