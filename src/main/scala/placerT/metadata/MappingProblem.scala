@@ -38,7 +38,7 @@ case class MappingProblem(timeUnit:String,
                           properties:SortedMap[String,Int],
                           processorClasses: Array[ProcessingElementClass],
                           softwareModel: SoftwareModel,
-                          hardwareModel: HardwareModel,
+                          hardwareModell: List[HardwareModel],
                           constraints:List[MappingConstraint],
                           goal: MappingGoal) {
 

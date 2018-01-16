@@ -41,7 +41,8 @@ case class EMappingProblem(timeUnit:String,
                            jsonFormat:String,
                            processingElementClasses:Array[EProcessingElementClass],
                            softwareModel:ESoftwareModel,
-                           hardwareModel:EHardwareModel,
+                           hardwareModel:Option[EHardwareModel],
+                           hardwareModels:List[EHardwareModel],
                            constraints:List[EMappingConstraint],
                            properties:List[ENameValue],
                            goal:EGoal) {
@@ -49,6 +50,7 @@ case class EMappingProblem(timeUnit:String,
   val currentFormat = "PlacerBeta3"
   require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
+  require(hardwareModel.isDefined != hardwareModels.isEmpty,"you must have either hardwareModel or hardwareModels defined"
 
   def extract(verbose:Boolean) = {
     val cl = processingElementClasses.map(_.extract)

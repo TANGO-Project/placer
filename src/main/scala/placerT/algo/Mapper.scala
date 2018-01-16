@@ -644,7 +644,6 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
           problem.cpTransmissions.map(transmission => transmission.start)
         ).toArray
 
-
       val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
 
       (conflictOrderingSearch(
