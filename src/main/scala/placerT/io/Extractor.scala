@@ -21,7 +21,7 @@ package placerT.io
 
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue
-import placerT.metadata.hw._
+import placerT.metadata.hw.{ProcessingElementClass, _}
 import placerT.metadata.sw.TransmissionTiming._
 import placerT.metadata.sw._
 import placerT.metadata._
@@ -50,14 +50,19 @@ case class EMappingProblem(timeUnit:String,
   val currentFormat = "PlacerBeta3"
   require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
-  require(hardwareModel.isDefined != hardwareModels.isEmpty,"you must have either hardwareModel or hardwareModels defined"
+  require(hardwareModel.isDefined != hardwareModels.isEmpty,"you must have either hardwareModel or hardwareModels defined")
 
   def extract(verbose:Boolean) = {
     val cl = processingElementClasses.map(_.extract)
     Checker.checkDuplicates(cl.map(_.name),"processing element class")
 
-    val hw = hardwareModel.extract(cl)
-    val sw = softwareModel.extract(hw,verbose)
+    val sw = softwareModel.extract(cl,verbose)
+
+    val hws = (hardwareModel,hardwareModels) match{
+      case (None,l) if l.nonEmpty => l.map(_.extract(cl,sw))
+      case (Some(m),Nil) => List(m.extract(cl,sw))
+      case _ => throw new Error("you must have either hardwareModel or hardwareModels defined and not both")
+    }
 
     MappingProblem(
       timeUnit,
@@ -66,8 +71,8 @@ case class EMappingProblem(timeUnit:String,
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
       cl,
       sw,
-      hw,
-      constraints.map(_.extract(hw,sw)),
+      hws,
+      constraints.map(_.extract(if(hws.size == 1) Some(hws.head.processors) else None,sw)),
       goal.extract)
   }
 }
@@ -79,18 +84,22 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               mustBeUsed:Option[String],
                               mustNotBeUsed:Option[String],
                               symmetricPE:Option[List[String]]){
-  def extract(hw:HardwareModel,sw:SoftwareModel):MappingConstraint = {
+  def extract(hwOpt:Option[Iterable[ProcessingElement]],sw:SoftwareModel):MappingConstraint = {
 
     def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
-      val processor = hw.processors.find(p => p.name equals c.processingElement) match{
-        case Some(x) => x
-        case None => throw new Error("cannot find processor" + c.processingElement + " used in mappingConstraint " + c)}
+      hwOpt match{
+        case None => throw new Error("runOn and notRunOn constraints must be defined in hardware section if multiple hardware used")
+        case Some(hw) =>
+          val processor = hw.find(p => p.name equals c.processingElement) match{
+            case Some(x) => x
+            case None => throw new Error("cannot find processor" + c.processingElement + " used in mappingConstraint " + c)}
 
-      val process = sw.simpleProcesses.find(p => p.name equals c.task) match{
-        case Some(x) => x
-        case None => throw new Error("cannot find process " + c.task + " used in mappingConstraint " + c)}
+          val process = sw.simpleProcesses.find(p => p.name equals c.task) match{
+            case Some(x) => x
+            case None => throw new Error("cannot find process " + c.task + " used in mappingConstraint " + c)}
 
-      RunOnConstraint(processor,process,value)
+          RunOnConstraint(processor,process,value)
+      }
     }
 
     def extractSameCore(c:List[String],value:Boolean):MappingConstraint = {
@@ -102,18 +111,28 @@ case class EMappingConstraint(runOn:Option[ERunOn],
     }
 
     def extractMustBeUsed(processorName:String,value:Boolean):MustBeUsedConstraint = {
-      val processor = hw.processors.find(p => p.name equals processorName) match{
-        case Some(x) => x
-        case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")}
-      MustBeUsedConstraint(processor,value)
+      hwOpt match {
+        case None => throw new Error("mustBeUsed constraints must be defined in hardware section if multiple hardware used")
+        case Some(hw) =>
+          val processor = hw.find(p => p.name equals processorName) match {
+            case Some(x) => x
+            case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")
+          }
+          MustBeUsedConstraint(processor, value)
+      }
     }
 
     def extractPESymmetry(symmetricPENames:List[String]):SymmetricPEConstraint = {
-      val processors = symmetricPENames.map(processorName => hw.processors.find(p => p.name equals processorName) match{
-        case Some(x) => x
-        case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")})
+      hwOpt match {
+        case None => throw new Error("symmetricPE constraints must be defined in hardware section if multiple hardware used")
+        case Some(hw) =>
+          val processors = symmetricPENames.map(processorName => hw.find(p => p.name equals processorName) match {
+            case Some(x) => x
+            case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")
+          })
 
-      SymmetricPEConstraint(processors)
+          SymmetricPEConstraint(processors)
+      }
     }
 
 
@@ -180,14 +199,14 @@ case class ESoftwareModel(sharedPermanentFunctions:List[EParametricImplementatio
                           transmissions: Array[ETransmission],
                           properties:List[ENameValue] = List.empty,
                           softwareClass: ESoftwareClass) {
-  def extract(hw: HardwareModel,verbose:Boolean) = {
+  def extract(cl:Array[ProcessingElementClass],verbose:Boolean) = {
 
     Checker.checkDuplicates(simpleProcesses.map(_.name),"task")
     Checker.checkDuplicates(transmissions.map(_.name),"transmission")
 
-    val standardImplems = sharedPermanentFunctions.map(_.extract(hw)).toArray
+    val standardImplems = sharedPermanentFunctions.map(_.extract(cl)).toArray
 
-    val proc = simpleProcesses.map(task => task.extract(hw,standardImplems))
+    val proc = simpleProcesses.map(task => task.extract(cl,standardImplems))
     SoftwareModel(
       standardImplems,
       proc,
@@ -222,8 +241,8 @@ case class EAtomicTask(name: String,
   Checker.checkDuplicates(implementations.map(_.name),"implementation of task " + name)
   require(implementations.nonEmpty,"task " + name + " has no implementation")
 
-  def extract(hw: HardwareModel,standardImplems:Array[ParametricImplementation]) = {
-    val translatedImplems = implementations.map(implementation => implementation.extract(hw))
+  def extract(cl:Array[ProcessingElementClass],standardImplems:Array[ParametricImplementation]) = {
+    val translatedImplems = implementations.map(implementation => implementation.extract(cl))
 
     def extractReferenceImplem(sharedImplementation:String):ReferenceToSharedParametricImplementation = {
       standardImplems.find(_.name equals sharedImplementation) match {
@@ -255,8 +274,8 @@ case class EParametricImplementation(name: String,
   val parsedResources = SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract)
   val parsedNbThreads = nbThreads match{case None => Const(1); case Some(f) => FormulaParser(f)}
 
-  def extract(hw:HardwareModel) = {
-    val targetClass = hw.processorClasses.find(_.name equals target) match {
+  def extract(cl:Array[ProcessingElementClass]) = {
+    val targetClass = cl.find(_.name equals target) match {
       case Some(x) => x;
       case None => throw new Error("cannot find processor class " + target + " used in implementation " + name)
     }
@@ -411,10 +430,11 @@ case class EHardwareModel(name: String,
                           busses: Array[EBus],
                           properties: List[ENameValue],
                           powerCap: Option[Int],
-                          energyCap: Option[Int]) {
+                          energyCap: Option[Int],
+                          constraints:List[EMappingConstraint]) {
   require(processingElements.nonEmpty,"no processing element declared")
 
-  def extract(pc:Array[ProcessingElementClass]) = {
+  def extract(pc:Array[ProcessingElementClass],sw:SoftwareModel) = {
     val p = processingElements.map(_.extract(pc))
     Checker.checkDuplicates(p.map(_.name),"processing element")
     val b = busses.map(_.extract(p))
@@ -426,7 +446,8 @@ case class EHardwareModel(name: String,
       b,
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
       powerCap,
-      energyCap)
+      energyCap,
+      constraints.map(_.extract(Some(p),sw)))
   }
 }
 

@@ -316,7 +316,8 @@ case class HardwareModel(name: String,
                          busses: Array[Bus],
                          properties: SortedMap[String, Int] = SortedMap.empty,
                          powerCap: Option[Int] = None,
-                         energyCap: Option[Int] = None) extends IndiceMaker {
+                         energyCap: Option[Int] = None,
+                         constraints:Iterable[MappingConstraint]) extends IndiceMaker {
   setIndices(processors)
   setIndices(busses)
   setIndices(processorClasses)

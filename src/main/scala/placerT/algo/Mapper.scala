@@ -396,7 +396,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     reportProgress("posting mapping constraints")
 
-    for(constraint <- problem.constraints){
+    for(constraint <- (problem.constraints ++ hardwareModel.constraints)){
       constraint match {
         case RunOnConstraint(processor, process, value) =>
           if (value) {
