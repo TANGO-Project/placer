@@ -51,13 +51,14 @@ case class EMappingProblem(timeUnit:String,
                            hardwareModels:List[EHardwareModel],
                            constraints:List[EMappingConstraint],
                            properties:List[ENameValue],
-                           goal:EGoal) {
+                           goal:EGoal) extends IndiceMaker {
 
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
   require(hardwareModel.isDefined != hardwareModels.nonEmpty,"you must have either hardwareModel or hardwareModels defined")
 
   def extract(verbose:Boolean) = {
-    val cl = processingElementClasses.map(_.extract)
+    val cl = processingElementClasses.map(_.extract).toArray
+    setIndices(cl)
     Checker.checkDuplicates(cl.map(_.name),"processing element class")
 
     val sw = softwareModel.extract(cl,verbose)

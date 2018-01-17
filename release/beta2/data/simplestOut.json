@@ -1,0 +1,33 @@
+{
+  "timeUnit":"ms",
+  "dataUnit":"bit",
+  "info":"simplest example with two tasks and a transmission",
+  "mappings":[
+    {
+      "hardwareName":"ExampleHardware1",
+      "makeSpan":21,
+      "energy":42,
+      "taskMapping":[
+        {
+          "task":"input",
+          "processingElement":"procB",
+          "implementation":"cpu_input",
+          "parameters":[],
+          "start":0,
+          "duration":10,
+          "end":10
+        },
+        {
+          "task":"output",
+          "processingElement":"procB",
+          "implementation":"cpu_output",
+          "parameters":[],
+          "start":10,
+          "duration":11,
+          "end":21
+        }
+      ],
+      "transmissionMapping":[]
+    }
+  ]
+}

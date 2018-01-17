@@ -320,7 +320,6 @@ case class HardwareModel(name: String,
                          constraints:Iterable[MappingConstraint]) extends IndiceMaker {
   setIndices(processors)
   setIndices(busses)
-  setIndices(processorClasses)
   busses.foreach(_.close())
 
   override def toString: String = "HardwareModel(\n" +
