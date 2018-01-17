@@ -19,9 +19,11 @@
 
 package placerT.algo
 
-import oscar.cp._
+import oscar.cp.{multiobjective, _}
+import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
+import oscar.cp.multiobjective.ListPareto
 import placerT.algo.hw._
 import placerT.algo.sw.{CPTask, CPTransmission}
 import placerT.metadata.hw._
@@ -43,16 +45,31 @@ case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,
 object Mapper {
 
   def findMapping(problem: MappingProblem,config:MapperConfig): Mappings = {
-    // try {
-    Mappings(timeUnit = problem.timeUnit,
+
+    val paretoSols = multiobjective.ListPareto[Unit](false,false) //minimize both dimensions
+    for (bestSol <- bestSolutionsSoFar) {
+      paretoSols.insert(Unit, bestSol.toIndexedSeq)
+    }
+
+
+    val simpleProblems = problem.flattenToMonoHardwareProblems
+    var bestMappings:Mappings = Mappings(
+      timeUnit = problem.timeUnit,
       dataUnit = problem.dataUnit,
-      info = problem.info,
-      new Mapper(problem,config).mapping)
-    // } catch{case e:oscar.cp.core.NoSolutionException => Mappings(List.empty)}
+      info = problem.info,List.empty)
+
+    for(simpleProblem <- simpleProblems) {
+      val newMappings = new Mapper(simpleProblem, config, bestMappings.mapping.map(_.objValues)).mappings
+      bestMappings = bestMappings.acc(newMappings)
+      if(problem.goal.isInstanceOf[Sat] && bestMappings.mapping.nonEmpty) return bestMappings
+    }
   }
+
 }
 
-class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel with Constraints {
+class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSolutionsSoFar:multiobjective.ListPareto[Mapping]) extends CPModel with Constraints {
+
+  //TODO: handle BestSoFar!!
 
   def addDocumented(c: Constraint,origin: =>String){
     try {
@@ -73,7 +90,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
   store.silent = true
 
   val cpProblem = postProblem(softwareModel, hardwareModel)
-  val mapping = solveMappingProblem(cpProblem, goal)
+  val mappings = solveMappingProblem(cpProblem, goal)
 
   def reportProgress(startedUpTask:String): Unit ={
     this.solver.propagate()
@@ -171,8 +188,8 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }).toSet
 
     //TODO: shared functions
-//    val selfLoopBusses = hardwareModel.processors.toList.map(
-//      proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, proc, this))
+    //    val selfLoopBusses = hardwareModel.processors.toList.map(
+    //      proc => new CPSelfLoopBus(proc.id + hardwareModel.busses.length, proc, proc, this))
 
 
     var lastBusID:Int = hardwareModel.busses.length-1
@@ -534,17 +551,35 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
       }
     }
 
-    val (isSearchOnlyOne,isParetoSearch,theVar) = goal match {
+    val (isSearchOnlyOne,isParetoSearch,theVars) = goal match {
       case s:SimpleMappingGoal =>
         val theVar = simpleVarFinder(s)
         minimize(theVar)
-        (false,false,theVar)
-      case Pareto(a,b) => solver.paretoMinimize(simpleVarFinder(a), simpleVarFinder(b))
-        (false,true,null)
-      case Sat() => (true,false,null)
+        if(bestSolutionsSoFar.nonEmpty){
+          require(bestSolutionsSoFar.size == 1)
+          require(bestSolutionsSoFar.head.size == 1)
+          add(theVar < bestSolutionsSoFar.head.head) //requiring that the new solution is better than the already found one
+        }
+        (false,false,List(theVar))
+      case Pareto(a,b) =>
+        val varA = simpleVarFinder(a)
+        val varB = simpleVarFinder(b)
+        solver.paretoMinimize(varA, varB)
+
+        if(bestSolutionsSoFar.nonEmpty) {
+          val paretoSols = multiobjective.ListPareto[Unit](false,false) //minimize both dimensions
+          for (bestSol <- bestSolutionsSoFar) {
+            paretoSols.insert(Unit, bestSol.toIndexedSeq)
+          }
+          add(ParetoConstraint(paretoSols, Array(false, false), Array(varA, varB)))
+        }
+
+        (false,true,List(varA,varB))
+      case Sat() => (true,false,List.empty)
     }
 
     solver.addDecisionVariables(problem.varsToSave)
+    solver.addDecisionVariables(theVars)
 
     search {
       val allVars = problem.varsToDistribute.toArray
@@ -594,13 +629,13 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
 
     goal match {
       case Pareto(a,b) =>
-        solver.nonDominatedSolutions.sortBy(_.apply( simpleVarFinder(a))).map(cpSol => problem.getMapping(cpSol))
+        solver.nonDominatedSolutions.sortBy(_.apply( simpleVarFinder(a))).map(cpSol => problem.getMapping(cpSol,theVars))
       case _:SimpleMappingGoal | _:Sat =>
         val lastSol = solver.lastSol
         if (lastSol.dict.isEmpty) {
           None
         } else {
-          Some(problem.getMapping(lastSol))
+          Some(problem.getMapping(lastSol,theVars))
         }
     }
   }
@@ -619,10 +654,12 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
     }
 
     val varToMinimize = simpleVarFinder(simpleGoal)
+    val theVar = varToMinimize
 
     minimize(varToMinimize)
 
     solver.addDecisionVariables(problem.varsToSave)
+    solver.addDecisionVariables(theVar)
 
     var bestSolution: Option[Mapping] = None
     var bestValue: Int = Int.MaxValue
@@ -660,7 +697,7 @@ class Mapper(val problem: MappingProblem,config:MapperConfig) extends CPModel wi
         )
 
     } onSolution {
-      bestSolution = Some(problem.getMapping(solver.lastSol))
+      bestSolution = Some(problem.getMapping(solver.lastSol,List(theVar)))
       bestValue = varToMinimize.value
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }

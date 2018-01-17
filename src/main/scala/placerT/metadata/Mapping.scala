@@ -43,7 +43,8 @@ case class Mapping(hardwareName: String,
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
                    makeSpan: Int,
                    energy: Int,
-                   width:Option[Int]) {
+                   width:Option[Int],
+                   objValues:List[Int]) {
 
   private def padToLength(s: String, l: Int) = (s + nStrings(l, " ")).substring(0, l)
 
@@ -131,6 +132,13 @@ case class Mappings(timeUnit:String,
                     dataUnit:String,
                     info:String,
                     mapping: Iterable[Mapping]) {
+
+  def acc(newMappings:Iterable[Mapping]):Mappings = {
+
+
+  }
+
+
   def toJSon: String = {
     "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +

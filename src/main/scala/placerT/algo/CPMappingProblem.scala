@@ -23,11 +23,11 @@ import oscar.cp._
 import oscar.cp.core.CPSol
 import placerT.algo.hw._
 import placerT.algo.sw.{CPTask, CPTransmission}
-import placerT.metadata.{Mapping, MappingProblem, SharedFunctionMapping, TaskMapping}
+import placerT.metadata._
 import placerT.metadata.hw.{Bus, ProcessingElement}
 import placerT.metadata.sw.FlattenedImplementation
 
-case class CPMappingProblem(mappingProblem: MappingProblem,
+case class CPMappingProblem(mappingProblem: MappingProblemMonoHardware,
                             hardwareName: String,
                             cpSharedFunctions:Iterable[CPInstantiatedPermanentFunction],
                             cpTasks: Array[CPTask],
@@ -40,7 +40,7 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
                             processorLoadArrayUnderApprox:Array[CPIntVar],
                             pEToTasksOnFlexible:Array[List[CPTask]]) {
 
-  def getMapping(sol: CPSol): Mapping = {
+  def getMapping(sol: CPSol,objVars:List[CPIntVar]): Mapping = {
 
     def proc(procID: CPIntVar): ProcessingElement = cpProcessors(sol(procID)).p
     def implem(task: CPTask): FlattenedImplementation = task.allImplementationArray(sol(task.implementationID))
@@ -75,7 +75,8 @@ case class CPMappingProblem(mappingProblem: MappingProblem,
       transmissionMapping,
       sol(makeSpan),
       sol(energy),
-      widthVar match{case None => None case Some(w) => Some(sol(w))})
+      widthVar match{case None => None case Some(w) => Some(sol(w))},
+      objVars.map(sol(_)))
   }
 
   def varsToDistribute: List[CPIntVar] = {

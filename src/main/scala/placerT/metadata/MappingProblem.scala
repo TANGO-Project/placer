@@ -27,11 +27,11 @@ import placerT.metadata.sw.{AtomicTask, SoftwareModel}
 import scala.collection.immutable.SortedMap
 
 /**
- * defines a mapping problem
- * @param softwareModel the model of the sw
- * @param hardwareModel the model of the hw (will evolve to list of hardware models)
- * @param goal the objective of the mapping
- */
+  * defines a mapping problem
+  * @param softwareModel the model of the sw
+  * @param hardwareModels the model of the hw (will evolve to list of hardware models)
+  * @param goal the objective of the mapping
+  */
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
                           info:String,
@@ -40,20 +40,39 @@ case class MappingProblem(timeUnit:String,
                           softwareModel: SoftwareModel,
                           hardwareModels: List[HardwareModel],
                           constraints:List[MappingConstraint],
-                          goal: MappingGoal) {
-
-  def toJSon: String = "{" +
-    JSonHelper.string("timeUnit",timeUnit) + "," +
-    JSonHelper.string("dataUnit",dataUnit) + "," +
-    JSonHelper.complex("softwareModel", softwareModel.toJSon) + "," +
-    JSonHelper.complex("hardwareModel", hardwareModel.toJSon) + "," +
-    JSonHelper.complex("goal", goal.toJSon) + "}"
+                          goal: MappingGoal){
+  def flattenToMonoHardwareProblems:List[MappingProblemMonoHardware] = {
+    hardwareModels.map(
+      hardwareModel =>
+        MappingProblemMonoHardware(timeUnit:String,
+          dataUnit:String,
+          info:String,
+          properties:SortedMap[String,Int],
+          processorClasses: Array[ProcessingElementClass],
+          softwareModel: SoftwareModel,
+          hardwareModel: HardwareModel,
+          constraints:List[MappingConstraint],
+          goal: MappingGoal)
+    )
+  }
 }
+
+case class MappingProblemMonoHardware(timeUnit:String,
+                                      dataUnit:String,
+                                      info:String,
+                                      properties:SortedMap[String,Int],
+                                      processorClasses: Array[ProcessingElementClass],
+                                      softwareModel: SoftwareModel,
+                                      hardwareModel: HardwareModel,
+                                      constraints:List[MappingConstraint],
+                                      goal: MappingGoal)
+
+
 
 abstract sealed class MappingConstraint
 case class RunOnConstraint(processor:ProcessingElement,
-                             process:AtomicTask,
-                             value:Boolean) extends MappingConstraint{
+                           process:AtomicTask,
+                           value:Boolean) extends MappingConstraint{
   override def toString: String = {
     (if (value) "MustRunOn(" else "MustNotRunOn(") + process.name + "," + processor.name + ")"
   }
