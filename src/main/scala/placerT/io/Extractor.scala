@@ -31,8 +31,14 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 object Extractor {
   implicit val formats = DefaultFormats
   def extractProblem(jValue:JValue,verbose:Boolean = true): MappingProblem = {
+    jValue.extract[EMappingProblemHeaderOnly] //just to check the header before performing the extract
     jValue.extract[EMappingProblem].extract(verbose)
   }
+}
+
+case class EMappingProblemHeaderOnly(jsonFormat:String){
+  val currentFormat = "PlacerBeta3"
+  require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
 }
 
 case class EMappingProblem(timeUnit:String,
@@ -47,10 +53,8 @@ case class EMappingProblem(timeUnit:String,
                            properties:List[ENameValue],
                            goal:EGoal) {
 
-  val currentFormat = "PlacerBeta3"
-  require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
-  require(hardwareModel.isDefined != hardwareModels.isEmpty,"you must have either hardwareModel or hardwareModels defined")
+  require(hardwareModel.isDefined != hardwareModels.nonEmpty,"you must have either hardwareModel or hardwareModels defined")
 
   def extract(verbose:Boolean) = {
     val cl = processingElementClasses.map(_.extract)

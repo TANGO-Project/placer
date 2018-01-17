@@ -133,12 +133,6 @@ case class Mappings(timeUnit:String,
                     info:String,
                     mapping: Iterable[Mapping]) {
 
-  def acc(newMappings:Iterable[Mapping]):Mappings = {
-
-
-  }
-
-
   def toJSon: String = {
     "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +

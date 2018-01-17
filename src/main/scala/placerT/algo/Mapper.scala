@@ -45,26 +45,61 @@ case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,
 object Mapper {
 
   def findMapping(problem: MappingProblem,config:MapperConfig): Mappings = {
+    problem.goal match{
+      case _:Pareto =>
+        val paretoSols = multiobjective.ListPareto[Mapping](false,false) //minimize two dimensions
 
-    val paretoSols = multiobjective.ListPareto[Unit](false,false) //minimize both dimensions
-    for (bestSol <- bestSolutionsSoFar) {
-      paretoSols.insert(Unit, bestSol.toIndexedSeq)
-    }
+        for(simpleProblem <-  problem.flattenToMonoHardwareProblems) {
+          val newMappings = new Mapper(simpleProblem, config, paretoSols).mappings
+          for (newMapping <- newMappings) {
+            paretoSols.insert(newMapping, newMapping.objValues.toIndexedSeq)
+          }
+        }
 
+         Mappings(
+          timeUnit = problem.timeUnit,
+          dataUnit = problem.dataUnit,
+          info = problem.info,
+           paretoSols.toList)
 
-    val simpleProblems = problem.flattenToMonoHardwareProblems
-    var bestMappings:Mappings = Mappings(
-      timeUnit = problem.timeUnit,
-      dataUnit = problem.dataUnit,
-      info = problem.info,List.empty)
+      case _:Sat =>
 
-    for(simpleProblem <- simpleProblems) {
-      val newMappings = new Mapper(simpleProblem, config, bestMappings.mapping.map(_.objValues)).mappings
-      bestMappings = bestMappings.acc(newMappings)
-      if(problem.goal.isInstanceOf[Sat] && bestMappings.mapping.nonEmpty) return bestMappings
+        for(simpleProblem <- problem.flattenToMonoHardwareProblems) {
+          val newMappings = new Mapper(simpleProblem, config, multiobjective.ListPareto[Mapping](false)).mappings
+          if(newMappings.nonEmpty){
+            require(newMappings.size == 1)
+            return Mappings(
+              timeUnit = problem.timeUnit,
+              dataUnit = problem.dataUnit,
+              info = problem.info,
+              List(newMappings.head))
+          }
+        }
+
+        Mappings(
+          timeUnit = problem.timeUnit,
+          dataUnit = problem.dataUnit,
+          info = problem.info,
+          List.empty)
+
+      case _:SimpleMappingGoal =>
+
+        val paretoSols = multiobjective.ListPareto[Mapping](false) //minimize one dimensions
+
+        for(simpleProblem <-  problem.flattenToMonoHardwareProblems) {
+          val newMappings = new Mapper(simpleProblem, config, paretoSols).mappings
+          for (newMapping <- newMappings) {
+            paretoSols.insert(newMapping, newMapping.objValues.toIndexedSeq)
+          }
+        }
+
+        Mappings(
+          timeUnit = problem.timeUnit,
+          dataUnit = problem.dataUnit,
+          info = problem.info,
+          paretoSols.toList)
     }
   }
-
 }
 
 class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSolutionsSoFar:multiobjective.ListPareto[Mapping]) extends CPModel with Constraints {
@@ -555,23 +590,20 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       case s:SimpleMappingGoal =>
         val theVar = simpleVarFinder(s)
         minimize(theVar)
-        if(bestSolutionsSoFar.nonEmpty){
+
+        if(!bestSolutionsSoFar.isEmpty) {
           require(bestSolutionsSoFar.size == 1)
-          require(bestSolutionsSoFar.head.size == 1)
-          add(theVar < bestSolutionsSoFar.head.head) //requiring that the new solution is better than the already found one
+          add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
         }
+
         (false,false,List(theVar))
       case Pareto(a,b) =>
         val varA = simpleVarFinder(a)
         val varB = simpleVarFinder(b)
         solver.paretoMinimize(varA, varB)
 
-        if(bestSolutionsSoFar.nonEmpty) {
-          val paretoSols = multiobjective.ListPareto[Unit](false,false) //minimize both dimensions
-          for (bestSol <- bestSolutionsSoFar) {
-            paretoSols.insert(Unit, bestSol.toIndexedSeq)
-          }
-          add(ParetoConstraint(paretoSols, Array(false, false), Array(varA, varB)))
+        if(!bestSolutionsSoFar.isEmpty) {
+          add(ParetoConstraint(bestSolutionsSoFar, Array(false, false), Array(varA, varB)))
         }
 
         (false,true,List(varA,varB))
