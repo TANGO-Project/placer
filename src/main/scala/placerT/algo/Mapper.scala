@@ -33,13 +33,14 @@ import placerT.metadata.{MappingProblem, _}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.collection.mutable.ArrayBuffer
 
-case class MapperConfig(maxDiscrepancy:Int=Int.MaxValue,
-                        timeLimit:Int = Int.MaxValue,
-                        lns:Boolean = true,
-                        lnsMaxFails:Int = 2000,
-                        lnsRelaxProba:Int = 90,
-                        lnsNbRelaxations:Int = 500,
-                        lnsNbRelaxationNoImprove:Int = 200)
+case class MapperConfig(maxDiscrepancy:Int,
+                        timeLimit:Int,
+                        lns:Boolean,
+                        lnsMaxFails:Int,
+                        lnsRelaxProba:Int,
+                        lnsNbRelaxations:Int,
+                        lnsNbRelaxationNoImprove:Int,
+                        lnsCarryOnObjForMultiHardware:Int)
 
 
 object Mapper {
@@ -56,11 +57,11 @@ object Mapper {
           }
         }
 
-         Mappings(
+        Mappings(
           timeUnit = problem.timeUnit,
           dataUnit = problem.dataUnit,
           info = problem.info,
-           paretoSols.toList)
+          paretoSols.toList)
 
       case _:Sat =>
 
@@ -734,85 +735,126 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       println("solution found, makeSpan=" + problem.makeSpan.value + " energy:" + problem.energy.value)
     }
 
-    val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
 
-    println("stat of initial solution: ")
-    println(stat)
+
+    config.lnsCarryOnObjForMultiHardware match {
+      case 0 =>
+        val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
+        println("stat of initial solution (no carry on lns): ")
+        println(stat)
+      case 1 =>
+        println("first attempt of initial solution with lns carry on")
+        val firstAttempt = startSubjectTo(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue) {
+          if (!bestSolutionsSoFar.isEmpty) {
+            require(bestSolutionsSoFar.size == 1)
+            add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
+          }
+        }
+
+        if (firstAttempt.nSols == 0) {
+          println("initial solution with lns carry on failed: ")
+          println(firstAttempt)
+
+          if(bestSolutionsSoFar.size == 1) {
+            println("starting second attempt without carry on")
+            val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
+            println("stat of second attempt without lns carry on: ")
+            println(stat)
+          }else{
+            println("there is no actual value carried on, so no second attempt")
+          }
+
+        } else {
+          println("initial solution with lns carry on:")
+          println(firstAttempt)
+        }
+
+      case 2 =>
+        val stat = startSubjectTo(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue) {
+          if (!bestSolutionsSoFar.isEmpty) {
+            require(bestSolutionsSoFar.size == 1)
+            add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
+          }
+        }
+      case x => "undefined value of lnsCarryOn:" + x
+    }
+
+
 
     bestSolution match{
-      case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
-      case _ => ;
+    case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
+    case _ => ;
+  }
+  val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.flatMap(
+    _ match{
+      case c@CoreSharingConstraint(processes, value) if value => Some(c)
+      case _ => None
     }
-    val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.flatMap(
-      _ match{
-        case c@CoreSharingConstraint(processes, value) if value => Some(c)
-        case _ => None
+  )
+
+  val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
+
+  //LNS restart stuff here!
+  val constraintBuffer = ArrayBuffer[Constraint]()
+  val maxFails = config.lnsMaxFails
+  val relaxProba = config.lnsRelaxProba
+  val nRelaxations = config.lnsNbRelaxations
+  var remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
+  var currentRelaxation = 0
+  while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
+    remainigRelaxationNoImprove -= 1
+    currentRelaxation = currentRelaxation +1
+    println("relaxation " + currentRelaxation)
+    constraintBuffer.clear()
+    val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
+      //relaxation strategy (actually it is more a non-relaxation strategy)
+
+      val mustRelaxArray = Array.fill(cpProblem.cpTasks.length)(false)
+
+      for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
+        if (scala.math.random * 100 > relaxProba) {
+          //must relax
+          for(taskToRelaxAnyway <- listOFTaskOnSameFlexible){
+            mustRelaxArray(taskToRelaxAnyway.id) = true
+          }
+        }
       }
-    )
 
-    val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
-
-    //LNS restart stuff here!
-    val constraintBuffer = ArrayBuffer[Constraint]()
-    val maxFails = config.lnsMaxFails
-    val relaxProba = config.lnsRelaxProba
-    val nRelaxations = config.lnsNbRelaxations
-    var remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
-    var currentRelaxation = 0
-    while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
-      remainigRelaxationNoImprove -= 1
-      currentRelaxation = currentRelaxation +1
-      println("relaxation " + currentRelaxation)
-      constraintBuffer.clear()
-      val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
-        //relaxation strategy (actually it is more a non-relaxation strategy)
-
-        val mustRelaxArray = Array.fill(cpProblem.cpTasks.length)(false)
-
-        for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
+      //does not operate on SamePE constraints
+      for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
+        if(!allProcessesInSamePEConstraints.contains(task.id) && !mustRelaxArray(task.id)) {
           if (scala.math.random * 100 > relaxProba) {
-            //must relax
-            for(taskToRelaxAnyway <- listOFTaskOnSameFlexible){
-              mustRelaxArray(taskToRelaxAnyway.id) = true
-            }
+            constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)
           }
         }
+      }
 
-        //does not operate on SamePE constraints
-        for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
-          if(!allProcessesInSamePEConstraints.contains(task.id) && !mustRelaxArray(task.id)) {
-            if (scala.math.random * 100 > relaxProba) {
-              constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)
-            }
+      for(samePEConstraint <- samePEConstraints){
+        val noMustRelax = samePEConstraint.processes.forall(process => !mustRelaxArray(process.id))
+        if (noMustRelax && scala.math.random * 100 > relaxProba) {
+          val witnessTaskID = samePEConstraint.processes.head.id
+          val processorID = problem.cpTasks(witnessTaskID).processorID
+          for(task <- samePEConstraint.processes) {
+            constraintBuffer += (problem.cpTasks(task.id).processorID === processorID)
           }
         }
+      }
 
-        for(samePEConstraint <- samePEConstraints){
-          val noMustRelax = samePEConstraint.processes.forall(process => !mustRelaxArray(process.id))
-          if (noMustRelax && scala.math.random * 100 > relaxProba) {
-            val witnessTaskID = samePEConstraint.processes.head.id
-            val processorID = problem.cpTasks(witnessTaskID).processorID
-            for(task <- samePEConstraint.processes) {
-              constraintBuffer += (problem.cpTasks(task.id).processorID === processorID)
-            }
-          }
-        }
+      //TODO: add relaxation of sharedFunctionPE!
 
-        //TODO: add relaxation of sharedFunctionPE!
+      add(constraintBuffer)
+    }
 
+    if(stats1.nSols > 0) {
+      remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
+      val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*10) {
         add(constraintBuffer)
       }
-
-      if(stats1.nSols > 0) {
-        remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
-        val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*10) {
-          add(constraintBuffer)
-        }
-      }else{
-        println("early stop")
-      }
+    }else{
+      println("early stop")
     }
-
-    bestSolution
   }
+
+  bestSolution
+}
 }

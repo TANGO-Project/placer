@@ -38,7 +38,8 @@ case class Config(in: File = new File("."),
                   lnsMaxFails:Int = 2000,
                   lnsRelaxProba:Int = 90,
                   lnsNbRelaxations:Int = 500,
-                  lnsNbRelaxationNoImprove:Int = 200)
+                  lnsNbRelaxationNoImprove:Int = 200,
+                  lnsCarryOnObjForMultiHardware:Int = 1)
 
 object Main extends App {
 
@@ -67,8 +68,8 @@ object Main extends App {
     opt[Unit]("license").action((_, c) =>
       c.copy(license = true)).text("prints license and stops")
 
-    opt[Boolean]("lns").action((_,c) =>
-      c.copy(lns = true)).text("use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto")
+    opt[Boolean]("lns").action((bool,c) =>
+      c.copy(lns = bool)).text("use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto")
 
     opt[Int]("lnsMaxFails").
       action((x, c) => c.copy(lnsMaxFails = x)).
@@ -85,6 +86,16 @@ object Main extends App {
     opt[Int]("lnsNbRelaxationNoImprove").
       action((x, c) => c.copy(lnsNbRelaxationNoImprove = x)).
       text("for LNS: the maximal number of consecutive relaxation without improvement, default is 200")
+
+    opt[Int]("lnsCarryOnObjForMultiHardware").action((int,c) =>
+      c.copy(lnsCarryOnObjForMultiHardware = int)).
+        text("when using multi hardware, " +
+          "should Placer carry on the best values for the objective function " +
+          "from one hardware to the next one? \n" +
+          "0 is no\n" +
+          "1 is yes,but if first solution cannot be found, try again without carry on\n" +
+          "2 is yes, and without retry\n" +
+          "default is 1")
 
     help("help").text("prints this usage text")
 
@@ -133,7 +144,8 @@ object Main extends App {
           config.lnsMaxFails,
           config.lnsRelaxProba,
           config.lnsNbRelaxations,
-          config.lnsNbRelaxationNoImprove))
+          config.lnsNbRelaxationNoImprove,
+          config.lnsCarryOnObjForMultiHardware))
 
       if (config.verbose) println(mappingSet)
 
