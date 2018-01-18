@@ -193,8 +193,6 @@ case class AtomicTask(implementations: List[ParametricImplementation],
                       sharedImplementations:List[ReferenceToSharedParametricImplementation],
                       name: String) extends Indiced() with IndiceMaker {
 
-  val flattenedNonSharedImplementations:Iterable[FlattenedImplementationConcrete] = implementations.flatMap(_.implementations)
-
   //  println("\n" + implementationArray.toList.mkString("\n") + "\n")
 
   override def toString: String = "Task(" + name + " implems:{" + implementations.mkString("") + "} sharedImplems:{" + sharedImplementations.mkString(",") + "})"
@@ -204,7 +202,7 @@ case class AtomicTask(implementations: List[ParametricImplementation],
   def maxDuration(procs: Iterable[ProcessingElement], properties: SortedMap[String, Int]): Int = {
     var maxDur = 0
     for (proc <- procs) {
-      for (implem <- flattenedNonSharedImplementations) {
+      for (implem <- implementations.flatMap(_.implementations)) {
         if (implem.canRunOn(proc)) {
           val dur = implem.duration(proc, properties)
           if (dur > maxDur) maxDur = dur

@@ -43,7 +43,7 @@ case class CPTask(id: Int,
       ReferenceToSharedFlattenedImplementationConcrete(flattenedImplem, vCore)
     })})
 
-  val allImplementationArray:Array[FlattenedImplementation] = (task.flattenedNonSharedImplementations ++ flattenedReferenceToImplementations).toArray
+  val allImplementationArray:Array[FlattenedImplementation] = (task.implementations.flatMap(_.implementations) ++ flattenedReferenceToImplementations).toArray
   setIndices(allImplementationArray)
 
   implicit val store:CPStore = cpHardwareModel.store
