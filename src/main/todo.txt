@@ -1,0 +1,24 @@
+
+voici les structures que je vais ajouter au JSon de Placer pour faciliter les whatIf:
+
+
+sweep:List[whatIf]
+
+"whatIf" = {
+  "whatIfName":"whatIfname",
+  "additionalConstraints":List[Constraint]
+}
+
+
+constraints class to add:
+restrictParameter(task,implementation,parameter,values)//must be a subset
+powerCap
+energyCap
+maxMakespan
+maxDelay
+selectImplementation(task,implementation,parametersOpt)
+objective //and we delete the sat mode; no such obj means sat mode
+
+
+//Also add command line parameters to JSon as additionnal constraints?
+ExplorationMode(...)

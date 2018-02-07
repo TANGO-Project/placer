@@ -256,9 +256,9 @@ case class EAtomicTask(name: String,
       }
     }
 
-    val transaltedSharedImplementation = sharedImplementation.map(si => extractReferenceImplem(si))
+    val translatedSharedImplementation = sharedImplementation.map(si => extractReferenceImplem(si))
 
-    AtomicTask(translatedImplems, transaltedSharedImplementation, name)
+    AtomicTask(translatedImplems, translatedSharedImplementation, name)
   }
 }
 

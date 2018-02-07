@@ -22,7 +22,7 @@ package placerT.metadata
 
 import placerT.io.JSonHelper
 import placerT.metadata.hw.{HardwareModel, ProcessingElement, ProcessingElementClass}
-import placerT.metadata.sw.{AtomicTask, SoftwareModel}
+import placerT.metadata.sw.{AtomicTask, Implementation, SoftwareModel}
 
 import scala.collection.immutable.SortedMap
 
@@ -100,4 +100,55 @@ case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:Sym
 
 object SymmetricPEConstraintType extends Enumeration {
   val Workload,LongTask = Value
+}
+
+
+
+
+
+case class PowerCap(maxPower:Int) extends MappingConstraint {
+
+}
+
+case class EnergyCap(maxEnergy:Int) extends MappingConstraint {
+
+}
+
+case class MaxMakespan(maxMakeSpan:Int) extends MappingConstraint {
+
+}
+
+case class maxDelay(maxDelay:Int) extends MappingConstraint {
+
+}
+case class RestrictImplementations(task:AtomicTask,implementations:List[Implementation]) extends MappingConstraint {
+
+}
+case class RestrictParameter(task:AtomicTask,implementation:Implementation,parameter:String,value:List[Int]) extends MappingConstraint {
+  //restricts the possible value of a parameter to a specified subset
+}
+
+
+
+sealed abstract class MappingGoal2 extends MappingConstraint {
+  def needsWidth:Boolean
+
+}
+
+sealed abstract class SimpleMappingGoal2 extends MappingGoal2{
+  override def needsWidth:Boolean = false
+}
+
+case class MinEnergy() extends SimpleMappingGoal2{
+}
+case class MinMakeSpan() extends SimpleMappingGoal2{
+}
+case class MinFrame() extends SimpleMappingGoal2{
+  override def needsWidth:Boolean = true
+}
+case class Pareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingGoal2{
+
+  require(a ne b,"cannot define multi objective twice the same basic objective:" + a)
+
+  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
 }
