@@ -565,7 +565,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       pEToTasksOnFlexible)
   }
 
-  def solveMappingProblem(problem: CPMappingProblem, goal: MappingGoal): Iterable[Mapping] = {
+  def solveMappingProblem(problem: CPMappingProblem, goal: MappingObjective): Iterable[Mapping] = {
 
     if(config.lns) {
       goal match {

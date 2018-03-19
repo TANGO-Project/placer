@@ -20,9 +20,8 @@
 
 package placerT.metadata
 
-import placerT.io.JSonHelper
-import placerT.metadata.hw.{HardwareModel, ProcessingElement, ProcessingElementClass}
-import placerT.metadata.sw.{AtomicTask, Implementation, SoftwareModel}
+import placerT.metadata.hw.{HardwareModel, ProcessingElementClass}
+import placerT.metadata.sw.SoftwareModel
 
 import scala.collection.immutable.SortedMap
 
@@ -39,8 +38,8 @@ case class MappingProblem(timeUnit:String,
                           processorClasses: Array[ProcessingElementClass],
                           softwareModel: SoftwareModel,
                           hardwareModels: List[HardwareModel],
-                          constraints:List[MappingConstraint],
-                          goal: MappingGoal){
+                          constraints:ConstraintList,
+                          goal: MappingObjective){
   def flattenToMonoHardwareProblems:List[MappingProblemMonoHardware] = {
     hardwareModels.map(
       hardwareModel =>
@@ -51,8 +50,7 @@ case class MappingProblem(timeUnit:String,
           processorClasses: Array[ProcessingElementClass],
           softwareModel: SoftwareModel,
           hardwareModel: HardwareModel,
-          constraints:List[MappingConstraint],
-          goal: MappingGoal)
+          constraints)
     )
   }
 }
@@ -64,91 +62,4 @@ case class MappingProblemMonoHardware(timeUnit:String,
                                       processorClasses: Array[ProcessingElementClass],
                                       softwareModel: SoftwareModel,
                                       hardwareModel: HardwareModel,
-                                      constraints:List[MappingConstraint],
-                                      goal: MappingGoal)
-
-
-
-abstract sealed class MappingConstraint
-case class RunOnConstraint(processor:ProcessingElement,
-                           process:AtomicTask,
-                           value:Boolean) extends MappingConstraint{
-  override def toString: String = {
-    (if (value) "MustRunOn(" else "MustNotRunOn(") + process.name + "," + processor.name + ")"
-  }
-}
-case class CoreSharingConstraint(processes:List[AtomicTask],
-                                 value:Boolean) extends MappingConstraint{
-  override def toString: String = {
-    (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
-  }
-}
-case class MustBeUsedConstraint(processor:ProcessingElement,value:Boolean) extends MappingConstraint {
-  override def toString: String = (if(value) "MustBeUsed(" else "MustNotBeUsed(") + processor.name + ")"
-}
-
-case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:SymmetricPEConstraintType.Value = SymmetricPEConstraintType.Workload) extends MappingConstraint {
-
-  require(processors.size > 1,"SymmetricPEConstraint cannot be specified with fewer that two processing elements")
-  val witnessPE = processors.head
-  for(p <- processors.tail){
-    require(witnessPE symmetricTo p, "different processing elements specified in SymmetricPEConstraint:" + witnessPE.name + " and " + p.name)
-  }
-
-  override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
-}
-
-object SymmetricPEConstraintType extends Enumeration {
-  val Workload,LongTask = Value
-}
-
-
-
-
-
-case class PowerCap(maxPower:Int) extends MappingConstraint {
-
-}
-
-case class EnergyCap(maxEnergy:Int) extends MappingConstraint {
-
-}
-
-case class MaxMakespan(maxMakeSpan:Int) extends MappingConstraint {
-
-}
-
-case class maxDelay(maxDelay:Int) extends MappingConstraint {
-
-}
-case class RestrictImplementations(task:AtomicTask,implementations:List[Implementation]) extends MappingConstraint {
-
-}
-case class RestrictParameter(task:AtomicTask,implementation:Implementation,parameter:String,value:List[Int]) extends MappingConstraint {
-  //restricts the possible value of a parameter to a specified subset
-}
-
-
-
-sealed abstract class MappingGoal2 extends MappingConstraint {
-  def needsWidth:Boolean
-
-}
-
-sealed abstract class SimpleMappingGoal2 extends MappingGoal2{
-  override def needsWidth:Boolean = false
-}
-
-case class MinEnergy() extends SimpleMappingGoal2{
-}
-case class MinMakeSpan() extends SimpleMappingGoal2{
-}
-case class MinFrame() extends SimpleMappingGoal2{
-  override def needsWidth:Boolean = true
-}
-case class Pareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingGoal2{
-
-  require(a ne b,"cannot define multi objective twice the same basic objective:" + a)
-
-  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
-}
+                                      constraints:ConstraintList)

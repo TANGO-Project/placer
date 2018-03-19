@@ -17,6 +17,7 @@
  *
  */
 
+/*
 package placerT.metadata
 
 import placerT.io.JSonHelper
@@ -59,3 +60,5 @@ case class Pareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingGoal{
       JSonHelper.string("a",a.simpleJSonName) + "," +
       JSonHelper.string("b",b.simpleJSonName) + "}") + "}"
 }
+
+*/

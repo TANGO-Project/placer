@@ -77,7 +77,7 @@ case class EMappingProblem(timeUnit:String,
       cl,
       sw,
       hws,
-      constraints.map(_.extract(if(hws.size == 1) Some(hws.head.processors) else None,sw)),
+      new ConstraintList(constraints.map(_.extract(if(hws.size == 1) Some(hws.head.processors) else None,sw))),
       goal.extract)
   }
 }
@@ -165,7 +165,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
 case class ERunOn(task:String,processingElement:String)
 
 case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
-  def extract:MappingGoal = {
+  def extract:MappingObjective = {
     (simpleObjective,multiObjective) match{
       case (None,None) => throw new Error("no mapping goal defined")
       case (Some(s),None) => EGoal.extractSimple(s)
@@ -177,7 +177,7 @@ case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
 }
 
 object EGoal{
-  def extractSimple(name:String):MappingGoal = {
+  def extractSimple(name:String):MappingObjective = {
     name match{
       case "minEnergy" => MinEnergy()
       case "minMakespan" => MinMakeSpan()
@@ -354,6 +354,7 @@ case class EProcessingElement(processorClass: String,
                               multiCore:Option[Int],
                               powerModel: String = "0",
                               switchingDelay: Option[Int]) {
+
   val parsedPowerModel = FormulaParser(powerModel)
 
   def extract(pc: Array[ProcessingElementClass]): ProcessingElement = {
