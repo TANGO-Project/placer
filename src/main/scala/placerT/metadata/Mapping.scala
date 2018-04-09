@@ -19,6 +19,7 @@
 
 package placerT.metadata
 
+import oscar.cp.core.CPSol
 import placerT.io.JSonHelper
 import placerT.metadata.hw.{Bus, ProcessingElement, SelfLoopBus}
 import placerT.metadata.sw.{AtomicTask, FlattenedImplementation, Transmission}
@@ -44,7 +45,8 @@ case class Mapping(hardwareName: String,
                    makeSpan: Int,
                    energy: Int,
                    width:Option[Int],
-                   objValues:List[Int]) {
+                   objValues:List[Int],
+                   cpSol:CPSol) {
 
   private def padToLength(s: String, l: Int) = (s + nStrings(l, " ")).substring(0, l)
 

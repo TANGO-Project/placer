@@ -20,6 +20,7 @@
 package placerT.algo
 
 import oscar.cp.constraints.ParetoConstraint
+import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import oscar.cp.{multiobjective, _}
@@ -450,7 +451,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     for(constraint <- (problem.constraints.cl ++ hardwareModel.constraints)){
       constraint match {
         case _:MappingObjective =>
-          //skipping objectives, they will be handled later on.
+        //skipping objectives, they will be handled later on.
         case RunOnConstraint(processor, process, value) =>
           if (value) {
             add(cpTasks(process.id).processorID === processor.id)
@@ -782,79 +783,153 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
 
     bestSolution match{
-    case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
-    case _ => ;
+      case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
+      case _ => ;
+    }
+    val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.cl.flatMap(
+      _ match{
+        case c@CoreSharingConstraint(processes, value) if value => Some(c)
+        case _ => None
+      }
+    )
+
+    val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
+
+    //LNS restart stuff here!
+
+    val maxFails = config.lnsMaxFails
+    val relaxProba = config.lnsRelaxProba
+    val nRelaxations = config.lnsNbRelaxations
+    var remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
+    var currentRelaxation = 0
+    while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
+      remainigRelaxationNoImprove -= 1
+      currentRelaxation = currentRelaxation +1
+      println("relaxation " + currentRelaxation)
+
+      val constraintsForThisRelaxation = generateConstraintsForRelaxation(relaxProba,bestSolution.get,allProcessesInSamePEConstraints,samePEConstraints)
+      val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
+        //relaxation strategy (actually it is more a non-relaxation strategy)
+        add(constraintsForThisRelaxation)
+      }
+
+      //we only did a small run, so if there was some soluition, carry on the search, with the same relaxation
+      if(stats1.nSols > 0) {
+        remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
+        val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*10) {
+          add(constraintsForThisRelaxation)
+        }
+      }else{
+        println("early stop")
+      }
+    }
+
+    bestSolution
   }
-  val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.cl.flatMap(
-    _ match{
-      case c@CoreSharingConstraint(processes, value) if value => Some(c)
-      case _ => None
-    }
-  )
 
-  val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
 
-  //LNS restart stuff here!
-  val constraintBuffer = ArrayBuffer[Constraint]()
-  val maxFails = config.lnsMaxFails
-  val relaxProba = config.lnsRelaxProba
-  val nRelaxations = config.lnsNbRelaxations
-  var remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
-  var currentRelaxation = 0
-  while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
-    remainigRelaxationNoImprove -= 1
-    currentRelaxation = currentRelaxation +1
-    println("relaxation " + currentRelaxation)
-    constraintBuffer.clear()
-    val stats1 = startSubjectTo(failureLimit = maxFails/100,timeLimit = config.timeLimit) {
-      //relaxation strategy (actually it is more a non-relaxation strategy)
+  def timeOverlappingTasks(task:CPTask,mapping:Mapping):List[CPTask] = {
+    cpProblem.cpTasks.toList.filter((otherTask:CPTask) =>
+      taskOverlap(task,otherTask,mapping.cpSol)
+    )
+  }
 
-      val mustRelaxArray = Array.fill(cpProblem.cpTasks.length)(false)
+  def taskOverlap(taskA:CPTask,taskB:CPTask,sol:CPSol):Boolean = {
+    if(sol(taskA.end) < sol(taskB.start)) false
+    else if (sol(taskB.end) < sol(taskA.start)) false
+    else true
+  }
+  def transmissionOverlap(transmissionA:CPTransmission,transmissionB:CPTransmission,sol:CPSol):Boolean = {
+    if(sol(transmissionA.end) < sol(transmissionB.start)) false
+    else if (sol(transmissionB.end) < sol(transmissionA.start)) false
+    else true
+  }
 
-      for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
-        if (scala.math.random * 100 > relaxProba) {
-          //must relax
-          for(taskToRelaxAnyway <- listOFTaskOnSameFlexible){
-            mustRelaxArray(taskToRelaxAnyway.id) = true
-          }
-        }
-      }
 
-      //does not operate on SamePE constraints
-      for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.get.taskMapping) {
-        if(!allProcessesInSamePEConstraints.contains(task.id) && !mustRelaxArray(task.id)) {
-          if (scala.math.random * 100 > relaxProba) {
-            constraintBuffer += (problem.cpTasks(task.id).processorID === pe.id)
-          }
-        }
-      }
+  def timeOverlappingTransmissions(transmission:CPTransmission, mapping:Mapping):List[CPTransmission] = {
+    cpProblem.cpTransmissions.toList.filter(
+      (otherTransmission:CPTransmission) =>
+        transmission != otherTransmission
+          && transmissionOverlap(transmission,otherTransmission,mapping.cpSol)
+    )
+  }
 
-      for(samePEConstraint <- samePEConstraints){
-        val noMustRelax = samePEConstraint.processes.forall(process => !mustRelaxArray(process.id))
-        if (noMustRelax && scala.math.random * 100 > relaxProba) {
-          val witnessTaskID = samePEConstraint.processes.head.id
-          val processorID = problem.cpTasks(witnessTaskID).processorID
-          for(task <- samePEConstraint.processes) {
-            constraintBuffer += (problem.cpTasks(task.id).processorID === processorID)
-          }
-        }
-      }
+  def transmissionToAdjacentTasks(transmission:CPTransmission):List[CPTask] = {
+    List(transmission.from,transmission.to)
+  }
 
-      //TODO: add relaxation of sharedFunctionPE!
+  def taskToAdjacentTransmissions(task:CPTask):List[CPTransmission] = {
+    List.empty ++ task.incomingCPTransmissions ++ task.outgoingCPTransmissions
+  }
 
-      add(constraintBuffer)
-    }
-
-    if(stats1.nSols > 0) {
-      remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
-      val stats2 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit*10) {
-        add(constraintBuffer)
-      }
+  def nextAndPrevTasksOnSameSupport(transmission:CPTransmission, mapping:Mapping):List[CPTransmission] = {
+    val sol = mapping.cpSol
+    val onSameBus = cpProblem.cpTransmissions.filter(p => sol(p.busID) == sol(transmission.busID) && p != transmission)
+    val precedings = onSameBus.filter(p => sol(p.start) < sol(transmission.start))
+    val lastPreceding = if(precedings.nonEmpty){
+      Some(precedings.maxBy(p => sol(p.start)))
     }else{
-      println("early stop")
+      None
+    }
+
+    val succeedings = onSameBus.filter(p => sol(p.start) > sol(transmission.start))
+    val firstSucceeding = if(succeedings.nonEmpty) {
+      Some(precedings.minBy(p => sol(p.start)))
+    }else{
+      None
+    }
+    List.empty ++ lastPreceding ++ firstSucceeding
+  }
+
+
+  def expandTask(task:CPTask,mapping:Mapping):List[CPTask] = {
+    var taskList = List(task)
+    while(true){
+      val overlappingTasks = taskList.flatMap(timeOverlappingTasks(_,mapping))
+
     }
   }
 
-  bestSolution
+  def generateConstraintsForRelaxation(relaxProba:Int,
+                                       bestSolution:Mapping,
+                                       allProcessesInSamePEConstraints:SortedSet[Int],
+                                       samePEConstraints:Iterable[CoreSharingConstraint]): List[Constraint] ={
+
+
+    var toReturn:List[Constraint] = List.empty
+    val mustRelaxArray = Array.fill(cpProblem.cpTasks.length)(false)
+
+    //for shared function stuff
+    for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
+      if (scala.math.random * 100 > relaxProba) {
+        //must relax
+        for(taskToRelaxAnyway <- listOFTaskOnSameFlexible){
+          mustRelaxArray(taskToRelaxAnyway.id) = true
+        }
+      }
+    }
+
+    //does not operate on SamePE constraints
+    for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.taskMapping) {
+      if(!allProcessesInSamePEConstraints.contains(task.id) && !mustRelaxArray(task.id)) {
+        if (scala.math.random * 100 > relaxProba) {
+          toReturn =(cpProblem.cpTasks(task.id).processorID === pe.id) :: toReturn
+        }
+      }
+    }
+
+    for(samePEConstraint <- samePEConstraints){
+      val noMustRelax = samePEConstraint.processes.forall(process => !mustRelaxArray(process.id))
+      if (noMustRelax && scala.math.random * 100 > relaxProba) {
+        val witnessTaskID = samePEConstraint.processes.head.id
+        val processorID = cpProblem.cpTasks(witnessTaskID).processorID
+        for(task <- samePEConstraint.processes) {
+          toReturn = (cpProblem.cpTasks(task.id).processorID === processorID) :: toReturn
+        }
+      }
+    }
+    toReturn
+  }
 }
-}
+
+
