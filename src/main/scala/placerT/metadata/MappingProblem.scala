@@ -29,7 +29,6 @@ import scala.collection.immutable.SortedMap
   * defines a mapping problem
   * @param softwareModel the model of the sw
   * @param hardwareModels the model of the hw (will evolve to list of hardware models)
-  * @param goal the objective of the mapping
   */
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
@@ -38,8 +37,7 @@ case class MappingProblem(timeUnit:String,
                           processorClasses: Array[ProcessingElementClass],
                           softwareModel: SoftwareModel,
                           hardwareModels: List[HardwareModel],
-                          constraints:ConstraintList,
-                          goal: MappingObjective){
+                          constraints:ConstraintList){
   def flattenToMonoHardwareProblems:List[MappingProblemMonoHardware] = {
     hardwareModels.map(
       hardwareModel =>

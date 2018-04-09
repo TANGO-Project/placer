@@ -19,18 +19,17 @@
 
 package placerT.algo
 
-import oscar.cp.{multiobjective, _}
 import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
-import oscar.cp.multiobjective.ListPareto
+import oscar.cp.{multiobjective, _}
 import placerT.algo.hw._
 import placerT.algo.sw.{CPTask, CPTransmission}
 import placerT.metadata.hw._
 import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
-import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.collection.immutable.SortedSet
 import scala.collection.mutable.ArrayBuffer
 
 case class MapperConfig(maxDiscrepancy:Int,
@@ -42,12 +41,11 @@ case class MapperConfig(maxDiscrepancy:Int,
                         lnsNbRelaxationNoImprove:Int,
                         lnsCarryOnObjForMultiHardware:Int)
 
-
 object Mapper {
 
   def findMapping(problem: MappingProblem,config:MapperConfig): Mappings = {
-    problem.goal match{
-      case _:Pareto =>
+    problem.constraints.objective match{
+      case _:MinPareto =>
         val paretoSols = multiobjective.ListPareto[Mapping](false,false) //minimize two dimensions
 
         for(simpleProblem <-  problem.flattenToMonoHardwareProblems) {
@@ -119,14 +117,14 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
   val softwareModel = problem.softwareModel
   val hardwareModel = problem.hardwareModel
   var nbProcessorsHWAndVirtual:Int = Int.MinValue
-  val goal = problem.goal
+  val objective = problem.constraints.objective
 
   val store:CPStore = this.solver
 
   store.silent = true
 
   val cpProblem = postProblem(softwareModel, hardwareModel)
-  val mappings = solveMappingProblem(cpProblem, goal)
+  val mappings = solveMappingProblem(cpProblem, objective)
 
   def reportProgress(startedUpTask:String): Unit ={
     this.solver.propagate()
@@ -293,13 +291,13 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
             case Some(d) =>
               reportProgress("creating width var")
               Some(CPIntVar(0,d))
-            case _ if goal.needsWidth =>
+            case _ if objective.needsWidth =>
               reportProgress("creating width var")
               Some(CPIntVar(0,Int.MaxValue))
             case _ =>  None
           }
         case _ =>
-          require(!goal.needsWidth,"you cannot ask for width related objective if not in an interative software")
+          require(!objective.needsWidth,"you cannot ask for width related objective if not in an interative software")
           None
       }
 
@@ -449,8 +447,10 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
     reportProgress("posting mapping constraints")
 
-    for(constraint <- (problem.constraints ++ hardwareModel.constraints)){
+    for(constraint <- (problem.constraints.cl ++ hardwareModel.constraints)){
       constraint match {
+        case _:MappingObjective =>
+          //skipping objectives, they will be handled later on.
         case RunOnConstraint(processor, process, value) =>
           if (value) {
             add(cpTasks(process.id).processorID === processor.id)
@@ -598,7 +598,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         }
 
         (false,false,List(theVar))
-      case Pareto(a,b) =>
+      case MinPareto(a,b) =>
         val varA = simpleVarFinder(a)
         val varB = simpleVarFinder(b)
         solver.paretoMinimize(varA, varB)
@@ -661,7 +661,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     println
 
     goal match {
-      case Pareto(a,b) =>
+      case MinPareto(a,b) =>
         solver.nonDominatedSolutions.sortBy(_.apply( simpleVarFinder(a))).map(cpSol => problem.getMapping(cpSol,theVars))
       case _:SimpleMappingGoal | _:Sat =>
         val lastSol = solver.lastSol
@@ -785,7 +785,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
     case _ => ;
   }
-  val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.flatMap(
+  val samePEConstraints:Iterable[CoreSharingConstraint] = problem.mappingProblem.constraints.cl.flatMap(
     _ match{
       case c@CoreSharingConstraint(processes, value) if value => Some(c)
       case _ => None

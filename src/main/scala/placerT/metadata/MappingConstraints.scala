@@ -3,13 +3,15 @@ package placerT.metadata
 import placerT.metadata.hw.{HardwareModel, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, Implementation}
 
-class ConstraintList(cl:List[MappingConstraint]){
+class ConstraintList(val cl:List[MappingConstraint]){
   def isWidthNeeded = cl.exists(_.needsWidth)
-  val objective:Option[MappingObjective] = {
+  val objective:MappingObjective = {
     val allobj = cl.filter(_.isMappingObjective)
     require(allobj.size <= 1,"you cannot have more than one obective. For multi-criterion, please use the Pareto construct. Declared objectives: " + allobj.mkString(","))
-    if(allobj.size == 1) Some(allobj.head.asInstanceOf[MappingObjective]) else None
+    if(allobj.size == 1) allobj.head.asInstanceOf[MappingObjective] else Sat()
   }
+
+  override def toString: String = "{\n\t" + cl.mkString(",\n\t") + "}"
 }
 
 abstract sealed class MappingConstraint{
@@ -91,11 +93,14 @@ sealed abstract class MappingObjective extends MappingConstraint {
 sealed abstract class SimpleMappingGoal extends MappingObjective{
 }
 
+//this one is by default, and cannot actually be specified.
+case class Sat() extends SimpleMappingGoal{
+}
 case class MinEnergy() extends SimpleMappingGoal{
 }
 case class MinMakeSpan() extends SimpleMappingGoal{
 }
-case class MinWidth() extends SimpleMappingGoal{
+case class MinFrame() extends SimpleMappingGoal{
   override def needsWidth:Boolean = true
 }
 case class MinPareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingObjective{

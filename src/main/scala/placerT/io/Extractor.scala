@@ -37,7 +37,7 @@ object Extractor {
 }
 
 case class EMappingProblemHeaderOnly(jsonFormat:String){
-  val currentFormat = "PlacerBeta3"
+  val currentFormat = "PlacerBeta4"
   require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
 }
 
@@ -49,9 +49,8 @@ case class EMappingProblem(timeUnit:String,
                            softwareModel:ESoftwareModel,
                            hardwareModel:Option[EHardwareModel],
                            hardwareModels:List[EHardwareModel],
-                           constraints:List[EMappingConstraint],
                            properties:List[ENameValue],
-                           goal:EGoal) extends IndiceMaker {
+                           constraintsAndObjectives:List[EMappingConstraint]) extends IndiceMaker {
 
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
   require(hardwareModel.isDefined != hardwareModels.nonEmpty,"you must have either hardwareModel or hardwareModels defined")
@@ -69,6 +68,7 @@ case class EMappingProblem(timeUnit:String,
       case _ => throw new Error("you must have either hardwareModel or hardwareModels defined and not both")
     }
 
+    val cls = new ConstraintList(constraintsAndObjectives.map(_.extract(if(hws.size == 1) Some(hws.head.processors) else None,sw)))
     MappingProblem(
       timeUnit,
       dataUnit,
@@ -77,8 +77,7 @@ case class EMappingProblem(timeUnit:String,
       cl,
       sw,
       hws,
-      new ConstraintList(constraints.map(_.extract(if(hws.size == 1) Some(hws.head.processors) else None,sw))),
-      goal.extract)
+      cls)
   }
 }
 
@@ -88,7 +87,9 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               notSamePE:Option[List[String]],
                               mustBeUsed:Option[String],
                               mustNotBeUsed:Option[String],
-                              symmetricPE:Option[List[String]]){
+                              symmetricPE:Option[List[String]],
+                              simpleObjective:Option[String],
+                              multiObjective:Option[EPareto]){
   def extract(hwOpt:Option[Iterable[ProcessingElement]],sw:SoftwareModel):MappingConstraint = {
 
     def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
@@ -141,21 +142,25 @@ case class EMappingConstraint(runOn:Option[ERunOn],
     }
 
 
-    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,mustNotBeUsed,symmetricPE) match {
-      case (Some(s),None,None,None,None,None,None) =>
+    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,mustNotBeUsed,symmetricPE,simpleObjective,multiObjective) match {
+      case (Some(s),None,None,None,None,None,None,None,None) =>
         extractRunOn(s,true)
-      case (None,Some(s),None,None,None,None,None) =>
+      case (None,Some(s),None,None,None,None,None,None,None) =>
         extractRunOn(s,false)
-      case (None,None,Some(s),None,None,None,None) =>
+      case (None,None,Some(s),None,None,None,None,None,None) =>
         extractSameCore(s,true)
-      case (None,None,None,Some(s),None,None,None) =>
+      case (None,None,None,Some(s),None,None,None,None,None) =>
         extractSameCore(s,false)
-      case (None,None,None,None,Some(s),None,None) =>
+      case (None,None,None,None,Some(s),None,None,None,None) =>
         extractMustBeUsed(s,true)
-      case (None,None,None,None,None,Some(s),None) =>
+      case (None,None,None,None,None,Some(s),None,None,None) =>
         extractMustBeUsed(s,false)
-      case (None,None,None,None,None,None,Some(s)) =>
+      case (None,None,None,None,None,None,Some(s),None,None) =>
         extractPESymmetry(s)
+      case (None,None,None,None,None,None,None,Some(s),None) =>
+        EGoal.extractSimple(s)
+      case (None,None,None,None,None,None,None,None,Some(p)) =>
+        p.extract
 
       case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)
     }
@@ -164,25 +169,12 @@ case class EMappingConstraint(runOn:Option[ERunOn],
 
 case class ERunOn(task:String,processingElement:String)
 
-case class EGoal(simpleObjective:Option[String],multiObjective:Option[EPareto]){
-  def extract:MappingObjective = {
-    (simpleObjective,multiObjective) match{
-      case (None,None) => throw new Error("no mapping goal defined")
-      case (Some(s),None) => EGoal.extractSimple(s)
-      case (None,Some(p)) => p.extract
-      case _ => throw new Error("mapping goal defined twice")
-    }
-
-  }
-}
-
 object EGoal{
   def extractSimple(name:String):MappingObjective = {
     name match{
       case "minEnergy" => MinEnergy()
       case "minMakespan" => MinMakeSpan()
       case "minFrame" => MinFrame()
-      case "sat" => Sat()
       case _ => throw new Error("unknown simple mapping goal:" + name)
     }
   }
@@ -196,7 +188,7 @@ object EGoal{
 }
 
 case class EPareto(a:String,b:String){
-  def extract:Pareto = Pareto(EGoal.extractSimpleExpectSimple(a), EGoal.extractSimpleExpectSimple(b))
+  def extract:MinPareto = MinPareto(EGoal.extractSimpleExpectSimple(a), EGoal.extractSimpleExpectSimple(b))
 }
 
 case class ESoftwareModel(sharedPermanentFunctions:List[EParametricImplementation],
