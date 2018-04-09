@@ -862,7 +862,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     List.empty ++ task.incomingCPTransmissions ++ task.outgoingCPTransmissions
   }
 
-  def nextAndPrevTasksOnSameSupport(transmission:CPTransmission, mapping:Mapping):List[CPTransmission] = {
+  def nextAndPrevTransmissionsOnSameSupport(transmission:CPTransmission, mapping:Mapping):List[CPTransmission] = {
     val sol = mapping.cpSol
     val onSameBus = cpProblem.cpTransmissions.filter(p => sol(p.busID) == sol(transmission.busID) && p != transmission)
     val precedings = onSameBus.filter(p => sol(p.start) < sol(transmission.start))
@@ -882,12 +882,21 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
   }
 
 
-  def expandTask(task:CPTask,mapping:Mapping):List[CPTask] = {
-    var taskList = List(task)
-    while(true){
-      val overlappingTasks = taskList.flatMap(timeOverlappingTasks(_,mapping))
-
+  def expandTask(task:CPTask,mapping:Mapping,requiredSize:Int):List[CPTask] = {
+    var taskSet:SortedSet[Int] = SortedSet(task.id)
+    while(taskSet.size < requiredSize){
+      val overlappingTasks:SortedSet[Int] = taskSet.flatMap(taskID => timeOverlappingTasks(cpProblem.cpTasks(taskID),mapping).map(_.id))
+      val newOverlappingTasks = overlappingTasks -- taskSet
+      val linkedTasks:SortedSet[Int] = newOverlappingTasks.flatMap(taskID => {
+        val adjacentTransmissions:List[CPTransmission] = taskToAdjacentTransmissions(cpProblem.cpTasks(taskID))
+        val linkedTasks = adjacentTransmissions.flatMap(transmissionToAdjacentTasks)
+        val timeOverlappingTrans:List[CPTransmission] = adjacentTransmissions.flatMap(t => timeOverlappingTransmissions(t,mapping))
+        val tasksLinkedToTimeOverlappingTransmissions = timeOverlappingTrans.flatMap(transmissionToAdjacentTasks)
+        SortedSet.empty[Int] ++ linkedTasks.map(_.id) ++ tasksLinkedToTimeOverlappingTransmissions.map(_.id)
+      })
+      taskSet = taskSet ++ linkedTasks
     }
+    taskSet.toList.map(cpProblem.cpTasks(_))
   }
 
   def generateConstraintsForRelaxation(relaxProba:Int,
