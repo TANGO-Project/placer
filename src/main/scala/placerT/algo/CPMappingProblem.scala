@@ -76,7 +76,8 @@ case class CPMappingProblem(mappingProblem: MappingProblemMonoHardware,
       sol(makeSpan),
       sol(energy),
       widthVar match{case None => None case Some(w) => Some(sol(w))},
-      objVars.map(sol(_)))
+      objVars.map(sol(_)),
+      sol)
   }
 
   def varsToDistribute: List[CPIntVar] = {
