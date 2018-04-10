@@ -21,7 +21,6 @@
 package placerT.algo.sw
 
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.Mapper
 
 abstract class CPAbstractTask {
   def start: CPIntVar

@@ -21,10 +21,10 @@
 package placerT.algo.hw
 
 import oscar.cp.core.variables.CPIntVar
+import oscar.cp.modeling.Constraints
 import placerT.algo.sw.CPTransmission
 import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{Bus, ProcessingElement, SelfLoopBus}
-import oscar.cp.modeling.Constraints
 
 abstract class CPBus(val id: Int, mapper: Mapper) {
 

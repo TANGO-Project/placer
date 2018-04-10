@@ -1,10 +1,8 @@
 package placerT.algo
 
-import oscar.cp
 import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
-import oscar.cp.modeling.Constraints
 import oscar.cp.{multiobjective, _}
 import placerT.algo.sw.{CPTask, CPTransmission}
 import placerT.metadata._

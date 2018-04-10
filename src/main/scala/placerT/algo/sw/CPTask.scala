@@ -24,9 +24,9 @@ import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.Mapper
-import placerT.algo.hw.{CPHardwareModel, CPInstantiatedPermanentFunction, CPPermanentTaskProcessor, CPProcessor}
-import placerT.metadata.{Formula, IndiceMaker}
+import placerT.algo.hw.{CPHardwareModel, CPInstantiatedPermanentFunction, CPPermanentTaskProcessor}
 import placerT.metadata.sw._
+import placerT.metadata.{Formula, IndiceMaker}
 
 import scala.collection.immutable.SortedMap
 

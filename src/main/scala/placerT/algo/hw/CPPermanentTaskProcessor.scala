@@ -22,10 +22,9 @@ package placerT.algo.hw
 import oscar.cp
 import oscar.cp._
 import oscar.cp.core.variables.CPIntVar
-import placerT.algo.{Mapper, SimpleTask}
 import placerT.algo.sw.CPTask
+import placerT.algo.{Mapper, SimpleTask}
 import placerT.metadata.hw.{MultiTaskPermanentTasks, ProcessingElement}
-import placerT.metadata.sw.FlattenedImplementation
 
 import scala.collection.immutable.SortedMap
 

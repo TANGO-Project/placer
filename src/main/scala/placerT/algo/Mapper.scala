@@ -19,8 +19,6 @@
 
 package placerT.algo
 
-import oscar.cp.constraints.ParetoConstraint
-import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 import oscar.cp.{multiobjective, _}
@@ -31,7 +29,6 @@ import placerT.metadata.sw._
 import placerT.metadata.{MappingProblem, _}
 
 import scala.collection.immutable.SortedSet
-import scala.collection.mutable.ArrayBuffer
 
 case class MapperConfig(maxDiscrepancy:Int,
                         timeLimit:Int,

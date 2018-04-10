@@ -27,7 +27,6 @@ package placerT.metadata.hw
 
 import placerT.io.JSonHelper
 import placerT.metadata._
-import placerT.metadata.sw.ParametricImplementation
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 

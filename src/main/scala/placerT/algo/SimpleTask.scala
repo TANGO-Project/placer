@@ -20,10 +20,8 @@
 package placerT.algo
 
 import oscar.cp._
-import oscar.cp.core.CPPropagStrength
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
-import placerT.algo.CumulativeTask.maxCumulativeResource
 
 
 case class SimpleTask(start:CPIntVar, duration: CPIntVar, end: CPIntVar, isNeeded: CPBoolVar)

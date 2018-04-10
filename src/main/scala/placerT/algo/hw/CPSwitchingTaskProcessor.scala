@@ -20,12 +20,11 @@
 
 package placerT.algo.hw
 
-import oscar.cp.CPBoolVar
 import oscar.cp.core.variables.CPIntVar
 import placerT.algo.sw.CPTask
 import placerT.algo.{CumulativeTask, Mapper, SimpleTask}
 import placerT.metadata.hw.{ProcessingElement, SwitchingTask}
-import placerT.metadata.sw.{FlattenedImplementation, FlattenedImplementationConcrete}
+import placerT.metadata.sw.FlattenedImplementationConcrete
 
 import scala.collection.immutable.SortedMap
 

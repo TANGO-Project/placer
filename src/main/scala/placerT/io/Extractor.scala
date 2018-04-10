@@ -21,10 +21,10 @@ package placerT.io
 
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue
+import placerT.metadata._
 import placerT.metadata.hw.{ProcessingElementClass, _}
 import placerT.metadata.sw.TransmissionTiming._
 import placerT.metadata.sw._
-import placerT.metadata._
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
