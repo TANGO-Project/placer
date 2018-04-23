@@ -278,6 +278,7 @@ case class EParametricImplementation(name: String,
     }
 
     require(targetClass.resources equals parsedResources.keySet,"error in declared resources of " + name)
+
     ParametricImplementation(
       name,
       targetClass,

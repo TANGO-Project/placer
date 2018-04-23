@@ -152,18 +152,6 @@ OneShotSoftware = {
     maxMakespan:?Integer
 }
 
-MappingGoal =
-    {multiObjective:MultiObjectiveGoal}
-    | {simpleObjective:SimpleGoal}
-
-#minMakeSpan,minEnergy,minFrame
-SimpleGoal = String
-
-MultiObjectiveGoal = {
-    a:SimpleGoal
-    b:SimpleGoal
-}
-
 TaskPE = {
     task:String
     processingElement:String
@@ -176,6 +164,19 @@ Constraint = {mustBeUsed:String}
    | {symmetricPE:[String]}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
+   | MappingGoal
+
+MappingGoal =
+    {multiObjective:MultiObjectiveGoal}
+    | {simpleObjective:SimpleGoal}
+
+#minMakeSpan,minEnergy,minFrame
+SimpleGoal = String
+
+MultiObjectiveGoal = {
+    a:SimpleGoal
+    b:SimpleGoal
+}
 
 #jsonFormat documents the version of the Json file used.
 #this document describes the format "PlacerBeta3"
@@ -188,7 +189,6 @@ Main = {
     processingElementClasses:[ProcessingElementClass]
     hardwareModel:HardwareModel
     softwareModel:SoftwareModel
-    goal:MappingGoal
     properties:?[NameValue]
-    constraints:?[Constraint]
+    constraintsAndObjectives:?[Constraint]
 }

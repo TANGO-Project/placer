@@ -1,8 +1,8 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"aquascan with an FPGA added and shared functions",
-  "jsonFormat":"PlacerBeta3",
+  "info":"aquascan with an FPGA added and shared parametric functions",
+  "jsonFormat":"PlacerBeta4",
   "processingElementClasses":
   [
     {
@@ -1273,7 +1273,7 @@
       }
     }
   },
-  "constraints":
+  "constraintsAndObjectives":
   [
     {
       "mustBeUsed":"Core1"
@@ -1300,10 +1300,9 @@
         "FirstRotation",
         "OrientationDetermination"
       ]
+    },
+    {
+      "simpleObjective":"minMakespan"
     }
-  ],
-  "goal":
-  {
-    "simpleObjective":"minMakespan"
-  }
+  ]
 }

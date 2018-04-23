@@ -1,7 +1,7 @@
 {
    "timeUnit":"us",
    "dataUnit":"byte",
-   "jsonFormat":"PlacerBeta3",
+   "jsonFormat":"PlacerBeta4",
    "processingElementClasses":
    [
       {
@@ -378,8 +378,10 @@
          "oneShotSoftware": {}
       }
    },
-   "goal":
-   {
-      "simpleObjective":"minMakespan"
-   }
+   "constraintsAndObjectives":
+   [
+      {
+         "simpleObjective":"minMakespan"
+      }
+   ]
 }

@@ -3,6 +3,8 @@ package placerT.metadata
 import placerT.metadata.hw.{HardwareModel, ProcessingElement}
 import placerT.metadata.sw.{AtomicTask, Implementation}
 
+import scala.collection.immutable.SortedSet
+
 class ConstraintList(val cl:List[MappingConstraint]){
   def isWidthNeeded = cl.exists(_.needsWidth)
   val objective:MappingObjective = {
@@ -32,6 +34,8 @@ case class CoreSharingConstraint(processes:List[AtomicTask],
   override def toString: String = {
     (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
   }
+
+  lazy val idOfTasks:SortedSet[Int] = SortedSet.empty ++ processes.map(_.id)
 }
 
 case class MustBeUsedConstraint(processor:ProcessingElement,value:Boolean) extends MappingConstraint {

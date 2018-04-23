@@ -97,9 +97,9 @@ case class CPTask(id: Int,
 
       implem match {
         case sharedImplem: ReferenceToSharedFlattenedImplementationConcrete =>
-          val targettedProcesors = cpProcessors.toList.filter(p => sharedImplem.target == p)
+          val targetedProcessors = cpProcessors.toList.filter(p => sharedImplem.target == p)
 
-          targettedProcesors.map(p => {
+          targetedProcessors.map(p => {
             val durationPI = sharedImplem.f.duration(p.p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
             require(durationPI >= 0, "duration of implementation " + sharedImplem.name + " on processor " + p.p.name + " is negative:" + durationPI)
             val power = Formula.eval(
@@ -125,9 +125,9 @@ case class CPTask(id: Int,
           })
 
         case concreteImplem: FlattenedImplementationConcrete =>
-          val targettedProcesors = cpProcessors.toList.filter(p => concreteImplem.canRunOn(p.p))
+          val targetedProcessors = cpProcessors.toList.filter(p => concreteImplem.canRunOn(p.p))
 
-          targettedProcesors.map(p => {
+          targetedProcessors.map(p => {
             val durationPI = concreteImplem.duration(p.p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
             require(durationPI >= 0, "duration of implementation " + concreteImplem.name + " on processor " + p.p.name + " is negative:" + durationPI)
             val power = Formula.eval(p.p.powerModelForTask,

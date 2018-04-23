@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"the simple unconstrained aquaScan model with two different hardwares",
-   "jsonFormat":"PlacerBeta3",
+   "jsonFormat":"PlacerBeta4",
    "processingElementClasses":
    [
       {
@@ -17,7 +17,7 @@
    ],
    "hardwareModels":[
    {
-      "name":"ExampleHardware1",
+      "name":"HardwareWith4Cores",
       "processingElements":
       [
          {
@@ -92,7 +92,7 @@
        ]
    },
    {
-      "name":"ExampleHardware2",
+      "name":"HardwareWith2Cores",
          "processingElements":
          [
             {
@@ -1312,7 +1312,7 @@
          }
       }
    },
-   "constraints":
+   "constraintsAndObjectives":
    [
       {
          "samePE":[
@@ -1324,10 +1324,9 @@
             "FirstRotation",
             "OrientationDetermination"
          ]
+      },
+      {
+         "simpleObjective":"minMakespan"
       }
-   ],
-   "goal":
-   {
-      "simpleObjective":"minMakespan"
-   }
+   ]
 }

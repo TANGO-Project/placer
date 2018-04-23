@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"the simple unconstrained aquaScan model",
-   "jsonFormat":"PlacerBeta3",
+   "jsonFormat":"PlacerBeta4",
    "processingElementClasses":
    [
       {
@@ -1243,7 +1243,7 @@
          }
       }
    },
-   "constraints":
+   "constraintsAndObjectives":
    [
      {
        "mustBeUsed":"Core1"
@@ -1270,10 +1270,9 @@
             "FirstRotation",
             "OrientationDetermination"
          ]
+      },
+      {
+         "simpleObjective":"minMakespan"
       }
-   ],
-   "goal":
-   {
-      "simpleObjective":"minMakespan"
-   }
+   ]
 }
