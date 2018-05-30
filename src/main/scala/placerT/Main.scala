@@ -138,14 +138,14 @@ object Main extends App {
       if (config.verbose) println(problem)
 
       val mappingSet = Mapper.findMapping(problem,
-        MapperConfig(config.discrepancy,
-          config.timeLimit,
-          config.lns,
-          config.lnsMaxFails,
-          config.lnsRelaxProba,
-          config.lnsNbRelaxations,
-          config.lnsNbRelaxationNoImprove,
-          config.lnsCarryOnObjForMultiHardware))
+        MapperConfig(maxDiscrepancy = config.discrepancy,
+          timeLimit = config.timeLimit,
+          lns = config.lns,
+          lnsMaxFails = config.lnsMaxFails,
+          lnsRelaxProba = config.lnsRelaxProba,
+          lnsNbRelaxations = config.lnsNbRelaxations,
+          lnsNbRelaxationNoImprove = config.lnsNbRelaxationNoImprove,
+          lnsCarryOnObjForMultiHardware = config.lnsCarryOnObjForMultiHardware))
 
       if (config.verbose) println(mappingSet)
 

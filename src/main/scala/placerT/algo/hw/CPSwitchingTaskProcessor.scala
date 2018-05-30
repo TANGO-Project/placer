@@ -71,7 +71,7 @@ case class CPInstantiatedPermanentFunction(override val id: Int, host:CPPermanen
   //we need to check this because there are two possible closing fo this PE class
   var isClosed = false
 
-  override def close() {
+  override def close(){
     require(!isClosed)
     if(allSimpleTasksPotentiallyExecutingHere.isEmpty) nbInstances.assign(0)
     else CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name)
