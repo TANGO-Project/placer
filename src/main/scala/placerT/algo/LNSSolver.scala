@@ -316,7 +316,6 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
           allProcessesInSamePEConstraints:SortedSet[Int],
           samePEConstraints:Iterable[CoreSharingConstraint])
         setPEForNonRelaxedTasks(isTaskRelaxed,bestSolution)
-
     }
   }
 
@@ -523,8 +522,6 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     }
     toReturn
   }
-
-
 }
 
 
