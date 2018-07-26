@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"aquascan with an FPGA added",
-   "jsonFormat":"PlacerBeta3",
+   "jsonFormat":"PlacerBeta4",
    "processingElementClasses":
    [
       {
@@ -63,7 +63,7 @@
             "processorClass":"fpga",
             "name":"Fpga1",
             "memSize":32768,
-            "resources":[{"name":"gates", "value":1000}],
+            "resources":[{"name":"gates", "value":1200}],
             "properties":[],
             "powerModel":"0"
          }
@@ -79,10 +79,25 @@
                   "Core1",
                   "Core2",
                   "Core3",
+                  "Core4"
+               ],
+               "timeUnitPerDataUnit":1,
+               "latency":1
+            }
+         },
+         {
+            "halfDuplexBus":
+            {
+               "name":"slowerBus",
+               "relatedProcessors":
+               [
+                  "Core1",
+                  "Core2",
+                  "Core3",
                   "Core4",
                   "Fpga1"
                ],
-               "timeUnitPerDataUnit":1,
+               "timeUnitPerDataUnit":4,
                "latency":1
             }
          }
@@ -1291,11 +1306,11 @@
       {
          "oneShotSoftware":
          {
-           "maxMakespanDISABLED":82936
+           "maxMakespanDISABLED":8500
          }
       }
    },
-   "constraints":
+   "constraintsAndObjectives":
    [
      {
        "mustBeUsed":"Core1"
@@ -1322,10 +1337,9 @@
             "FirstRotation",
             "OrientationDetermination"
          ]
+      },
+      {
+         "simpleObjective":"minMakespan"
       }
-   ],
-   "goal":
-   {
-      "simpleObjective":"minMakespan"
-   }
+   ]
 }

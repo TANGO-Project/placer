@@ -37,7 +37,8 @@ case class MapperConfig(maxDiscrepancy:Int,
                         lnsRelaxProba:Int,
                         lnsNbRelaxations:Int,
                         lnsNbRelaxationNoImprove:Int,
-                        lnsCarryOnObjForMultiHardware:Int)
+                        lnsCarryOnObjForMultiHardware:Int,
+                        performShavings:Boolean = false)
 
 object Mapper {
 

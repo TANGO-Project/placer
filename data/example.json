@@ -1,7 +1,8 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
-  "jsonFormat":"PlacerBeta3",
+  "jsonFormat":"PlacerBeta4",
+  "info":"a representative fictive example",
   "processingElementClasses":[
     {
       "switchingTask":{
@@ -109,7 +110,7 @@
             "value":100
           }
         ],
-        "powerModel":"frequency*frequency*(kgate+multiplier*20)/1000+2"
+        "powerModel":"frequency*frequency*(kgate*2+multiplier)/10000+2"
       }
     ],
     "busses":[
@@ -208,7 +209,7 @@
               }
             ],
             "computationMemory":"100",
-            "duration":"500/frequency"
+            "duration":"100/frequency"
           }
         ]
       },
@@ -221,7 +222,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"100",
-            "duration":"10/mflops+100000/mips"
+            "duration":"100/mflops+1000000/mips"
           },
           {
             "name":"PI_cpu_supplier2",
@@ -229,7 +230,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"10",
-            "duration":"100/mflops+1000/mips"
+            "duration":"1000/mflops+10000/mips"
           },
           {
             "name":"fpga_standard",
@@ -458,15 +459,17 @@
       }
     ],
     "softwareClass":{
-      "iterativeSoftware":{
-        "maxFrameDelay":200
+      "oneShotSoftware":{
+        "maxMakespan":500
       }
     }
   },
-  "goal":{
-    "multiObjective":{
-      "a":"minMakespan",
-      "b":"minEnergy"
+  "constraintsAndObjectives":[
+    {
+      "multiObjective": {
+        "a": "minMakespan",
+        "b": "minEnergy"
+      }
     }
-  }
+  ]
 }

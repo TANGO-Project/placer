@@ -3,6 +3,7 @@ package placerT.algo
 import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
+import oscar.cp.preprocessing.ShavingUtils
 import oscar.cp.{multiobjective, _}
 import placerT.algo.hw.CPProcessor
 import placerT.algo.sw.{CPTask, CPTransmission}
@@ -139,6 +140,7 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
 
     //LNS restart stuff here!
+    performTimeShavings()
 
     val maxFails = config.lnsMaxFails
     val relaxProba = config.lnsRelaxProba
@@ -154,14 +156,18 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
       val stats1 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit) {
         //relaxation strategy (actually it is more a non-relaxation strategy)
         add(constraintsForThisRelaxation)
+        //print("innerShavings:") performTimeShavings() ths reduces a lot, but is very costly, compared to classical propagation.
       }
 
-      //we only did a small run, so if there was some solution, carry on the search, with the same relaxation
+      if (config.performShavings && stats1.nSols > 0) performTimeShavings()
+
+        //we only did a small run, so if there was some solution, carry on the search, with the same relaxation
       if(stats1.nSols > 0) {
         remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
         val stats2 = startSubjectTo(failureLimit = maxFails*10,timeLimit = config.timeLimit){
           add(constraintsForThisRelaxation)
         }
+        if (config.performShavings && stats2.nSols > 0) performTimeShavings()
       }else{
         println("early stop")
       }
@@ -170,6 +176,20 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     bestSolution
   }
 
+
+  def performTimeShavings() {
+    val startVars = (cpProblem.cpTasks.map(_.start).toList ::: cpProblem.cpTransmissions.map(_.start).toList).toArray
+    performShavings(startVars)
+   //shaving on target selection does not help at all
+  }
+
+  def performShavings(a:Array[CPIntVar]): Unit = {
+      solver.propagate()
+      val startDomSizeBefore = a.map(sv => sv.size)
+      ShavingUtils.boundsShaving(solver, a)
+      val startDomSizeAfter = a.map(sv => sv.size)
+      println(s"Shaving on min and max has removed ${a.indices.foldLeft(0)((acc, i) => acc + (startDomSizeBefore(i) - startDomSizeAfter(i)))} values from the domains of ${a.length} variables.")
+  }
 
   def timeOverlappingTasks(task:CPTask,mapping:Mapping):List[CPTask] = {
     cpProblem.cpTasks.toList.filter((otherTask:CPTask) =>
@@ -242,9 +262,20 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     taskSet.toList.map(cpProblem.cpTasks(_))
   }
 
-
-
   def generateConstraintsForRelaxation(relaxProba:Int,
+                                       bestSolution:Mapping,
+                                       allProcessesInSamePEConstraints:SortedSet[Int],
+                                       samePEConstraints:Iterable[CoreSharingConstraint]): List[Constraint] = {
+    val isTaskRelaxed =
+      selectTasksToRelaxFullRANDOM(relaxProba:Int,
+        bestSolution:Mapping,
+        allProcessesInSamePEConstraints:SortedSet[Int],
+        samePEConstraints:Iterable[CoreSharingConstraint])
+
+    setPEForNonRelaxedTasks(isTaskRelaxed,bestSolution)
+  }
+
+  def generateConstraintsForRelaxationFull(relaxProba:Int,
                                        bestSolution:Mapping,
                                        allProcessesInSamePEConstraints:SortedSet[Int],
                                        samePEConstraints:Iterable[CoreSharingConstraint]): List[Constraint] ={
