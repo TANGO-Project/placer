@@ -1,0 +1,51 @@
+
+
+TODO
+
+Graphical front-end
+LNS-Pareto
+what-if-schenario
+multi-hardware
+iterative
+CBLS
+
+ajouter taskSet pour les GPGPU
+ajouter mémoire externe?! (très compliqué)
+
+
+
+
+
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:44240 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:3) pe:Fpga1 nbInstances:1)
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:42476 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:1) pe:Fpga1 nbInstances:1)
+		(implem:FpgaDigitCorrelation(blockSize:2) pe:Fpga1 nbInstances:1)
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:43842 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:3) pe:Fpga1 nbInstances:1)
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:44865 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:3) pe:Fpga1 nbInstances:1)
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:41959 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:3) pe:Fpga1 nbInstances:1)
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:42316 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:1) pe:Fpga1 nbInstances:1)
+		(implem:FpgaDigitCorrelation(blockSize:2) pe:Fpga1 nbInstances:1)
+
+
+
+Mapping(hardwareName:ExampleHardware1 makeSpan:41885 width:None energy:0){
+	sharedFunctions{
+		(implem:FpgaDigitCorrelation(blockSize:3) pe:Fpga1 nbInstances:1)
+	}
