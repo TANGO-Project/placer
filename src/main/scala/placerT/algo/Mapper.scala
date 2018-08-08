@@ -43,8 +43,9 @@ case class MapperConfig(maxDiscrepancy:Int,
 object Mapper {
 
   def findMapping(problem: MappingProblem,config:MapperConfig): Mappings = {
+
     problem.constraints.objective match{
-      case _:MinPareto =>
+      case Some(minPareto:MinPareto) =>
         val paretoSols = multiobjective.ListPareto[Mapping](false,false) //minimize two dimensions
 
         for(simpleProblem <-  problem.flattenToMonoHardwareProblems) {
@@ -60,7 +61,7 @@ object Mapper {
           info = problem.info,
           paretoSols.toList)
 
-      case _:Sat =>
+      case None =>
 
         for(simpleProblem <- problem.flattenToMonoHardwareProblems) {
           val newMappings = new Mapper(simpleProblem, config, multiobjective.ListPareto[Mapping](false)).mappings
@@ -80,7 +81,7 @@ object Mapper {
           info = problem.info,
           List.empty)
 
-      case _:SimpleMappingGoal =>
+      case Some(_:SimpleMappingGoal) =>
 
         val paretoSols = multiobjective.ListPareto[Mapping](false) //minimize one dimensions
 
@@ -143,7 +144,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     val summedMaxSwitchingTimes = hardwareModel.processors.map(_.switchingDelay).max * softwareModel.simpleProcesses.length
 
     val staticMaxHorizon = summedMaxTaskDurations + summedMaxTransmissionTimes + summedMaxSwitchingTimes
-    val maxHorizon = softwareModel.softwareClass.maxMakespan match {
+    val maxHorizon = problem.constraints.maxMakeSpanOpt match {
       case Some(x) =>
         staticMaxHorizon min x
       case None => staticMaxHorizon
@@ -198,15 +199,15 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     reportProgress("constants about adjacency")
 
     //instantiating constants about adjacency
-    val processorToBusAdjacencyNoSelfLoop: Set[(Int, Int)] =
-      hardwareModel.busses.flatMap(bus => bus.receivingFromProcessors.map(proc => (proc.id, bus.id))).toSet
+    //val processorToBusAdjacencyNoSelfLoop: Set[(Int, Int)] =
+    //  hardwareModel.busses.flatMap(bus => bus.receivingFromProcessors.map(proc => (proc.id, bus.id))).toSet
 
-    val busToProcessorAdjacencyNoSelfLoop: Set[(Int, Int)] =
-      hardwareModel.busses.flatMap(bus => bus.sendingToProcessors.map(proc => (bus.id, proc.id))).toSet
+    //val busToProcessorAdjacencyNoSelfLoop: Set[(Int, Int)] =
+    //  hardwareModel.busses.flatMap(bus => bus.sendingToProcessors.map(proc => (bus.id, proc.id))).toSet
 
     val processorIDToProcessorIAndHostedVirtualProcessorID: Array[List[Int]] = Array.tabulate(cpProcessorsSimple.length)(List(_))
-    for (virtualProcesor <- cpProcessorsVirtual) {
-      processorIDToProcessorIAndHostedVirtualProcessorID(virtualProcesor.p.id) = virtualProcesor.id :: processorIDToProcessorIAndHostedVirtualProcessorID(virtualProcesor.p.id)
+    for (virtualProcessor <- cpProcessorsVirtual) {
+      processorIDToProcessorIAndHostedVirtualProcessorID(virtualProcessor.p.id) = virtualProcessor.id :: processorIDToProcessorIAndHostedVirtualProcessorID(virtualProcessor.p.id)
     }
 
     val processorToBusToProcessorAdjacencyNoSelfLoop: Set[(Int, Int, Int)] = hardwareModel.busses.flatMap(
@@ -284,24 +285,19 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         flow.size, flow.name, flow.timing)
     )
 
+    val isWidthNeeded = problem.constraints.isWidthNeeded
+
     //creating the width var, in case needed for modulo scheduling
     val widthVar: Option[CPIntVar] =
-      softwareModel.softwareClass match {
-        case i: IterativeSoftware =>
-          i.maxFrameDelay match {
-            case Some(d) =>
-              reportProgress("creating width var")
-              Some(CPIntVar(0, d))
-            case _ if objective.needsWidth =>
-              reportProgress("creating width var")
-              Some(CPIntVar(0, Int.MaxValue))
-            case _ => None
-          }
-        case _ =>
-          require(!objective.needsWidth, "you cannot ask for width related objective if not in an interative software")
-          None
-      }
+      if(isWidthNeeded){
+        require(softwareModel.softwareClass == SoftwareClass.IterativeSoftware,
+          "frame delay constraints and objectives can only be specified for iterative software")
+        reportProgress("creating width var")
+        Some(CPIntVar(0, Int.MaxValue))
+      }else None
 
+
+    //the width of every piece of hardware
     var widthVarList: List[CPIntVar] = List.empty
 
     reportProgress("registering tasks and transmissions to processors and busses")
@@ -312,10 +308,8 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       }
       bus.close()
 
-      widthVar match {
-        case Some(w) =>
-          widthVarList = bus.timeWidth :: widthVarList
-        case _ => ;
+      if(isWidthNeeded){
+        widthVarList = bus.timeWidth :: widthVarList
       }
     }
 
@@ -327,10 +321,9 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         //reportProgress("registering execution constraints processor " + proc.p.name + " for task " + task.task.name)
         proc.accumulateExecutionConstraintsOnTask(task)
       }
-      widthVar match {
-        case Some(w) =>
-          widthVarList = proc.timeWidth :: widthVarList //TODO: add proc.temporaryStorageWidth
-        case _ => ;
+
+      if(isWidthNeeded){
+        widthVarList = proc.timeWidth :: widthVarList //TODO: add proc.temporaryStorageWidth
       }
     }
     //processors are closed in a second round because of the shared implementations.
@@ -344,8 +337,8 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
     widthVar match {
       case Some(w) =>
-        reportProgress("posting maxFrameDelay")
-        addDocumented(maximum(widthVarList.toArray, w), "iterativeSoftware.maxFrameDelay")
+        reportProgress("posting global frame delay")
+        addDocumented(maximum(widthVarList.toArray, w), "global frame delay")
       case _ => ;
     }
 
@@ -412,52 +405,51 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     val backgroundPower: Int = cpProcessors.map(p => p.p.constantPower.value).sum
     val energy = sum(energyForEachTask) + makeSpan * backgroundPower
 
-    //deadline
-    softwareModel.softwareClass match {
-      case OneShotSoftware(Some(deadline)) =>
-        reportProgress("posting deadline")
-        add(makeSpan <= deadline)
-      case i: IterativeSoftware =>
-        i.maxMakespan match {
-          case Some(deadline) =>
-            reportProgress("posting deadline")
-            add(makeSpan <= deadline)
-          case None => ;
-        }
-      case _ => ;
-    }
-
-    //powerCap
-    hardwareModel.powerCap match {
-      case None => ;
-      case Some(cap) =>
-        reportProgress("posting powerCap")
-        val simpleCumulativeTasks = cpTasks.toList.map(
-          task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
-        )
-        CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(cap - backgroundPower), "powerCap")
-    }
-
-    //energyCap
-    hardwareModel.energyCap match {
-      case None => ;
-      case Some(cap) =>
-        reportProgress("posting energyCap")
-        addDocumented(energy <= cap, "energyCap")
-    }
 
     reportProgress("posting mapping constraints")
 
-    for (constraint <- (problem.constraints.cl ++ hardwareModel.constraints)) {
+    for (constraint <- problem.constraints.cl ++ hardwareModel.constraints.cl) {
       constraint match {
+
+        case ForbidHardwarePlatform(set) =>
+
+          if(set contains hardwareModel.name) store.fail()
+
+        case PowerCap(maxPower:Int) =>
+          reportProgress("posting powerCap")
+          val simpleCumulativeTasks = cpTasks.toList.map(
+            task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
+          )
+          CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(maxPower - backgroundPower), "powerCap")
+
+        case EnergyCap(maxEnergy:Int) =>
+          reportProgress("posting energyCap")
+          addDocumented(energy <= maxEnergy, "energyCap")
+
+
+        case MaxMakespan(maxMakeSpan:Int) =>
+          reportProgress("posting deadline")
+          add(makeSpan <= maxMakeSpan)
+
+        case WidthCap(maxDelay:Int) =>
+          reportProgress("posting max frame width constraint")
+
+          widthVar match{
+            case None => throw new Error("internal error: width constraint posted but with was not isntantiated!")
+            case Some(w:CPIntVar) =>
+              addDocumented(w <= maxDelay," max frame delay constraint")
+          }
+
         case _: MappingObjective =>
         //skipping objectives, they will be handled later on.
+
         case RunOnConstraint(processor, process, value) =>
           if (value) {
             add(cpTasks(process.id).processorID === processor.id)
           } else {
             add(cpTasks(process.id).processorID !== processor.id)
           }
+
         case c@CoreSharingConstraint(processes, value) =>
           val processesIDSet = SortedSet.empty[Int] ++ processes.map(_.id)
           if (value) {
@@ -568,18 +560,18 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
 
 
-  def solveMappingProblem(problem: CPMappingProblem, goal: MappingObjective): Iterable[Mapping] = {
+  def solveMappingProblem(problem: CPMappingProblem, goal: Option[MappingObjective]): Iterable[Mapping] = {
 
     if (config.lns) {
       goal match {
-        case simpleGoal: SimpleMappingGoal if !(simpleGoal.isInstanceOf[Sat]) =>
+        case Some(simpleGoal: SimpleMappingGoal) =>
           new LNSSolver(problem: CPMappingProblem, simpleGoal: SimpleMappingGoal, config: MapperConfig, solver: CPSolver, bestSolutionsSoFar: multiobjective.ListPareto[Mapping])
             .solveMappingProblemMinimizeLNS()
         case _ =>
           throw new Error("LNS can only be used for simple mapping goals, not for " + goal)
       }
     }else{
-      new PureCPSolver(cpProblem: CPMappingProblem, goal: MappingObjective, config:MapperConfig, solver:CPSolver, bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
+      new PureCPSolver(cpProblem: CPMappingProblem, goal, config:MapperConfig, solver:CPSolver, bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
         .solveMappingProblem()
     }
   }

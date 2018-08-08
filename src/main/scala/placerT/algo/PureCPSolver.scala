@@ -5,7 +5,7 @@ import oscar.cp.core.variables.CPIntVar
 import oscar.cp.{multiobjective, _}
 import placerT.metadata._
 
-class PureCPSolver(cpProblem: CPMappingProblem, goal: MappingObjective, config:MapperConfig, solver:CPSolver, bestSolutionsSoFar:multiobjective.ListPareto[Mapping]) {
+class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], config:MapperConfig, solver:CPSolver, bestSolutionsSoFar:multiobjective.ListPareto[Mapping]) {
 
   implicit val solver2:oscar.cp.core.CPSolver = solver
 
@@ -23,9 +23,9 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: MappingObjective, config:M
     }
 
     val (isSearchOnlyOne, isParetoSearch, theVars) = goal match {
-      case Sat() => (true, false, List.empty)
+      case None => (true, false, List.empty)
 
-      case s: SimpleMappingGoal =>
+      case Some(s: SimpleMappingGoal) =>
         val theVar = simpleVarFinder(s)
         minimize(theVar)
 
@@ -35,7 +35,7 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: MappingObjective, config:M
         }
 
         (false, false, List(theVar))
-      case MinPareto(a, b) =>
+      case Some(MinPareto(a, b)) =>
         val varA = simpleVarFinder(a)
         val varB = simpleVarFinder(b)
         solver.paretoMinimize(varA, varB)
@@ -99,9 +99,9 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: MappingObjective, config:M
     println
 
     goal match {
-      case MinPareto(a, b) =>
+      case Some(MinPareto(a, b)) =>
         solver.nonDominatedSolutions.sortBy(_.apply(simpleVarFinder(a))).map(cpSol => cpProblem.getMapping(cpSol, theVars))
-      case _: SimpleMappingGoal | _: Sat =>
+      case Some(_: SimpleMappingGoal) | None =>
         val lastSol = solver.lastSol
         if (lastSol.dict.isEmpty) {
           None

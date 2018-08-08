@@ -23,8 +23,9 @@ import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue
 import placerT.metadata._
 import placerT.metadata.hw.{ProcessingElementClass, _}
+import placerT.metadata.sw.SoftwareClass.SoftwareClass
 import placerT.metadata.sw.TransmissionTiming._
-import placerT.metadata.sw._
+import placerT.metadata.sw.{SoftwareClass, _}
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
@@ -37,7 +38,7 @@ object Extractor {
 }
 
 case class EMappingProblemHeaderOnly(jsonFormat:String){
-  val currentFormat = "PlacerBeta4"
+  val currentFormat = "PlacerBeta5"
   require(jsonFormat equals currentFormat,"expected " + currentFormat + " format fo input JSon, got " + jsonFormat)
 }
 
@@ -55,8 +56,8 @@ case class EMappingProblem(timeUnit:String,
   require(processingElementClasses.nonEmpty,"no processing element class specified in input file")
   require(hardwareModel.isDefined != hardwareModels.nonEmpty,"you must have either hardwareModel or hardwareModels defined")
 
-  def extract(verbose:Boolean) = {
-    val cl = processingElementClasses.map(_.extract).toArray
+  def extract(verbose:Boolean):MappingProblem = {
+    val cl = processingElementClasses.map(_.extract)
     setIndices(cl)
     Checker.checkDuplicates(cl.map(_.name),"processing element class")
 
@@ -69,6 +70,7 @@ case class EMappingProblem(timeUnit:String,
     }
 
     val cls = new ConstraintList(constraintsAndObjectives.map(_.extract(if(hws.size == 1) Some(hws.head.processors) else None,sw)))
+
     MappingProblem(
       timeUnit,
       dataUnit,
@@ -89,7 +91,13 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               mustNotBeUsed:Option[String],
                               symmetricPE:Option[List[String]],
                               simpleObjective:Option[String],
-                              multiObjective:Option[EPareto]){
+                              multiObjective:Option[EPareto],
+
+                              powerCap:Option[Int],
+                              energyCap:Option[Int],
+                              maxMakespan:Option[Int],
+                              maxWidth:Option[Int],
+                              forbidHardware:Option[List[String]]){
   def extract(hwOpt:Option[Iterable[ProcessingElement]],sw:SoftwareModel):MappingConstraint = {
 
     def extractRunOn(c:ERunOn,value:Boolean):MappingConstraint = {
@@ -141,36 +149,94 @@ case class EMappingConstraint(runOn:Option[ERunOn],
       }
     }
 
-
-    (runOn,notRunOn,samePE,notSamePE,mustBeUsed,mustNotBeUsed,symmetricPE,simpleObjective,multiObjective) match {
-      case (Some(s),None,None,None,None,None,None,None,None) =>
-        extractRunOn(s,true)
-      case (None,Some(s),None,None,None,None,None,None,None) =>
-        extractRunOn(s,false)
-      case (None,None,Some(s),None,None,None,None,None,None) =>
-        extractSameCore(s,true)
-      case (None,None,None,Some(s),None,None,None,None,None) =>
-        extractSameCore(s,false)
-      case (None,None,None,None,Some(s),None,None,None,None) =>
-        extractMustBeUsed(s,true)
-      case (None,None,None,None,None,Some(s),None,None,None) =>
-        extractMustBeUsed(s,false)
-      case (None,None,None,None,None,None,Some(s),None,None) =>
-        extractPESymmetry(s)
-      case (None,None,None,None,None,None,None,Some(s),None) =>
-        EGoal.extractSimple(s)
-      case (None,None,None,None,None,None,None,None,Some(p)) =>
-        p.extract
-
-      case (_) => throw new Error("erroneous mapping constraint (multiple def or empty def): " + this)
+    var toReturn:MappingConstraint = null
+    def acc(c:MappingConstraint): Unit ={
+      require(toReturn == null,"only one constraint can be specified at a time")
+      toReturn = c
     }
+
+    runOn match{
+      case Some(s) =>
+        acc(extractRunOn(s,true))
+      case _ => ;
+    }
+    notRunOn match{
+      case Some(s) =>
+        acc(extractRunOn(s,false))
+      case _ => ;
+    }
+    samePE match{
+      case Some(s) =>
+        acc( extractSameCore(s,true))
+      case _ => ;
+    }
+    notSamePE match{
+      case Some(s) =>
+        acc(extractSameCore(s,false))
+      case _ => ;
+    }
+    mustBeUsed match{
+      case Some(s) =>
+        acc(extractMustBeUsed(s,true))
+      case _ => ;
+    }
+    mustNotBeUsed match{
+      case Some(s) =>
+        acc(extractMustBeUsed(s,false))
+      case _ => ;
+    }
+    symmetricPE match{
+      case Some(s) =>
+        acc(extractPESymmetry(s))
+      case _ => ;
+    }
+    simpleObjective match{
+      case Some(s) =>
+        acc(EGoal.extractSimple(s))
+      case _ => ;
+    }
+    multiObjective match{
+      case Some(s) =>
+        acc(s.extract)
+      case _ => ;
+    }
+    powerCap match{
+      case Some(maxPower) =>
+        acc(PowerCap(maxPower))
+      case _ => ;
+    }
+    energyCap match{
+      case Some(maxEnergy) =>
+        acc(EnergyCap(maxEnergy:Int))
+      case _ => ;
+    }
+    maxMakespan match{
+      case Some(maxMakeSpan) =>
+        acc(MaxMakespan(maxMakeSpan))
+      case _ => ;
+    }
+    maxWidth match{
+      case Some(maxDelay) =>
+        acc(WidthCap(maxDelay:Int))
+      case _ => ;
+    }
+
+    forbidHardware match{
+      case Some(hardwares) =>
+        ForbidHardwarePlatform(SortedSet.empty[String] ++ hardwares)
+      case _ => ;
+    }
+    require(toReturn != null, "empty constraint found; maybe you misspelled something?")
+
+    toReturn
   }
 }
+
 
 case class ERunOn(task:String,processingElement:String)
 
 object EGoal{
-  def extractSimple(name:String):MappingObjective = {
+  def extractSimple(name:String):SimpleMappingGoal = {
     name match{
       case "minEnergy" => MinEnergy()
       case "minMakespan" => MinMakeSpan()
@@ -178,58 +244,45 @@ object EGoal{
       case _ => throw new Error("unknown simple mapping goal:" + name)
     }
   }
-
-  def extractSimpleExpectSimple(name:String):SimpleMappingGoal = {
-    extractSimple(name:String) match{
-      case s:SimpleMappingGoal => s
-      case x => throw new Error("expected simple mappinggoal, got " + x)
-    }
-  }
 }
 
 case class EPareto(a:String,b:String){
-  def extract:MinPareto = MinPareto(EGoal.extractSimpleExpectSimple(a), EGoal.extractSimpleExpectSimple(b))
+  def extract:MinPareto = MinPareto(EGoal.extractSimple(a), EGoal.extractSimple(b))
 }
 
 case class ESoftwareModel(sharedPermanentFunctions:List[EParametricImplementation],
-                          simpleProcesses: Array[EAtomicTask],
+                          tasks: Array[EAtomicTask],
                           transmissions: Array[ETransmission],
                           properties:List[ENameValue] = List.empty,
-                          softwareClass: ESoftwareClass) {
+                          softwareClass: String) {
   def extract(cl:Array[ProcessingElementClass],verbose:Boolean) = {
 
-    Checker.checkDuplicates(simpleProcesses.map(_.name),"task")
+    Checker.checkDuplicates(tasks.map(_.name),"task")
     Checker.checkDuplicates(transmissions.map(_.name),"transmission")
 
     val standardImplems = sharedPermanentFunctions.map(_.extract(cl)).toArray
 
-    val proc = simpleProcesses.map(task => task.extract(cl,standardImplems))
+    val proc = tasks.map(task => task.extract(cl,standardImplems))
     SoftwareModel(
       standardImplems,
       proc,
       transmissions.map(_.extract(proc)),
-      softwareClass.extract,
+      ESoftwareClass.extract(softwareClass),
       SortedMap.empty[String,Int] ++ properties.map(_.toCouple),
       verbose)
   }
 }
+import placerT.metadata.sw.SoftwareClass._
 
-case class ESoftwareClass(oneShotSoftware: Option[EOneShotSoftware],
-                          iterativeSoftware:Option[EITerativeSoftware]) {
-  def extract = (oneShotSoftware,iterativeSoftware) match {
-    case (Some(s),None) => s.extract
-    case (None,Some(i)) => i.extract
-    case (None,None) => throw new Error("software class not defined")
-    case _ =>  throw new Error("software class defined twice")
+object ESoftwareClass {
+
+  def extract(softwareClass: String): SoftwareClass = {
+    softwareClass match {
+      case "oneShotSoftware" => SoftwareClass.OneShotSoftware
+      case "iterativeSoftware" => SoftwareClass.IterativeSoftware
+      case _ => throw new Error("unknown softwareClass:" + softwareClass)
+    }
   }
-}
-
-case class EOneShotSoftware(maxMakespan: Option[Int]) {
-  def extract = OneShotSoftware(maxMakespan)
-}
-
-case class EITerativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int]){
-  def extract = IterativeSoftware(maxMakespan,maxFrameDelay)
 }
 
 case class EAtomicTask(name: String,
@@ -417,8 +470,14 @@ case class ESingleWayBus(from: List[String],
   require(to.size >= 1,"bus " + name + " should have at least one to PE")
 
   def extract(p: Array[ProcessingElement]) = SingleWayBus(
-    from.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
-    to.map(name => p.find(_.name equals name) match{case Some(x) => x ; case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
+    from.map(name => p.find(_.name equals name) match{
+      case Some(x) => x ;
+      case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
+
+    to.map(name => p.find(_.name equals name) match{
+      case Some(x) => x ;
+      case None => throw new Error("cannot find processing element " + name + " used in bus " + this.name)}),
+
     timeUnitPerDataUnit,
     latency,
     name)
@@ -428,8 +487,6 @@ case class EHardwareModel(name: String,
                           processingElements: Array[EProcessingElement],
                           busses: Array[EBus],
                           properties: List[ENameValue],
-                          powerCap: Option[Int],
-                          energyCap: Option[Int],
                           constraints:List[EMappingConstraint]) {
   require(processingElements.nonEmpty,"no processing element declared")
 
@@ -443,10 +500,8 @@ case class EHardwareModel(name: String,
       pc,
       p,
       b,
-      SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
-      powerCap,
-      energyCap,
-      constraints.map(_.extract(Some(p),sw)))
+      new ConstraintList(constraints.map(_.extract(Some(p),sw))),
+      SortedMap.empty[String, Int] ++ properties.map(_.toCouple))
   }
 }
 

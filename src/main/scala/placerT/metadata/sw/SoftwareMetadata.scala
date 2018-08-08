@@ -32,8 +32,6 @@ abstract sealed class FlattenedImplementation() extends Indiced{
 
   def description: String
 
-  def toJSon: String
-
   def computationMemory:Int
 
   def name:String
@@ -44,7 +42,6 @@ abstract sealed class FlattenedImplementation() extends Indiced{
 
 case class ReferenceToSharedFlattenedImplementationConcrete(f:FlattenedImplementationConcrete,target:CPInstantiatedPermanentFunction) extends FlattenedImplementation{
   require(f.target.isInstanceOf[MultiTaskPermanentTasks],"reference to standard implementation should only refer to MultiTaskPermanentTasks")
-  override def toJSon: String = f.name
 
   def durationOnFinalHardware(proc: ProcessingElement, properties: SortedMap[String, Int]): Int = f.duration(proc,properties)
 
@@ -101,13 +98,6 @@ case class FlattenedImplementationConcrete(name: String,
 
   def description: String = name + "(" + parameterValues.toList.map(nv => nv._1 + ":" + nv._2).mkString(",") + ")"
 
-  def toJSon: String = "{" +
-    JSonHelper.string("name", name) + "," +
-    JSonHelper.string("target", target.name) + "," +
-    JSonHelper.multiples("resourceUsage", resourceUsage.map(ru => "{" + JSonHelper.string("name", ru._1) + "," + JSonHelper.int("value", ru._2) + "}")) + "," +
-    JSonHelper.int("computationMemory", computationMemory) + "," +
-    JSonHelper.string("duration", duration.prettyPrint()) + "}"
-
   def toParam: ParametricImplementation = ParametricImplementation(name: String,
     target: ProcessingElementClass,
     nbThreads,
@@ -119,13 +109,11 @@ case class FlattenedImplementationConcrete(name: String,
 
 
 abstract sealed class Implementation extends Indiced() {
-  def toJSon: String
+
 }
 
 case class ReferenceToSharedParametricImplementation(p:ParametricImplementation) extends Implementation{
   require(p.target.isInstanceOf[MultiTaskPermanentTasks],"reference to standard implementation should only refer to MultiTaskPermanentTasks")
-
-  override def toJSon: String = "{" + JSonHelper.string("standardImplementation", p.name) + "}"
 
   def sharedFlattenedImplementations: Iterable[FlattenedImplementationConcrete] = {
     p.implementations
@@ -180,13 +168,6 @@ case class ParametricImplementation(name: String,
       " resourceUsage{" + (("mem", computationMemory) :: resourceUsage.toList).map({ case (a, b: Formula) => a + ":" + b.prettyPrint() }).mkString(",") + "} duration:" + duration.prettyPrint() + ")"
   }
 
-  def toJSon: String = "{" +
-    JSonHelper.string("name", name) + "," +
-    JSonHelper.string("target", target.name) + "," +
-    JSonHelper.multiples("parameters", parameters.map(paramAmount => "{" + JSonHelper.string("name", paramAmount._1) + "," + JSonHelper.multiples("values", paramAmount._2.map("" + _)) + "}")) + "," +
-    JSonHelper.multiples("resourceUsage", resourceUsage.map(ru => "{" + JSonHelper.string("name", ru._1) + "," + JSonHelper.string("formula", ru._2.prettyPrint()) + "}")) + "," +
-    JSonHelper.string("computationMemory", computationMemory.prettyPrint()) + "," +
-    JSonHelper.string("duration", duration.prettyPrint()) + "}"
 }
 
 case class AtomicTask(implementations: List[ParametricImplementation],
@@ -224,11 +205,6 @@ case class AtomicTask(implementations: List[ParametricImplementation],
 
     maxDur
   }
-
-  def toJSon: String = "{" +
-    JSonHelper.string("name", name) + "," +
-    JSonHelper.multiples("implementations", implementations.map(_.toJSon)) +
-    "}"
 }
 
 object TransmissionTiming extends Enumeration {
@@ -237,6 +213,7 @@ object TransmissionTiming extends Enumeration {
 }
 
 import placerT.metadata.sw.TransmissionTiming._
+
 
 //on peut avoir des flux vers les process atomiques, auquel cas, c'est additioné par process sur le même HW; on peutaussi avoir des communication vers le Groupe,
 // auquel cas, chaque process a besoin de la totalité du flux; c'st donc partagé si deux process du groupe sont sur le même HW
@@ -260,6 +237,13 @@ case class Transmission(source: AtomicTask,
     JSonHelper.int("size", size) + "," +
     JSonHelper.string("timing", timing.toString) + "}"
 }
+
+object SoftwareClass extends Enumeration {
+  type SoftwareClass = Value
+  val OneShotSoftware, IterativeSoftware = Value
+}
+
+import placerT.metadata.sw.SoftwareClass._
 
 /**
   *
@@ -291,12 +275,6 @@ case class SoftwareModel(sharedPermanentFunctions:Array[ParametricImplementation
     "\ttransmissions:[\n\t\t" + transmissions.mkString("\n\t\t") + "\n" +
     "\t" + softwareClass + "])"
 
-  def toJSon: String = "{" +
-    JSonHelper.multiples("simpleProcesses", simpleProcesses.map(_.toJSon)) + "," +
-    JSonHelper.multiples("transmissions", transmissions.map(_.toJSon)) + "," +
-    JSonHelper.complex("softwareClass", softwareClass.toJSon) +
-    "}"
-
   def checkCycle{
     val transmissionsNoPredecessors = transmissions.filter(t1 => !transmissions.exists(t2 => t2 precedes t1))
     val isReached = Array.fill(nbTransmissions)(false)
@@ -318,27 +296,4 @@ case class SoftwareModel(sharedPermanentFunctions:Array[ParametricImplementation
       }
     }
   }
-}
-
-abstract sealed class SoftwareClass() {
-  def toJSon: String
-  def maxMakespan:Option[Int]
-}
-
-case class OneShotSoftware(maxMakespan: Option[Int]) extends SoftwareClass() {
-  override def toString: String = "OneShotSoftware(maxDelayRequirement:" + maxMakespan + ")"
-
-  override def toJSon: String = "{" + JSonHelper.complex("oneShotSoftware", "{" + (maxMakespan match {
-    case None => "";
-    case Some(t: Int) => JSonHelper.int("maxDelay", t)
-  }) + "}") + "}"
-}
-
-case class IterativeSoftware(maxMakespan:Option[Int],maxFrameDelay:Option[Int]) extends SoftwareClass(){
-  override def toJSon: String = "{" + JSonHelper.complex("iterativeSoftware","{" +
-    (maxMakespan match{case None => "" ; case Some(t:Int) => JSonHelper.int("maxMakespan",t) + ","}) +
-    (maxFrameDelay match{case None => "" ; case Some(t:Int) => JSonHelper.int("maxFrameDelay",t)}) +
-    "}") + "}"
-
-  override def toString: String = "IterativeSoftware(maxMakespan:" + maxMakespan + " maxFrameDelay:" + maxFrameDelay + ")"
 }

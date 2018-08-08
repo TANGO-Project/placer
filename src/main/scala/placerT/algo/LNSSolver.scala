@@ -21,7 +21,6 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
 
     def simpleVarFinder(a: SimpleMappingGoal): CPIntVar = {
       a match {
-        case Sat() =>  throw new Error("LNS cannot solve sat problems")
         case MinEnergy() => cpProblem.energy
         case MinMakeSpan() => cpProblem.makeSpan
         case MinFrame() => cpProblem.widthVar match {

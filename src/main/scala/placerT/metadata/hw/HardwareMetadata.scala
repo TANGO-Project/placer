@@ -215,7 +215,6 @@ sealed abstract class Bus(val name: String, val timeUnitPerDataUnit: Int, val la
     */
   def transmissionDuration(size: Int): Int = latency + size * timeUnitPerDataUnit
 
-  def toJSon: String
 }
 
 case class HalfDuplexBus(relatedProcessors: List[ProcessingElement],
@@ -242,14 +241,6 @@ case class HalfDuplexBus(relatedProcessors: List[ProcessingElement],
   override def receivingFromProcessors: Set[ProcessingElement] = relatedProcessorSet
 
   override def sendingToProcessors: Set[ProcessingElement] = relatedProcessorSet
-
-  def toJSon: String = {
-    "{" + JSonHelper.complex("halfDuplexBus", "{" +
-      JSonHelper.string("name", name) + "," +
-      JSonHelper.strings("relatedProcessors", relatedProcessors.map(_.name)) + "," +
-      JSonHelper.int("timeUnitPerDataUnit", timeUnitPerDataUnit) + "," +
-      JSonHelper.int("latency", latency) + "}") + "}"
-  }
 }
 
 case class SingleWayBus(private val from: List[ProcessingElement],
@@ -280,19 +271,11 @@ case class SingleWayBus(private val from: List[ProcessingElement],
   override def receivingFromProcessors: Set[ProcessingElement] = fromProcessorSet
 
   override def sendingToProcessors: Set[ProcessingElement] = toProcessorSet
-
-  def toJSon: String = {
-    "{" + JSonHelper.complex("singleWayBus", "{" +
-      JSonHelper.string("name", name) + "," +
-      JSonHelper.strings("from", from.map(_.name)) + "," +
-      JSonHelper.strings("to", to.map(_.name)) + "," +
-      JSonHelper.int("timeUnitPerDataUnit", timeUnitPerDataUnit) + "," +
-      JSonHelper.int("latency", latency) + "}") + "}"
-  }
 }
 
 
-case class SelfLoopBus(procFrom: ProcessingElement, procTo: ProcessingElement) extends Bus("local loop on " + procFrom.name + (if(procFrom == procTo) "" else  (" and " + procTo.name)), 0, 0) {
+case class SelfLoopBus(procFrom: ProcessingElement, procTo: ProcessingElement)
+  extends Bus("local loop on " + procFrom.name + (if(procFrom == procTo) "" else  (" and " + procTo.name)), 0, 0) {
 
   override def toString: String = "local loop on " + procFrom.name + (if(procFrom == procTo) "" else  (" and " + procTo.name))
 
@@ -305,51 +288,26 @@ case class SelfLoopBus(procFrom: ProcessingElement, procTo: ProcessingElement) e
   override def receivingFromProcessors: Set[ProcessingElement] = Set(procFrom)
 
   override def canReceiveFlowFrom(p: ProcessingElement): Boolean = p == procFrom
-
-  def toJSon: String = throw new Error("not supposed to be JSon serialized")
 }
 
 case class HardwareModel(name: String,
                          processorClasses: Array[ProcessingElementClass],
                          processors: Array[ProcessingElement],
                          busses: Array[Bus],
-                         properties: SortedMap[String, Int] = SortedMap.empty,
-                         powerCap: Option[Int] = None,
-                         energyCap: Option[Int] = None,
-                         constraints:Iterable[MappingConstraint]) extends IndiceMaker {
+                         constraints:ConstraintList,
+                         properties: SortedMap[String, Int] = SortedMap.empty) extends IndiceMaker {
   setIndices(processors)
   setIndices(busses)
   busses.foreach(_.close())
 
+  require(constraints.objective.isEmpty,"you cannot define objective for a given hardware")
+
   override def toString: String = "HardwareModel(\n" +
     "\tname:" + name + "\n" +
-    (powerCap match {
-      case None => "";
-      case Some(cap) => "powerCap:" + cap + "\n"
-    }) +
-    (energyCap match {
-      case None => "";
-      case Some(cap) => "\tenergyCap:" + cap + "\n"
-    }) +
     "\tprocessingElementClasses:{\n\t\t" + processorClasses.mkString("\n\t\t") + "}\n" +
     "\tprocessingElements:{\n\t\t" + processors.mkString("\n\t\t") + "} \n" +
     "\tbusses:{\n\t\t" + busses.mkString("\n\t\t") + "}\n" +
+    "\tconstraints:{\n\t\t" + constraints.cl.mkString("\n\t\t") + "}\n" +
     "\tproperties:{" + properties.toList.map({ case (propertyName, value) => propertyName + ":" + value }).mkString(",") + "}\n" +
     ")"
-
-  def toJSon: String = "{" +
-    JSonHelper.string("name", name) + "," +
-    (powerCap match {
-      case None => "";
-      case Some(cap) => """"powerCap":""" + cap + ","
-    }) +
-    (energyCap match {
-      case None => "";
-      case Some(cap) => """"energyCap":""" + cap + ","
-    }) +
-    JSonHelper.multiples("processingElementClasses", processorClasses.map(_.toJSon)) + "," +
-    JSonHelper.multiples("processingElements", processors.map(_.toJSon)) + "," +
-    JSonHelper.multiples("busses", busses.map(_.toJSon)) + "," +
-    JSonHelper.multiples("properties", properties.toList.map({ case (propertyName, value) => JSonHelper.nameIntValue(propertyName, value) })) +
-    "}"
 }

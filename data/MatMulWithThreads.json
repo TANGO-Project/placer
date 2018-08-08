@@ -1,0 +1,343 @@
+
+{
+    "timeUnit": "ms",
+    "dataUnit": "MegaByte",
+    "jsonFormat": "PlacerBeta2",
+    "processingElementClasses":
+    [
+        {
+            "monoTaskSwitchingTask":
+            {
+                "name": "cpu",
+                "switchingDelay": 0
+            }
+        },
+        {
+            "monoTaskSwitchingTask":
+            {
+                "name": "gpu",
+                "switchingDelay": 0
+            }
+        }
+    ],
+    "hardwareModel":
+    {
+        "name": "OneNode",
+        "processingElements":
+        [
+            {
+                "processorClass": "cpu",
+                "name": "CPUsOfNode1",
+                "multiCore": 15,
+                "memSize": 1000,
+                "powerModel": "0"
+            },
+            {
+                "processorClass": "gpu",
+                "name": "GPUsOfNode1",
+                "multiCore": 2,
+                "memSize": 1000,
+                "powerModel": "0"
+            }
+        ],
+        "busses":
+        [
+            {
+                "halfDuplexBus":
+                {
+                    "name": "internalBusOfNode1",
+                    "relatedProcessors":
+                    [
+                        "CPUsOfNode1",
+                        "GPUsOfNode1"
+                    ],
+                    "timeUnitPerDataUnit": 0,
+                    "latency": 1
+                }
+            }
+        ]
+    },
+    "softwareModel":
+    {
+        "simpleProcesses":
+        [
+            {
+                "name": "startBarrier",
+                "implementations":
+                [
+                    {
+                        "name": "barrier",
+                        "target": "cpu",
+                        "duration": "1",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply13",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply15",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply17",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply19",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply14",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply16",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply18",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiply20",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads":"5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "endBarrier",
+                "implementations":
+                [
+                    {
+                        "name": "barrier",
+                        "target": "cpu",
+                        "duration": "1",
+                        "computationMemory": 0
+                    }
+                ]
+            }
+        ],
+        "transmissions":
+        [
+            {
+                "name": "startTo13",
+                "source": "startBarrier",
+                "target": "multiply13",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "startTo15",
+                "source": "startBarrier",
+                "target": "multiply15",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "startTo17",
+                "source": "startBarrier",
+                "target": "multiply17",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "startTo19",
+                "source": "startBarrier",
+                "target": "multiply19",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "13To14",
+                "source": "multiply13",
+                "target": "multiply14",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "15To16",
+                "source": "multiply15",
+                "target": "multiply16",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "17To18",
+                "source": "multiply17",
+                "target": "multiply18",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "19To20",
+                "source": "multiply19",
+                "target": "multiply20",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "14ToEndBarrier",
+                "source": "multiply14",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "16ToEndBarrier",
+                "source": "multiply16",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "18ToEndBarrier",
+                "source": "multiply18",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Sticky"
+            },
+            {
+                "name": "20ToEndBarrier",
+                "source": "multiply20",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Sticky"
+            }
+        ],
+        "softwareClass":
+        {
+            "oneShotSoftware": {"maxMakespanOFF":3500}
+        }
+    },
+    "constraints":
+    [
+        {
+            "mustBeUsed":"GPUsOfNode1"
+        }
+    ],
+    "goal":
+    {
+        "simpleObjective": "minMakespan"
+    }
+}

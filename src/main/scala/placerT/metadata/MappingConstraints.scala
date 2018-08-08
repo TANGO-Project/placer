@@ -7,13 +7,26 @@ import scala.collection.immutable.SortedSet
 
 class ConstraintList(val cl:List[MappingConstraint]){
   def isWidthNeeded = cl.exists(_.needsWidth)
-  val objective:MappingObjective = {
-    val allobj = cl.filter(_.isMappingObjective)
-    require(allobj.size <= 1,"you cannot have more than one obective. For multi-criterion, please use the Pareto construct. Declared objectives: " + allobj.mkString(","))
-    if(allobj.size == 1) allobj.head.asInstanceOf[MappingObjective] else Sat()
+
+  val objective:Option[MappingObjective] = {
+    val allObjective = cl.flatMap(_ match{case o:MappingObjective => Some(o); case _ => None})
+    require(allObjective.size <= 1,
+      "you cannot have more than one objective. For multi-criterion, please use the Pareto construct. Declared objectives: " + allObjective.mkString(","))
+    if(allObjective.size == 1) Some(allObjective.head) else None
   }
 
   override def toString: String = "{\n\t" + cl.mkString(",\n\t") + "}"
+
+  lazy val maxMakeSpanOpt:Option[Int] ={
+    var toReturn = Int.MaxValue
+    for(c <- cl){
+      c match{
+        case MaxMakespan(maxMakeSpan) => toReturn = toReturn min maxMakeSpan
+        case _ => ;
+      }
+    }
+    if(toReturn == Int.MaxValue) None else Some(toReturn)
+  }
 }
 
 abstract sealed class MappingConstraint{
@@ -35,7 +48,7 @@ case class CoreSharingConstraint(processes:List[AtomicTask],
     (if (value) "SameCore(" else "DifferentCores(") + processes.map(_.name) + ")"
   }
 
-  lazy val idOfTasks:SortedSet[Int] = SortedSet.empty ++ processes.map(_.id)
+  lazy val idOfTasks:SortedSet[Int] = SortedSet.empty[Int] ++ processes.map(_.id)
 }
 
 case class MustBeUsedConstraint(processor:ProcessingElement,value:Boolean) extends MappingConstraint {
@@ -57,38 +70,20 @@ object SymmetricPEConstraintType extends Enumeration {
   val Workload,LongTask = Value
 }
 
-
-
-case class PowerCap(maxPower:Int) extends MappingConstraint {
-
-}
-
-case class EnergyCap(maxEnergy:Int) extends MappingConstraint {
-
-}
-
-case class MakespanCap(maxMakeSpan:Int) extends MappingConstraint {
-
-}
-
-case class WidthCap(maxDelay:Int) extends MappingConstraint {
-
-}
+case class PowerCap(maxPower:Int) extends MappingConstraint
+case class EnergyCap(maxEnergy:Int) extends MappingConstraint
+case class MaxMakespan(maxMakeSpan:Int) extends MappingConstraint
+case class WidthCap(maxDelay:Int) extends MappingConstraint
 
 
 //software model is shared, so no need for specifying it
-case class RestrictImplementations(task:AtomicTask,implementations:List[Implementation]) extends MappingConstraint {
-
-}
-
+//case class RestrictImplementations(task:AtomicTask,implementations:List[Implementation]) extends MappingConstraint
 //software model is shared, so no need for specifying it
-case class RestrictParameter(task:AtomicTask,implementation:Implementation,parameter:String,value:List[Int]) extends MappingConstraint {
-  //restricts the possible value of a parameter to a specified subset
-}
+//case class RestrictParameter(task:AtomicTask,implementation:Implementation,parameter:String,value:List[Int]) extends MappingConstraint
 
-case class RestrictHardwarePlatform(acceptedPlatforms:List[HardwareModel]) extends MappingConstraint {
-
-}
+// restricts the possible value of a parameter to a specified su
+case class ForbidHardwarePlatform(forbiddenHardwarePlatforms:SortedSet[String]) extends MappingConstraint
+//case class RestrictHardwarePlatform(acceptedPlatforms:List[HardwareModel]) extends MappingConstraint
 
 sealed abstract class MappingObjective extends MappingConstraint {
   override def isMappingObjective:Boolean = true
@@ -97,9 +92,6 @@ sealed abstract class MappingObjective extends MappingConstraint {
 sealed abstract class SimpleMappingGoal extends MappingObjective{
 }
 
-//this one is by default, and cannot actually be specified.
-case class Sat() extends SimpleMappingGoal{
-}
 case class MinEnergy() extends SimpleMappingGoal{
 }
 case class MinMakeSpan() extends SimpleMappingGoal{
@@ -107,10 +99,11 @@ case class MinMakeSpan() extends SimpleMappingGoal{
 case class MinFrame() extends SimpleMappingGoal{
   override def needsWidth:Boolean = true
 }
+
 case class MinPareto(a:SimpleMappingGoal,b:SimpleMappingGoal) extends MappingObjective{
 
-require(a ne b,"cannot define multi objective twice the same basic objective:" + a)
+  require(a ne b,"cannot define multi objective with the same basic objective twice:" + a)
 
-override def needsWidth:Boolean = a.needsWidth || b.needsWidth
+  override def needsWidth:Boolean = a.needsWidth || b.needsWidth
 }
 
