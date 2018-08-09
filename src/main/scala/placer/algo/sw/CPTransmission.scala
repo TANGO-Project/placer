@@ -54,7 +54,7 @@ case class CPTransmission(id: Int,
 
   val isSelfLoopTransmission:CPBoolVar = busID.isIn(localLoopBusses)
 
-  def occuringOnBussesDebugInfo1:String = "occuringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
+  def occuringOnBussesDebugInfo1:String = "occurringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
 
   val originProcessorID = from.processorID
   val destinationProcessorID = to.processorID

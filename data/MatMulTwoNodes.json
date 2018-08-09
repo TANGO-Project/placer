@@ -68,7 +68,7 @@
                         "GPUsOfNode2"
                     ],
                     "timeUnitPerDataUnit": 0,
-                    "latency": 0
+                    "latency": 50
                 }
             }
         ]
@@ -261,84 +261,84 @@
                 "source": "startBarrier",
                 "target": "multiply13",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "startTo15",
                 "source": "startBarrier",
                 "target": "multiply15",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "startTo17",
                 "source": "startBarrier",
                 "target": "multiply17",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "startTo19",
                 "source": "startBarrier",
                 "target": "multiply19",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "13To14",
                 "source": "multiply13",
                 "target": "multiply14",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "15To16",
                 "source": "multiply15",
                 "target": "multiply16",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "17To18",
                 "source": "multiply17",
                 "target": "multiply18",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "19To20",
                 "source": "multiply19",
                 "target": "multiply20",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "14ToEndBarrier",
                 "source": "multiply14",
                 "target": "endBarrier",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "16ToEndBarrier",
                 "source": "multiply16",
                 "target": "endBarrier",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "18ToEndBarrier",
                 "source": "multiply18",
                 "target": "endBarrier",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             },
             {
                 "name": "20ToEndBarrier",
                 "source": "multiply20",
                 "target": "endBarrier",
                 "size": 1,
-                "timing": "Sticky"
+                "timing": "Free"
             }
         ],
         "softwareClass":"oneShotSoftware"
@@ -348,7 +348,14 @@
             "simpleObjective":"minMakespan"
         },
         {
-            "maxMakespan":654
-        }
+            "maxMakespanOFF":428,
+            "maxMakespan":1428
+        },
+      {
+        "mustBeUsed":"GPUsOfNode1"
+      },
+      {
+        "mustBeUsed":"GPUsOfNode2"
+      }
     ]
 }

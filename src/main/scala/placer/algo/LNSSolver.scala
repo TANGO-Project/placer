@@ -60,15 +60,24 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
 
       val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
 
-      (conflictOrderingSearch(
+
+      def distributeOnTaskPlacement = conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
-        processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max)) //TODO: should consider the fastest implementation first!!
-        ++ (if(arrayOfNbInstancesOfSharedFunctions.nonEmpty) conflictOrderingSearch(
+        processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
+
+      def distributeOnSharedImplementationInstances = conflictOrderingSearch(
         arrayOfNbInstancesOfSharedFunctions,
         (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
         (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-      ) else oscar.algo.search.Branching({Seq.empty}))
+      )
+
+      def distributeOnTransmissionRouting = conflictOrderingSearch(cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
+        transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.size,
+        transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
+
+      (distributeOnTransmissionRouting ++ distributeOnTaskPlacement //TODO: should consider the fastest implementation first!!
+        ++ (if(arrayOfNbInstancesOfSharedFunctions.nonEmpty) distributeOnSharedImplementationInstances else oscar.algo.search.Branching({Seq.empty}))
         ++ binarySplit(taskStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
         )
