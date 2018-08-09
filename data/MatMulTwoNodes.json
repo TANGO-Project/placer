@@ -2,18 +2,18 @@
 {
     "timeUnit": "ms",
     "dataUnit": "MegaByte",
-    "jsonFormat": "PlacerBeta2",
+    "jsonFormat": "PlacerBeta5",
     "processingElementClasses":
     [
         {
-            "monoTaskSwitchingTask":
+            "switchingTask":
             {
                 "name": "cpu",
                 "switchingDelay": 0
             }
         },
         {
-            "monoTaskSwitchingTask":
+            "switchingTask":
             {
                 "name": "gpu",
                 "switchingDelay": 0
@@ -28,7 +28,7 @@
             {
                 "processorClass": "cpu",
                 "name": "CPUsOfNode1",
-                "multiCore": 15,
+                "multiCore": 12,
                 "memSize": 1000,
                 "powerModel": "0"
             },
@@ -42,7 +42,7 @@
             {
                 "processorClass": "cpu",
                 "name": "CPUsOfNode2",
-                "multiCore": 15,
+                "multiCore": 12,
                 "memSize": 1000,
                 "powerModel": "0"
             },
@@ -68,14 +68,14 @@
                         "GPUsOfNode2"
                     ],
                     "timeUnitPerDataUnit": 0,
-                    "latency": 1
+                    "latency": 0
                 }
             }
         ]
     },
     "softwareModel":
     {
-        "simpleProcesses":
+        "tasks":
         [
             {
                 "name": "startBarrier",
@@ -341,22 +341,14 @@
                 "timing": "Sticky"
             }
         ],
-        "softwareClass":
-        {
-            "oneShotSoftware": {"maxMakespanOFF":3500}
-        }
+        "softwareClass":"oneShotSoftware"
     },
-    "constraints":
-    [
+    "constraintsAndObjectives":[
         {
-            "mustBeUsed":"GPUsOfNode1"
+            "simpleObjective":"minMakespan"
         },
         {
-            "mustBeUsed":"GPUsOfNode2"
+            "maxMakespan":654
         }
-    ],
-    "goal":
-    {
-        "simpleObjective": "minMakespan"
-    }
+    ]
 }

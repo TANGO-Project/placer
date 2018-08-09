@@ -16,7 +16,7 @@
             "switchingTask":
             {
                 "name": "gpu",
-                "switchingDelay": 0
+                "switchingDelay": 1
             }
         }
     ],
@@ -81,7 +81,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -100,7 +99,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -119,7 +117,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -138,7 +135,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -157,7 +153,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -176,7 +171,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -195,7 +189,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -214,7 +207,6 @@
                         "name": "CPUMultiply",
                         "target": "cpu",
                         "duration": "890",
-                        "nbThreads":"5",
                         "computationMemory": 0
                     },
                     {
@@ -332,7 +324,7 @@
             "simpleObjective":"minMakespan"
         },
         {
-            "maxMakespan":1857
+            "maxMakespan":857
         }
     ]
 }

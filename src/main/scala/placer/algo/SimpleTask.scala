@@ -20,6 +20,7 @@
 package placer.algo
 
 import oscar.cp._
+import oscar.cp.core.CPPropagStrength
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.modeling.Constraints
 
@@ -52,9 +53,11 @@ object SimpleTask extends Constraints {
         }
       }
     } else {
-      for (t <- endArray.indices) {
-        endArray(t) = endArray(t) + switchingDelay
-        durationArray(t) = durationArray(t) + switchingDelay
+      if (switchingDelay != 0) {
+        for (t <- endArray.indices) {
+          endArray(t) = endArray(t) + switchingDelay
+          durationArray(t) = durationArray(t) + switchingDelay
+        }
       }
     }
     //needed because there is a bug in resource constraint when duration is unset and negative
@@ -62,7 +65,7 @@ object SimpleTask extends Constraints {
       cp.add(duration >= 0)
     }
 
-    cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray))
+    cp.add(unaryResource(startTimeArray, durationArray, endArray, isNeededArray),CPPropagStrength.Strong)
   }
 
   def resourceWidthOfUse(simpleTasks: List[SimpleTask]):CPIntVar = {
