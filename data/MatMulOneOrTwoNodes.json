@@ -3,6 +3,7 @@
     "timeUnit": "ms",
     "dataUnit": "MegaByte",
     "jsonFormat": "PlacerBeta5",
+     "info":"there are two hardwares: one or two nodes",
     "processingElementClasses":
     [
         {
@@ -20,81 +21,118 @@
             }
         }
     ],
-    "hardwareModel":
-    {
-        "name": "TwoNode",
+    "hardwareModels":[
+      {
+        "name": "TwoNodes",
         "processingElements":
         [
-            {
-                "processorClass": "cpu",
-                "name": "CPUsOfNode1",
-                "multiCore": 12,
-                "memSize": 1000,
-                "powerModel": "0"
-            },
-            {
-                "processorClass": "gpu",
-                "name": "GPUsOfNode1",
-                "multiCore": 2,
-                "memSize": 1000,
-                "powerModel": "0"
-            },
-            {
-                "processorClass": "cpu",
-                "name": "CPUsOfNode2",
-                "multiCore": 12,
-                "memSize": 1000,
-                "powerModel": "0"
-            },
-            {
-                "processorClass": "gpu",
-                "name": "GPUsOfNode2",
-                "multiCore": 2,
-                "memSize": 1000,
-                "powerModel": "0"
-            }
+          {
+            "processorClass": "cpu",
+            "name": "CPUsOfNode1",
+            "multiCore": 12,
+            "memSize": 1000,
+            "powerModel": "0"
+          },
+          {
+            "processorClass": "gpu",
+            "name": "GPUsOfNode1",
+            "multiCore": 2,
+            "memSize": 1000,
+            "powerModel": "0"
+          },
+          {
+            "processorClass": "cpu",
+            "name": "CPUsOfNode2",
+            "multiCore": 12,
+            "memSize": 1000,
+            "powerModel": "0"
+          },
+          {
+            "processorClass": "gpu",
+            "name": "GPUsOfNode2",
+            "multiCore": 2,
+            "memSize": 1000,
+            "powerModel": "0"
+          }
         ],
         "busses":
         [
-            {
-                "halfDuplexBus": {
-                    "name": "globalBus",
-                    "relatedProcessors": [
-                        "CPUsOfNode1",
-                        "GPUsOfNode1",
-                        "CPUsOfNode2",
-                        "GPUsOfNode2"
-                    ],
-                    "timeUnitPerDataUnit": 0,
-                    "latency": 50
-                }
-            },
-            {
-                "halfDuplexBus":
-                {
-                    "name": "internalBusOfNode1",
-                    "relatedProcessors":
-                    [
-                        "CPUsOfNode1",
-                        "GPUsOfNode1"
-                    ],
-                    "timeUnitPerDataUnit": 0,
-                    "latency": 5
-                }
-            },
-            {
-                "halfDuplexBus": {
-                    "name": "internalBusOfNode2",
-                    "relatedProcessors": [
-                        "CPUsOfNode2",
-                        "GPUsOfNode2"
-                    ],
-                    "timeUnitPerDataUnit": 0,
-                    "latency": 5
-                }
+          {
+            "halfDuplexBus": {
+              "name": "globalBus",
+              "relatedProcessors": [
+                "CPUsOfNode1",
+                "GPUsOfNode1",
+                "CPUsOfNode2",
+                "GPUsOfNode2"
+              ],
+              "timeUnitPerDataUnit": 0,
+              "latency": 50
             }
+          },
+          {
+            "halfDuplexBus":
+            {
+              "name": "internalBusOfNode1",
+              "relatedProcessors":
+              [
+                "CPUsOfNode1",
+                "GPUsOfNode1"
+              ],
+              "timeUnitPerDataUnit": 0,
+              "latency": 5
+            }
+          },
+          {
+            "halfDuplexBus": {
+              "name": "internalBusOfNode2",
+              "relatedProcessors": [
+                "CPUsOfNode2",
+                "GPUsOfNode2"
+              ],
+              "timeUnitPerDataUnit": 0,
+              "latency": 5
+            }
+          }
         ]
-    },
+      },
+      {
+        "name": "OneNode",
+        "processingElements":
+        [
+          {
+            "processorClass": "cpu",
+            "name": "CPUsOfNode1",
+            "multiCore": 12,
+            "memSize": 1000,
+            "powerModel": "0"
+          },
+          {
+            "processorClass": "gpu",
+            "name": "GPUsOfNode1",
+            "multiCore": 2,
+            "memSize": 1000,
+            "powerModel": "0"
+          }
+        ],
+        "busses":
+        [
+          {
+            "halfDuplexBus":
+            {
+              "name": "internalBusOfNode1",
+              "relatedProcessors":
+              [
+                "CPUsOfNode1",
+                "GPUsOfNode1"
+              ],
+              "timeUnitPerDataUnit": 0,
+              "latency": 5
+            }
+          }
+        ]
+      }
+        ],
     "softwareModel":
     {
         "tasks":
@@ -373,12 +411,6 @@
             "maxMakespanOFF":428,
             "maxMakespan":2000
         },
-      {
-        "mustBeUsed":"GPUsOfNode1"
-      },
-      {
-        "mustBeUsed":"GPUsOfNode2"
-      },
         {
             "samePE":[
                 "startBarrier",

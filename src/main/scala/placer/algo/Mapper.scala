@@ -38,7 +38,8 @@ case class MapperConfig(maxDiscrepancy:Int,
                         lnsNbRelaxations:Int,
                         lnsNbRelaxationNoImprove:Int,
                         lnsCarryOnObjForMultiHardware:Int,
-                        performShavings:Boolean = false)
+                        performShavings:Boolean = false,
+                        lnsUseEarlyStop:Boolean = true)
 
 object Mapper {
 
@@ -124,7 +125,11 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
   store.silent = true
 
   val cpProblem = postProblem(softwareModel, hardwareModel)
-  val mappings = solveMappingProblem(cpProblem, objective)
+  val mappings:Iterable[Mapping] = if(cpProblem != null){
+    solveMappingProblem(cpProblem, objective)
+  }else{
+    None
+  }
 
   def reportProgress(startedUpTask: String): Unit = {
     this.solver.propagate()
@@ -346,22 +351,21 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     val taskEnds = cpTasks.map(task => task.end)
     val makeSpan = maximum(taskEnds)
 
-    //does not work for multi-cores becauze of rounding stuff.
+    //does not work for multi-cores because of rounding stuff.
     val processorLoadArrayUnderApprox = Array.tabulate(cpProcessors.length)(
       (processorID: Int) => cpProcessors(processorID) match {
         case m: CPSwitchingTaskProcessor => CPIntVar(0, maxHorizon * m.nbCores)
         case _ => CPIntVar(0, maxHorizon)
       })
 
-
-    //reportProgress("redundant bin-packing constraint on workload for mono task processors")
+    reportProgress("redundant bin-packing constraint on workload for mono task processors")
     //this one assumes adjusted minDuration per processor
     for (processorID <- cpProcessors.indices) {
       cpProcessors(processorID) match {
         case m: CPSwitchingTaskProcessor =>
           val areTaskunningOnThisProcessor = cpTasks.map(task => task.isRunningOnProcessor(processorID))
           val switchingDelay = m.switchingDelay
-          val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minTaskDurationOnProcessor(processorID) + switchingDelay)
+          val minDurationOfTaskWhenOnThisProcessor = cpTasks.map(task => task.minWorkloadOnProcessor(processorID).getOrElse(0) + switchingDelay)
           val processorLoadVariable = processorLoadArrayUnderApprox(processorID)
           add(binaryKnapsack(areTaskunningOnThisProcessor, minDurationOfTaskWhenOnThisProcessor, processorLoadVariable))
         //          add(processorLoadVariable <= (makeSpan + switchingDelay))
@@ -413,7 +417,10 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
         case ForbidHardwarePlatform(set) =>
 
-          if(set contains hardwareModel.name) store.fail()
+          if(set contains hardwareModel.name) {
+            println("forbidden hardware: " + hardwareModel.name)
+            return null
+          }
 
         case PowerCap(maxPower:Int) =>
           reportProgress("posting powerCap")
@@ -435,7 +442,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
           reportProgress("posting max frame width constraint")
 
           widthVar match{
-            case None => throw new Error("internal error: width constraint posted but with was not isntantiated!")
+            case None => throw new Error("internal error: width constraint posted but width was not instantiated!")
             case Some(w:CPIntVar) =>
               addDocumented(w <= maxDelay," max frame delay constraint")
           }
@@ -525,7 +532,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
                   processorIDs match {
                     case Nil => ;
                     case currentProcessorID :: tail =>
-                      val longestTask = taskPotentiallyRunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID))
+                      val longestTask = taskPotentiallyRunningOnProcessors.maxBy(_.minTaskDurationOnProcessor(witnessProcessorID).getOrElse(0))
 
                       for (p <- tail) {
                         add(longestTask.isRunningOnProcessor(p) === 0)

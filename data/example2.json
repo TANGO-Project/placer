@@ -1,7 +1,7 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
-  "jsonFormat":"PlacerBeta3",
+  "jsonFormat":"PlacerBeta5",
   "processingElementClasses":[
     {
       "switchingTask":{
@@ -29,8 +29,6 @@
   ],
   "hardwareModel":{
     "name":"ExampleHardware1",
-    "powerCap":700,
-    "energyCap":500000,
     "processingElements":[
       {
         "processorClass":"cpu",
@@ -134,7 +132,7 @@
     ]
   },
   "softwareModel":{
-    "simpleProcesses":[
+    "tasks":[
       {
         "name":"inputting",
         "implementations":[
@@ -358,16 +356,23 @@
         "timing":"Free"
       }
     ],
-    "softwareClass":{
-      "iterativeSoftware":{
-        "maxFrameDelay":200
-      }
-    }
+    "softwareClass":"iterativeSoftware"
   },
-  "goal":{
-    "multiObjective":{
-      "a":"minMakespan",
-      "b":"minEnergy"
+  "constraintsAndObjectives":[
+    {
+      "multiObjective": {
+        "a": "minMakespan",
+        "b": "minEnergy"
+      }
+    },
+    {
+      "powerCap":700
+    },
+    {
+      "energyCap":500000
+    },
+    {
+      "maxWidth":200
     }
-  }
+  ]
 }

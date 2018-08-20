@@ -92,7 +92,6 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               symmetricPE:Option[List[String]],
                               simpleObjective:Option[String],
                               multiObjective:Option[EPareto],
-
                               powerCap:Option[Int],
                               energyCap:Option[Int],
                               maxMakespan:Option[Int],
@@ -223,7 +222,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
 
     forbidHardware match{
       case Some(hardwares) =>
-        ForbidHardwarePlatform(SortedSet.empty[String] ++ hardwares)
+        acc(ForbidHardwarePlatform(SortedSet.empty[String] ++ hardwares))
       case _ => ;
     }
     require(toReturn != null, "empty constraint found; maybe you misspelled something?")

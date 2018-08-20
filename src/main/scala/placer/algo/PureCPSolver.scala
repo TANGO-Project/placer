@@ -31,7 +31,11 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], 
 
         if (!bestSolutionsSoFar.isEmpty) {
           require(bestSolutionsSoFar.size == 1)
-          add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
+          try {
+            add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
+          } catch{
+            case _:NoSolutionException => return None
+          }
         }
 
         (false, false, List(theVar))
@@ -67,7 +71,7 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], 
         val processorIDChoices = cpProblem.cpTasks.map(task => task.processorID)
         val taskMaxDurations = cpProblem.cpTasks.map(task => task.taskDuration.max)
 
-        val taskStarts = (
+        val taskAndTransmissionStarts = (
           List.empty ++
             cpProblem.cpTasks.map(task => task.start) ++
             cpProblem.cpTransmissions.map(transmission => transmission.start)
@@ -75,6 +79,57 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], 
 
         val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
 
+
+        //basic distribution procedures
+        def distributeOnTaskPlacementLessBuzyProcFirst = conflictOrderingSearch(
+          processorIDChoices,
+          taskMaxDurations(_),
+          processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
+
+        def distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst = conflictOrderingSearch(
+          processorIDChoices,
+          taskID => cpProblem.cpTasks(taskID).taskDuration.size,
+          taskID => cpProblem.cpTasks(taskID).processorID.minBy(
+            processorID => cpProblem.cpTasks(taskID).minTaskDurationOnProcessor(processorID).getOrElse(Int.MaxValue) + cpProblem.processorLoadArrayUnderApprox(processorID).max))
+
+        def distributeOnSharedImplementationInstances =
+          if(arrayOfNbInstancesOfSharedFunctions.nonEmpty)
+            conflictOrderingSearch(
+              arrayOfNbInstancesOfSharedFunctions,
+              fnID => arrayOfNbInstancesOfSharedFunctions(fnID).max,
+              fnID => arrayOfNbInstancesOfSharedFunctions(fnID).min)
+          else oscar.algo.search.Branching({Seq.empty})
+
+        def distributeOnLocalOrBusTransmission =
+          conflictOrderingSearch(
+            cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
+            transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.size,
+            transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
+
+        def distributeOnTransmissionRouting =
+          conflictOrderingSearch(
+            cpProblem.cpTransmissions.map(_.busID),
+            transmissionID => -cpProblem.cpTransmissions(transmissionID).transmissionDuration.size, //the one that has the most impact on the schedule?
+            transmissionID => cpProblem.cpTransmissions(transmissionID).busID.min)
+
+        def distributeOnScheduleConflict = conflictOrderingSearch(
+          taskAndTransmissionStarts,
+          taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).size,
+          taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).min)
+
+        (/*distributeOnLocalOrBusTransmission
+        ++ distributeOnTransmissionRouting
+        ++ distributeOnTaskPlacementLessBuzyProcFirst //TODO: should consider the fastest implementation first!!
+        ++ */
+          /*distributeOnLocalOrBusTransmission
+            ++*/ distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst
+          ++ distributeOnSharedImplementationInstances
+          ++ binarySplit(taskAndTransmissionStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
+          ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
+          )
+
+
+        /*
         (conflictOrderingSearch(
           processorIDChoices,
           taskMaxDurations(_),
@@ -87,7 +142,7 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], 
           Seq.empty
         }))
           ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
-          ++ discrepancy(conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min), config.maxDiscrepancy))
+          ++ discrepancy(conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min), config.maxDiscrepancy))*/
       }
     } onSolution {
       println("solution found, makeSpan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)

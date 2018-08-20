@@ -211,11 +211,19 @@ case class CPTask(id: Int,
   store.add(table(implementationID, processorID, processorImplementationCombo,implemAndProcessorAndIndice))
 
   private val possibleProcessorAndDuration = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.processor,x.duration))
-  private val possibleProcessorToMinDuration = possibleProcessorAndDuration.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
+  private val possibleProcessorAndWorkload = implemAndProcessorAndDurationAndEnergyAndPower.map(x => (x.processor,x.duration*x.nbThreads))
 
-  def minTaskDurationOnProcessor(processorID:Int):Int = {
-    possibleProcessorToMinDuration.getOrElse(processorID,0)
+  private val possibleProcessorToMinDuration = possibleProcessorAndDuration.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
+  private val possibleProcessorToMinWorkload = possibleProcessorAndWorkload.groupBy(_._1).mapValues((possibles:Iterable[(Int,Int)]) => possibles.map(_._2).min)
+
+  def minTaskDurationOnProcessor(processorID:Int):Option[Int] = {
+    possibleProcessorToMinDuration.get(processorID)
   }
+
+  def minWorkloadOnProcessor(processorID:Int):Option[Int] = {
+    possibleProcessorToMinWorkload.get(processorID)
+  }
+
 
   def addIncomingTransmission(cPTransmission: CPTransmission): Unit = {
     if(cPTransmission.timing == TransmissionTiming.Alap){

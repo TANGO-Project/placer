@@ -1,5 +1,6 @@
 package placer.algo
 
+import oscar.algo.Inconsistency
 import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
@@ -52,7 +53,7 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
       val processorIDChoices = cpProblem.cpTasks.map(task => task.processorID)
       val taskMaxDurations = cpProblem.cpTasks.map(task => task.taskDuration.max)
 
-      val taskStarts = (
+      val taskAndTransmissionStarts = (
         List.empty ++
           cpProblem.cpTasks.map(task => task.start) ++
           cpProblem.cpTransmissions.map(transmission => transmission.start)
@@ -61,24 +62,58 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
       val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
 
 
-      def distributeOnTaskPlacement = conflictOrderingSearch(
+      //basic distribution procedures
+      def distributeOnTaskPlacementLessBuzyProcFirst = conflictOrderingSearch(
         processorIDChoices,
         taskMaxDurations(_),
         processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
 
-      def distributeOnSharedImplementationInstances = conflictOrderingSearch(
-        arrayOfNbInstancesOfSharedFunctions,
-        (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
-        (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-      )
+      def distributeOnTaskPlacementFastestImplemFirst = conflictOrderingSearch(
+        processorIDChoices,
+        taskID => cpProblem.cpTasks(taskID).taskDuration.size,
+        taskID => cpProblem.cpTasks(taskID).processorID.minBy(
+          processorID => cpProblem.cpTasks(taskID).minTaskDurationOnProcessor(processorID).getOrElse(Int.MaxValue)))
 
-      def distributeOnTransmissionRouting = conflictOrderingSearch(cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
-        transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.size,
-        transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
 
-      (distributeOnTransmissionRouting ++ distributeOnTaskPlacement //TODO: should consider the fastest implementation first!!
-        ++ (if(arrayOfNbInstancesOfSharedFunctions.nonEmpty) distributeOnSharedImplementationInstances else oscar.algo.search.Branching({Seq.empty}))
-        ++ binarySplit(taskStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
+      def distributeOnTaskPlacementLessBuzyProcAfterPlacementFirst = conflictOrderingSearch(
+        processorIDChoices,
+        taskID => cpProblem.cpTasks(taskID).taskDuration.size,
+        taskID => cpProblem.cpTasks(taskID).processorID.minBy(
+          processorID => (cpProblem.cpTasks(taskID).minTaskDurationOnProcessor(processorID).getOrElse(Int.MaxValue) + cpProblem.processorLoadArrayUnderApprox(processorID).min)
+          /cpProblem.cpProcessors(processorID).p.nbCore))
+
+
+      def distributeOnSharedImplementationInstances =
+        if(arrayOfNbInstancesOfSharedFunctions.nonEmpty)
+          conflictOrderingSearch(
+            arrayOfNbInstancesOfSharedFunctions,
+            fnID => arrayOfNbInstancesOfSharedFunctions(fnID).max,
+            fnID => arrayOfNbInstancesOfSharedFunctions(fnID).min)
+        else oscar.algo.search.Branching({Seq.empty})
+
+      def distributeOnLocalOrBusTransmission =
+        conflictOrderingSearch(
+          cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
+          transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.size,
+          transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
+
+      def distributeOnTransmissionRouting =
+        conflictOrderingSearch(
+          cpProblem.cpTransmissions.map(_.busID),
+          transmissionID => -cpProblem.cpTransmissions(transmissionID).transmissionDuration.size, //the one that has the most impact on the schedule?
+          transmissionID => cpProblem.cpTransmissions(transmissionID).busID.min)
+
+      def distributeOnScheduleConflict = conflictOrderingSearch(
+        taskAndTransmissionStarts,
+        taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).size,
+        taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).min)
+
+      (/*distributeOnLocalOrBusTransmission
+        ++ distributeOnTransmissionRouting
+        ++ distributeOnTaskPlacementLessBuzyProcFirst //TODO: should consider the fastest implementation first!!
+        ++ */distributeOnTaskPlacementLessBuzyProcAfterPlacementFirst
+        ++ distributeOnSharedImplementationInstances
+        ++ binarySplit(taskAndTransmissionStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
         )
 
@@ -138,6 +173,7 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
       case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
       case _ => ;
     }
+
     val samePEConstraints:Iterable[CoreSharingConstraint] = cpProblem.mappingProblem.constraints.cl.flatMap(
       _ match{
         case c@CoreSharingConstraint(processes, value) if value => Some(c)
@@ -148,7 +184,10 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     val allProcessesInSamePEConstraints:SortedSet[Int] = SortedSet.empty[Int] ++ samePEConstraints.flatMap(_.processes.map(_.id))
 
     //LNS restart stuff here!
-    performTimeShavings()
+    if(!performTimeShavings()){
+      println("first solution of LNS is proven best")
+      return bestSolution
+    }
 
     val maxFails = config.lnsMaxFails
     val relaxProba = config.lnsRelaxProba
@@ -161,22 +200,27 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
       println("relaxation " + currentRelaxation)
 
       val constraintsForThisRelaxation = generateConstraintsForRelaxation(relaxProba,bestSolution.get,allProcessesInSamePEConstraints,samePEConstraints)
-      val stats1 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit) {
-        //relaxation strategy (actually it is more a non-relaxation strategy)
-        add(constraintsForThisRelaxation)
-        //print("innerShavings:") performTimeShavings() ths reduces a lot, but is very costly, compared to classical propagation.
-      }
 
-      if (config.performShavings && stats1.nSols > 0) performTimeShavings()
 
-        //we only did a small run, so if there was some solution, carry on the search, with the same relaxation
-      if(stats1.nSols > 0) {
+      val shouldPerformShortSearch = config.lnsUseEarlyStop
+
+      val quickSearchDidFindSomething = if (shouldPerformShortSearch){
+        val stats1 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit) {
+          //relaxation strategy (actually it is more a non-relaxation strategy)
+          add(constraintsForThisRelaxation)
+          //print("innerShavings:") performTimeShavings() ths reduces a lot, but is very costly, compared to classical propagation.
+        }
+        stats1.nSols > 0
+      } else false
+
+      val shouldPerformLongSearch = !config.lnsUseEarlyStop || config.lnsUseEarlyStop && quickSearchDidFindSomething
+      if(shouldPerformLongSearch){
         remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
         val stats2 = startSubjectTo(failureLimit = maxFails*10,timeLimit = config.timeLimit){
           add(constraintsForThisRelaxation)
         }
         if (config.performShavings && stats2.nSols > 0) performTimeShavings()
-      }else{
+      }else {
         println("early stop")
       }
     }
@@ -184,19 +228,26 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     bestSolution
   }
 
-
-  def performTimeShavings() {
+  /** @return false if failed store */
+  def performTimeShavings():Boolean =  {
     val startVars = (cpProblem.cpTasks.map(_.start).toList ::: cpProblem.cpTransmissions.map(_.start).toList).toArray
     performShavings(startVars)
-   //shaving on target selection does not help at all
   }
 
-  def performShavings(a:Array[CPIntVar]): Unit = {
-      solver.propagate()
-      val startDomSizeBefore = a.map(sv => sv.size)
-      ShavingUtils.boundsShaving(solver, a)
-      val startDomSizeAfter = a.map(sv => sv.size)
-      println(s"Shaving on min and max has removed ${a.indices.foldLeft(0)((acc, i) => acc + (startDomSizeBefore(i) - startDomSizeAfter(i)))} values from the domains of ${a.length} variables.")
+  /**
+    *
+    * @param a
+    * @return false if failed store
+    */
+  def performShavings(a:Array[CPIntVar]): Boolean = {
+    try{solver.propagate()} catch{
+      case _:Inconsistency => return false
+    }
+    val startDomSizeBefore = a.map(sv => sv.size)
+    ShavingUtils.boundsShaving(solver, a)
+    val startDomSizeAfter = a.map(sv => sv.size)
+    println(s"Shaving on min and max has removed ${a.indices.foldLeft(0)((acc, i) => acc + (startDomSizeBefore(i) - startDomSizeAfter(i)))} values from the domains of ${a.length} variables.")
+    true
   }
 
   def timeOverlappingTasks(task:CPTask,mapping:Mapping):List[CPTask] = {
@@ -284,9 +335,9 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
   }
 
   def generateConstraintsForRelaxationFull(relaxProba:Int,
-                                       bestSolution:Mapping,
-                                       allProcessesInSamePEConstraints:SortedSet[Int],
-                                       samePEConstraints:Iterable[CoreSharingConstraint]): List[Constraint] ={
+                                           bestSolution:Mapping,
+                                           allProcessesInSamePEConstraints:SortedSet[Int],
+                                           samePEConstraints:Iterable[CoreSharingConstraint]): List[Constraint] ={
 
 
     val isTaskRelaxed = if(Random.nextBoolean()){

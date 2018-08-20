@@ -73,7 +73,9 @@ object SymmetricPEConstraintType extends Enumeration {
 case class PowerCap(maxPower:Int) extends MappingConstraint
 case class EnergyCap(maxEnergy:Int) extends MappingConstraint
 case class MaxMakespan(maxMakeSpan:Int) extends MappingConstraint
-case class WidthCap(maxDelay:Int) extends MappingConstraint
+case class WidthCap(maxDelay:Int) extends MappingConstraint{
+  override def needsWidth: Boolean = true
+}
 
 
 //software model is shared, so no need for specifying it

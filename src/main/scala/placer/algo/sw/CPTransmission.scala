@@ -43,18 +43,18 @@ case class CPTransmission(id: Int,
   implicit val store = cpHardwareModel.store
   val maxHorizon  = cpHardwareModel.maxHorizon
   val busses = cpHardwareModel.cpBusses
-  val localLoopBusses = cpHardwareModel.selfLoopBussesID
+  val localLoopBusses = cpHardwareModel.selfLoopBussesID //they are included in busses
   val processorToBusToProcessorAdjacency = cpHardwareModel.processorToBusToProcessorAdjacency
 
   val start: CPIntVar = CPIntVar(0, maxHorizon)
   val end: CPIntVar = CPIntVar(0, maxHorizon)
 
   val busID: CPIntVar = CPIntVar.sparse(busses.indices)
+
+  @deprecated("should be removed for faster stuff!")
   val isOccurringOnBus: Array[CPBoolVar] = busses.map(bus => busID isEq bus.id)
 
   val isSelfLoopTransmission:CPBoolVar = busID.isIn(localLoopBusses)
-
-  def occuringOnBussesDebugInfo1:String = "occurringOnBusses:[" + isOccurringOnBus.mkString(",") + "]"
 
   val originProcessorID = from.processorID
   val destinationProcessorID = to.processorID

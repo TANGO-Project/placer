@@ -39,7 +39,8 @@ case class Config(in: File = new File("."),
                   lnsRelaxProba:Int = 90,
                   lnsNbRelaxations:Int = 500,
                   lnsNbRelaxationNoImprove:Int = 200,
-                  lnsCarryOnObjForMultiHardware:Int = 1)
+                  lnsCarryOnObjForMultiHardware:Int = 1,
+                  lnsUseEarlyStop:Boolean = true)
 
 object Main extends App {
 
@@ -91,11 +92,15 @@ object Main extends App {
       c.copy(lnsCarryOnObjForMultiHardware = int)).
         text("when using multi hardware, " +
           "should Placer carry on the best values for the objective function " +
-          "from one hardware to the next one? \n" +
-          "0 is no\n" +
-          "1 is yes,but if first solution cannot be found, try again without carry on\n" +
-          "2 is yes, and without retry\n" +
+          "from one hardware to the next one? (" +
+          "0 is no; " +
+          "1 is yes, but if first solution cannot be found, try again without carry on; " +
+          "2 is yes, and without retry)" +
           "default is 1")
+
+    opt[Boolean]("lnsUseEarlyStop").action((bool,c) =>
+      c.copy(lnsUseEarlyStop = bool)).text("when using LNS, this option ask the solver to first make a search with all limits (time and fails) divided by ten, " +
+      "and stop if this search was not fruitful. If the search was fruitful, it then proceeds with the normal set limits (time and fails)")
 
     help("help").text("prints this usage text")
 
@@ -145,7 +150,8 @@ object Main extends App {
           lnsRelaxProba = config.lnsRelaxProba,
           lnsNbRelaxations = config.lnsNbRelaxations,
           lnsNbRelaxationNoImprove = config.lnsNbRelaxationNoImprove,
-          lnsCarryOnObjForMultiHardware = config.lnsCarryOnObjForMultiHardware))
+          lnsCarryOnObjForMultiHardware = config.lnsCarryOnObjForMultiHardware,
+          lnsUseEarlyStop = config.lnsUseEarlyStop))
 
       if (config.verbose) println(mappingSet)
 

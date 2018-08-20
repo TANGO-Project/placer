@@ -1,7 +1,8 @@
 {
    "timeUnit":"us",
    "dataUnit":"byte",
-   "jsonFormat":"PlacerBeta4",
+   "jsonFormat":"PlacerBeta5",
+   "info":"an example from HPC that smartly mixes transmission and computation",
    "processingElementClasses":
    [
       {
@@ -74,7 +75,7 @@
    },
    "softwareModel":
    {
-      "simpleProcesses":
+      "tasks":
       [
          {
             "name":"a1",
@@ -373,10 +374,7 @@
          }
 
       ],
-      "softwareClass":
-      {
-         "oneShotSoftware": {}
-      }
+      "softwareClass":"oneShotSoftware"
    },
    "constraintsAndObjectives":
    [
