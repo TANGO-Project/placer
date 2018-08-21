@@ -1,0 +1,1050 @@
+{
+    "timeUnit": "ms",
+    "dataUnit": "MegaByte",
+    "jsonFormat": "PlacerBeta5",
+    "info": "matmul with larger matrix size, leading to 8 chains of 4 multiply (this is fictive data; normal is 16 chains of 4 blocks)",
+    "processingElementClasses":
+    [
+        {
+            "switchingTask":
+            {
+                "name": "cpu",
+                "switchingDelay": 0
+            }
+        },
+        {
+            "switchingTask":
+            {
+                "name": "gpu",
+                "switchingDelay": 0
+            }
+        }
+    ],
+    "hardwareModel":
+    {
+        "name": "TwoNode",
+        "processingElements":
+        [
+            {
+                "processorClass": "cpu",
+                "name": "CPUsOfNode1",
+                "multiCore": 12,
+                "memSize": 1000,
+                "powerModel": "0"
+            },
+            {
+                "processorClass": "gpu",
+                "name": "GPUsOfNode1",
+                "multiCore": 2,
+                "memSize": 1000,
+                "powerModel": "0"
+            },
+            {
+                "processorClass": "cpu",
+                "name": "CPUsOfNode2",
+                "multiCore": 12,
+                "memSize": 1000,
+                "powerModel": "0"
+            },
+            {
+                "processorClass": "gpu",
+                "name": "GPUsOfNode2",
+                "multiCore": 2,
+                "memSize": 1000,
+                "powerModel": "0"
+            }
+        ],
+        "busses":
+        [
+            {
+                "halfDuplexBus":
+                {
+                    "name": "globalBus",
+                    "relatedProcessors": [
+                        "CPUsOfNode1",
+                        "GPUsOfNode1",
+                        "CPUsOfNode2",
+                        "GPUsOfNode2"
+                    ],
+                    "timeUnitPerDataUnit": 0,
+                    "latency": 50
+                }
+            },
+            {
+                "halfDuplexBus":
+                {
+                    "name": "internalBusOfNode1",
+                    "relatedProcessors":
+                    [
+                        "CPUsOfNode1",
+                        "GPUsOfNode1"
+                    ],
+                    "timeUnitPerDataUnit": 0,
+                    "latency": 0
+                }
+            },
+            {
+                "halfDuplexBus":
+                {
+                    "name": "internalBusOfNode2",
+                    "relatedProcessors": [
+                        "CPUsOfNode2",
+                        "GPUsOfNode2"
+                    ],
+                    "timeUnitPerDataUnit": 0,
+                    "latency": 5
+                }
+            }
+        ]
+    },
+    "softwareModel":
+    {
+        "tasks":
+        [
+            {
+                "name": "startBarrier",
+                "implementations":
+                [
+                    {
+                        "name": "barrier",
+                        "target": "cpu",
+                        "duration": "1",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain1Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain1Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain1Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain1Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain2Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain2Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain2Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain2Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain3Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain3Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain3Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain3Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain4Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain4Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain4Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain4Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain5Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain5Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain5Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain5Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain6Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain6Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain6Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain6Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain7Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain7Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain7Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain7Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain8Block1",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain8Block2",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain8Block3",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "multiplyChain8Block4",
+                "implementations":
+                [
+                    {
+                        "name": "CPUMultiply",
+                        "target": "cpu",
+                        "duration": "890",
+                        "nbThreads": "5",
+                        "computationMemory": 0
+                    },
+                    {
+                        "name": "GPUMultiply",
+                        "target": "gpu",
+                        "duration": "213",
+                        "computationMemory": 0
+                    }
+                ]
+            },
+            {
+                "name": "endBarrier",
+                "implementations":
+                [
+                    {
+                        "name": "barrier",
+                        "target": "cpu",
+                        "duration": "1",
+                        "computationMemory": 0
+                    }
+                ]
+            }
+        ],
+        "transmissions":
+        [
+            {
+                "name": "startToChain1",
+                "source": "startBarrier",
+                "target": "multiplyChain1Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain1Block1ToBlock2",
+                "source": "multiplyChain1Block1",
+                "target": "multiplyChain1Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain1Block2ToBlock3",
+                "source": "multiplyChain1Block2",
+                "target": "multiplyChain1Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain1Block3ToBlock4",
+                "source": "multiplyChain1Block3",
+                "target": "multiplyChain1Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain1Block4ToEndBarrier",
+                "source": "multiplyChain1Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "startToChain2",
+                "source": "startBarrier",
+                "target": "multiplyChain2Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain2Block1ToBlock2",
+                "source": "multiplyChain2Block1",
+                "target": "multiplyChain2Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain2Block2ToBlock3",
+                "source": "multiplyChain2Block2",
+                "target": "multiplyChain2Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain2Block3ToBlock4",
+                "source": "multiplyChain2Block3",
+                "target": "multiplyChain2Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain2Block4ToEndBarrier",
+                "source": "multiplyChain2Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "startToChain3",
+                "source": "startBarrier",
+                "target": "multiplyChain3Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain3Block1ToBlock2",
+                "source": "multiplyChain3Block1",
+                "target": "multiplyChain3Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain3Block2ToBlock3",
+                "source": "multiplyChain3Block2",
+                "target": "multiplyChain3Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain3Block3ToBlock4",
+                "source": "multiplyChain3Block3",
+                "target": "multiplyChain3Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain3Block4ToEndBarrier",
+                "source": "multiplyChain3Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "startToChain4",
+                "source": "startBarrier",
+                "target": "multiplyChain4Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain4Block1ToBlock2",
+                "source": "multiplyChain4Block1",
+                "target": "multiplyChain4Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain4Block2ToBlock3",
+                "source": "multiplyChain4Block2",
+                "target": "multiplyChain4Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain4Block3ToBlock4",
+                "source": "multiplyChain4Block3",
+                "target": "multiplyChain4Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain4Block4ToEndBarrier",
+                "source": "multiplyChain4Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "startToChain5",
+                "source": "startBarrier",
+                "target": "multiplyChain5Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain5Block1ToBlock2",
+                "source": "multiplyChain5Block1",
+                "target": "multiplyChain5Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain5Block2ToBlock3",
+                "source": "multiplyChain5Block2",
+                "target": "multiplyChain5Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain5Block3ToBlock4",
+                "source": "multiplyChain5Block3",
+                "target": "multiplyChain5Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain5Block4ToEndBarrier",
+                "source": "multiplyChain5Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "startToChain6",
+                "source": "startBarrier",
+                "target": "multiplyChain6Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain6Block1ToBlock2",
+                "source": "multiplyChain6Block1",
+                "target": "multiplyChain6Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain6Block2ToBlock3",
+                "source": "multiplyChain6Block2",
+                "target": "multiplyChain6Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain6Block3ToBlock4",
+                "source": "multiplyChain6Block3",
+                "target": "multiplyChain6Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain6Block4ToEndBarrier",
+                "source": "multiplyChain6Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "startToChain7",
+                "source": "startBarrier",
+                "target": "multiplyChain7Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain7Block1ToBlock2",
+                "source": "multiplyChain7Block1",
+                "target": "multiplyChain7Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain7Block2ToBlock3",
+                "source": "multiplyChain7Block2",
+                "target": "multiplyChain7Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain7Block3ToBlock4",
+                "source": "multiplyChain7Block3",
+                "target": "multiplyChain7Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain7Block4ToEndBarrier",
+                "source": "multiplyChain7Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            },
+
+            {
+                "name": "startToChain8",
+                "source": "startBarrier",
+                "target": "multiplyChain8Block1",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain8Block1ToBlock2",
+                "source": "multiplyChain8Block1",
+                "target": "multiplyChain8Block2",
+                "size": 1,
+                "timing": "Free"
+            },
+
+            {
+                "name": "Chain8Block2ToBlock3",
+                "source": "multiplyChain8Block2",
+                "target": "multiplyChain8Block3",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain8Block3ToBlock4",
+                "source": "multiplyChain8Block3",
+                "target": "multiplyChain8Block4",
+                "size": 1,
+                "timing": "Free"
+            },
+            {
+                "name": "Chain8Block4ToEndBarrier",
+                "source": "multiplyChain8Block4",
+                "target": "endBarrier",
+                "size": 1,
+                "timing": "Free"
+            }
+        ],
+        "softwareClass": "oneShotSoftware"
+    },
+    "constraintsAndObjectives": [
+        {
+            "simpleObjective": "minMakespan"
+        },
+        {
+            "maxMakespan": 2500
+        },
+        {
+            "samePE": [
+                "startBarrier",
+                "endBarrier"
+            ]
+        },
+        {
+            "symmetricPE": [
+                "GPUsOfNode1",
+                "GPUsOfNode2"
+            ]
+        },
+        {
+            "symmetricPE": [
+                "CPUsOfNode1",
+                "CPUsOfNode2"
+            ]
+        }
+    ]
+}

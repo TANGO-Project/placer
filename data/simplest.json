@@ -1,8 +1,8 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
-  "info":"simplest example with two tasks and a transmission",
-  "jsonFormat":"PlacerBeta3",
+  "info":"simplest example with two tasks and a transmission, sat mode (no objective given)",
+  "jsonFormat":"PlacerBeta5",
   "processingElementClasses":[
     {
       "switchingTask":{
@@ -49,7 +49,7 @@
     "properties":[]
   },
   "softwareModel":{
-    "simpleProcesses":[
+    "tasks":[
       {
         "name":"input",
         "implementations":[
@@ -86,16 +86,9 @@
         "timing":"Free"
       }
     ],
-    "softwareClass":{
-      "oneShotSoftware":{}
-    }
+    "softwareClass":"oneShotSoftware"
   },
-  "goal":{
-    "simpleObjective":"sat"
-  },
-
-  "constraints":
-  [
+  "constraintsAndObjectives":[
     {
       "mustNotBeUsed":"procA"
     },

@@ -1,12 +1,13 @@
 {
   "timeUnit":"ms",
   "dataUnit":"bit",
-  "info":"C:\\sers\rdl\\ocuments\\ANGO\\ptim5TANGO\\lacer\\ata\\mallExample.json",
+  "info":"",
   "mappings":[
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":116,
-      "energy":35012,
+      "makeSpan":114,
+      "energy":34998,
+      "sharedFunctions":[],
       "taskMapping":[
         {
           "task":"input",
@@ -22,9 +23,9 @@
           "processingElement":"procA",
           "implementation":"cpu_standard",
           "parameters":[],
-          "start":12,
+          "start":11,
           "duration":12,
-          "end":24
+          "end":23
         },
         {
           "task":"output",
@@ -36,17 +37,18 @@
               "value":2
             }
           ],
-          "start":25,
+          "start":23,
           "duration":91,
-          "end":116
+          "end":114
         }
       ],
       "transmissionMapping":[]
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":255,
-      "energy":32685,
+      "makeSpan":254,
+      "energy":32678,
+      "sharedFunctions":[],
       "taskMapping":[
         {
           "task":"input",
@@ -76,9 +78,9 @@
               "value":2
             }
           ],
-          "start":164,
+          "start":163,
           "duration":91,
-          "end":255
+          "end":254
         }
       ],
       "transmissionMapping":[
