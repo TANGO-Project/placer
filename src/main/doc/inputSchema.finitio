@@ -16,12 +16,13 @@
 # If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
 
 @import finitio/data
-#definition of the JSon input format in finitio: http://www.finitio.io/
+
+#definition of the JSon input format of Placer tool
+#this document describes the format "PlacerBeta5"
+#uses the finitio language: http://www.finitio.io/
 
 HardwareModel = {
     name:String
-    powerCap:?Integer
-    energyCap:?Integer
     processingElements:[ProcessingElement]
     busses:[Bus]
     properties:[NameValue]
@@ -81,13 +82,13 @@ MultiTaskPermanentTasksClass ={
 
 SoftwareModel =  {
     sharedPermanentFunctions:[Implementation]
-    simpleProcesses:[SimpleProcess]
+    tasks:[Task]
     transmissions:[Transmission]
     softwareClass:SoftwareClass
     properties:?[NameValue]
 }
 
-SimpleProcess = {
+Task = {
     name:String
     implementations:[Implementation]
     sharedImplementation:[SharedImplementationRef]
@@ -157,13 +158,16 @@ TaskPE = {
     processingElement:String
 }
 
-Constraint = {mustBeUsed:String}
+ConstraintOrObjective =
+     {mustBeUsed:String}
    | {mustNotBeUsed:String}
    | {samePE:[String]}
    | {notSamePE:[String]}
    | {symmetricPE:[String]}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
+   | {powerCap:Integer}
+   | {energyCap:Integer}
    | MappingGoal
 
 MappingGoal =
@@ -178,17 +182,15 @@ MultiObjectiveGoal = {
     b:SimpleGoal
 }
 
-#jsonFormat documents the version of the Json file used.
-#this document describes the format "PlacerBeta3"
 
 Main = {
     info:?String
-    jsonFormat:String
+    jsonFormat:String #must be equal to the jsonFormat given in the header of this file
     timeUnit:String
     dataUnit:String
     processingElementClasses:[ProcessingElementClass]
     hardwareModel:HardwareModel
     softwareModel:SoftwareModel
     properties:?[NameValue]
-    constraintsAndObjectives:?[Constraint]
+    constraintsAndObjectives:?[ConstraintOrObjective]
 }
