@@ -3,11 +3,17 @@ package placer.algo
 import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.{multiobjective, _}
+import placer.AbstractPureCPSolver
 import placer.metadata._
 
-class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], config:MapperConfig, solver:CPSolver, bestSolutionsSoFar:multiobjective.ListPareto[Mapping]) {
-
-  implicit val solver2:oscar.cp.core.CPSolver = solver
+class PureCPSolver(cpProblem: CPMappingProblem,
+                   goal: Option[MappingObjective],
+                   config:MapperConfig,
+                   solver:CPSolver,
+                   bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
+extends AbstractPureCPSolver(cpProblem: CPMappingProblem,
+    config:MapperConfig,
+    solver:CPSolver){
 
   def solveMappingProblem(): Iterable[Mapping] = {
 
@@ -55,103 +61,13 @@ class PureCPSolver(cpProblem: CPMappingProblem, goal: Option[MappingObjective], 
     solver.addDecisionVariables(theVars)
 
     search {
-      val allVars = cpProblem.varsToDistribute.toArray
-      if (isParetoSearch) {
-        binaryFirstFail(allVars)
-        //conflict search does not deliver pareto optimal results so it is not used here.
-        //conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
-        //Same for split
-        //splitLastConflict(allVars)
-      } else {
-        //binaryFirstFail(allVars)
-        //splitLastConflict(allVars)
-        val processorIDArray = cpProblem.cpTasks.map(_.processorID)
-        //        conflictOrderingSearch(processorIDArray,processorIDArray(_).min,processorIDArray(_).min) ++ conflictOrderingSearch(allVars,allVars(_).min,allVars(_).min)
-
-        val processorIDChoices = cpProblem.cpTasks.map(task => task.processorID)
-        val taskMaxDurations = cpProblem.cpTasks.map(task => task.taskDuration.max)
-
-        val taskAndTransmissionStarts = (
-          List.empty ++
-            cpProblem.cpTasks.map(task => task.start) ++
-            cpProblem.cpTransmissions.map(transmission => transmission.start)
-          ).toArray
-
-        val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
-
-
-        //basic distribution procedures
-        def distributeOnTaskPlacementLessBuzyProcFirst = conflictOrderingSearch(
-          processorIDChoices,
-          taskMaxDurations(_),
-          processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
-
-        def distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst = conflictOrderingSearch(
-          processorIDChoices,
-          taskID => cpProblem.cpTasks(taskID).taskDuration.size,
-          taskID => cpProblem.cpTasks(taskID).processorID.minBy(
-            processorID => cpProblem.cpTasks(taskID).minTaskDurationOnProcessor(processorID).getOrElse(Int.MaxValue) + cpProblem.processorLoadArrayUnderApprox(processorID).max))
-
-        def distributeOnSharedImplementationInstances =
-          if(arrayOfNbInstancesOfSharedFunctions.nonEmpty)
-            conflictOrderingSearch(
-              arrayOfNbInstancesOfSharedFunctions,
-              fnID => arrayOfNbInstancesOfSharedFunctions(fnID).max,
-              fnID => arrayOfNbInstancesOfSharedFunctions(fnID).min)
-          else oscar.algo.search.Branching({Seq.empty})
-
-        def distributeOnLocalOrBusTransmission =
-          conflictOrderingSearch(
-            cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
-            transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.size,
-            transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
-
-        def distributeOnTransmissionRouting =
-          conflictOrderingSearch(
-            cpProblem.cpTransmissions.map(_.busID),
-            transmissionID => -cpProblem.cpTransmissions(transmissionID).transmissionDuration.size, //the one that has the most impact on the schedule?
-            transmissionID => cpProblem.cpTransmissions(transmissionID).busID.min)
-
-        def distributeOnScheduleConflict = conflictOrderingSearch(
-          taskAndTransmissionStarts,
-          taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).size,
-          taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).min)
-
-        (/*distributeOnLocalOrBusTransmission
-        ++ distributeOnTransmissionRouting
-        ++ distributeOnTaskPlacementLessBuzyProcFirst //TODO: should consider the fastest implementation first!!
-        ++ */
-          /*distributeOnLocalOrBusTransmission
-            ++*/ distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst
-          ++ distributeOnSharedImplementationInstances
-          ++ binarySplit(taskAndTransmissionStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
-          ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
-          )
-
-
-        /*
-        (conflictOrderingSearch(
-          processorIDChoices,
-          taskMaxDurations(_),
-          processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
-          ++ (if (arrayOfNbInstancesOfSharedFunctions.nonEmpty) conflictOrderingSearch(
-          arrayOfNbInstancesOfSharedFunctions,
-          (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
-          (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-        ) else oscar.algo.search.Branching({
-          Seq.empty
-        }))
-          ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
-          ++ discrepancy(conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min), config.maxDiscrepancy))*/
-      }
+     searchStrategy(isParetoSearch)
     } onSolution {
-      println("solution found, makeSpan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
+      println("solution found, makespan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
     }
 
     val stat = start(nSols = if (isSearchOnlyOne) 1 else Int.MaxValue, timeLimit = config.timeLimit)
-    print(stat)
-
-    println
+    println(stat)
 
     goal match {
       case Some(MinPareto(a, b)) =>

@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"the simple unconstrained aquaScan model",
-   "jsonFormat":"PlacerBeta4",
+   "jsonFormat":"PlacerBeta5",
    "processingElementClasses":
    [
       {
@@ -75,7 +75,7 @@
    },
    "softwareModel":
    {
-      "simpleProcesses":
+      "tasks":
       [
          {
             "name":"Input",
@@ -1235,16 +1235,13 @@
             "timing":"Sticky"
          }
       ],
-      "softwareClass":
-      {
-         "oneShotSoftware":
-         {
-           "maxMakespanDISABLED":82907
-         }
-      }
+      "softwareClass":"oneShotSoftware"
    },
    "constraintsAndObjectives":
    [
+      {
+         "maxMakespan":800000
+      },
      {
        "mustBeUsed":"Core1"
      },
@@ -1260,6 +1257,9 @@
      {
        "symmetricPE":["Core1","Core2","Core3","Core4"]
      },
+      {
+         "maxMakespan":175000
+      },
       {
          "samePE":[
             "LightingNormalisation",

@@ -6,6 +6,7 @@ import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.preprocessing.ShavingUtils
 import oscar.cp.{multiobjective, _}
+import placer.AbstractPureCPSolver
 import placer.algo.hw.CPProcessor
 import placer.algo.sw.{CPTask, CPTransmission}
 import placer.metadata._
@@ -14,9 +15,14 @@ import scala.collection.immutable.SortedSet
 import scala.util.Random
 
 
-class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, config:MapperConfig, solver:oscar.cp.CPSolver, bestSolutionsSoFar:multiobjective.ListPareto[Mapping]){
-
-  implicit val solver2:oscar.cp.core.CPSolver = solver
+class LNSSolver(cpProblem: CPMappingProblem,
+                simpleGoal: SimpleMappingGoal,
+                config:MapperConfig,
+                solver:oscar.cp.CPSolver,
+                bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
+  extends AbstractPureCPSolver(cpProblem: CPMappingProblem,
+  config:MapperConfig,
+  solver:CPSolver){
 
   def solveMappingProblemMinimizeLNS(): Iterable[Mapping] = {
 
@@ -43,80 +49,7 @@ class LNSSolver(cpProblem: CPMappingProblem, simpleGoal: SimpleMappingGoal, conf
     var bestValue: Int = Int.MaxValue
 
     search {
-      val allVars = cpProblem.varsToDistribute.toArray
-
-      //binaryFirstFail(allVars)
-      //splitLastConflict(allVars)
-      val processorIDArray = cpProblem.cpTasks.map(_.processorID)
-      // conflictOrderingSearch(processorIDArray, processorIDArray(_).min, processorIDArray(_).min) ++ conflictOrderingSearch(allVars, allVars(_).min, allVars(_).min)
-
-      val processorIDChoices = cpProblem.cpTasks.map(task => task.processorID)
-      val taskMaxDurations = cpProblem.cpTasks.map(task => task.taskDuration.max)
-
-      val taskAndTransmissionStarts = (
-        List.empty ++
-          cpProblem.cpTasks.map(task => task.start) ++
-          cpProblem.cpTransmissions.map(transmission => transmission.start)
-        ).toArray
-
-      val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
-
-
-      //basic distribution procedures
-      def distributeOnTaskPlacementLessBuzyProcFirst = conflictOrderingSearch(
-        processorIDChoices,
-        taskMaxDurations(_),
-        processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
-
-      def distributeOnTaskPlacementFastestImplemFirst = conflictOrderingSearch(
-        processorIDChoices,
-        taskID => cpProblem.cpTasks(taskID).taskDuration.size,
-        taskID => cpProblem.cpTasks(taskID).processorID.minBy(
-          processorID => cpProblem.cpTasks(taskID).minTaskDurationOnProcessor(processorID).getOrElse(Int.MaxValue)))
-
-
-      def distributeOnTaskPlacementLessBuzyProcAfterPlacementFirst = conflictOrderingSearch(
-        processorIDChoices,
-        taskID => cpProblem.cpTasks(taskID).taskDuration.size,
-        taskID => cpProblem.cpTasks(taskID).processorID.minBy(
-          processorID => (cpProblem.cpTasks(taskID).minTaskDurationOnProcessor(processorID).getOrElse(Int.MaxValue) + cpProblem.processorLoadArrayUnderApprox(processorID).min)
-          /cpProblem.cpProcessors(processorID).p.nbCore))
-
-
-      def distributeOnSharedImplementationInstances =
-        if(arrayOfNbInstancesOfSharedFunctions.nonEmpty)
-          conflictOrderingSearch(
-            arrayOfNbInstancesOfSharedFunctions,
-            fnID => arrayOfNbInstancesOfSharedFunctions(fnID).max,
-            fnID => arrayOfNbInstancesOfSharedFunctions(fnID).min)
-        else oscar.algo.search.Branching({Seq.empty})
-
-      def distributeOnLocalOrBusTransmission =
-        conflictOrderingSearch(
-          cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
-          transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.size,
-          transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
-
-      def distributeOnTransmissionRouting =
-        conflictOrderingSearch(
-          cpProblem.cpTransmissions.map(_.busID),
-          transmissionID => -cpProblem.cpTransmissions(transmissionID).transmissionDuration.size, //the one that has the most impact on the schedule?
-          transmissionID => cpProblem.cpTransmissions(transmissionID).busID.min)
-
-      def distributeOnScheduleConflict = conflictOrderingSearch(
-        taskAndTransmissionStarts,
-        taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).size,
-        taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).min)
-
-      (/*distributeOnLocalOrBusTransmission
-        ++ distributeOnTransmissionRouting
-        ++ distributeOnTaskPlacementLessBuzyProcFirst //TODO: should consider the fastest implementation first!!
-        ++ */distributeOnTaskPlacementLessBuzyProcAfterPlacementFirst
-        ++ distributeOnSharedImplementationInstances
-        ++ binarySplit(taskAndTransmissionStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
-        ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
-        )
-
+      searchStrategy(false)
     } onSolution {
       bestSolution = Some(cpProblem.getMapping(solver.lastSol,List(theVar)))
       bestValue = varToMinimize.value
