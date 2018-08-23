@@ -39,6 +39,9 @@ ProcessingElement = {
     switchingDelay:?Integer
 }
 
+#referencing a processing element that is declared in HardwareModel/processingElements
+ProcessingElementRef = String
+
 Bus = {halfDuplexBus:HalfDuplexBus}|{singleWayBus:SingleWayBus}
 
 HalfDuplexBus = {
@@ -55,9 +58,6 @@ SingleWayBus = {
     timeUnitPerDataUnit:Integer
     latency:Integer
 }
-
-#referencing a processing element that is declared in HardwareModel/processingElements
-ProcessingElementRef = String
 
 NameValue = {
     name:String
@@ -94,6 +94,10 @@ Task = {
     sharedImplementation:[SharedImplementationRef]
 }
 
+#refers to a declared task
+TaskRef = String
+
+
 SharedImplementationRef = String
 
 Implementation = {
@@ -129,8 +133,8 @@ ParameterDefinition = {
 
 Transmission = {
     name:String
-    source:SimpleProcessRef
-    target:SimpleProcessRef
+    source:TaskRef
+    target:TaskRef
     size:Integer
     timing:TransmissionTimingConstraint
 }
@@ -138,11 +142,7 @@ Transmission = {
 #Asap,Free,Alap
 TransmissionTimingConstraint = String
 
-SimpleProcessRef = String
-
-SoftwareClass =
-    {iterativeSoftware:IterativeSoftware}
-    | {oneShotSoftware:OneShotSoftware}
+SoftwareClass = String #iterativeSoftware,oneShotSoftware
 
 IterativeSoftware={
     maxFrameDelay:?Integer
@@ -154,28 +154,26 @@ OneShotSoftware = {
 }
 
 TaskPE = {
-    task:String
-    processingElement:String
+    task:TaskTef
+    processingElement:ProcessingElementRef
 }
 
 ConstraintOrObjective =
-     {mustBeUsed:String}
-   | {mustNotBeUsed:String}
-   | {samePE:[String]}
-   | {notSamePE:[String]}
+     {mustBeUsed:ProcessingElementRef}
+   | {mustNotBeUsed:ProcessingElementRef}
+   | {samePE:[TaskTef]}
+   | {notSamePE:[TaskTef]}
    | {symmetricPE:[String]}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
    | {powerCap:Integer}
    | {energyCap:Integer}
-   | MappingGoal
+   | {multiObjective:MultiObjectiveGoal}
+   | {simpleObjective:SimpleGoal}
 
-MappingGoal =
-    {multiObjective:MultiObjectiveGoal}
-    | {simpleObjective:SimpleGoal}
+#there should be at most one objective; which might be either multiObjective or simpleObjective
 
-#minMakeSpan,minEnergy,minFrame
-SimpleGoal = String
+SimpleGoal = String #minMakeSpan,minEnergy,minFrame
 
 MultiObjectiveGoal = {
     a:SimpleGoal
