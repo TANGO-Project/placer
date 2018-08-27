@@ -3,7 +3,6 @@ package placer.algo
 import oscar.cp.constraints.ParetoConstraint
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.{multiobjective, _}
-import placer.AbstractPureCPSolver
 import placer.metadata._
 
 class PureCPSolver(cpProblem: CPMappingProblem,
@@ -11,7 +10,7 @@ class PureCPSolver(cpProblem: CPMappingProblem,
                    config:MapperConfig,
                    solver:CPSolver,
                    bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
-extends AbstractPureCPSolver(cpProblem: CPMappingProblem,
+extends SearchStrategy(cpProblem: CPMappingProblem,
     config:MapperConfig,
     solver:CPSolver){
 

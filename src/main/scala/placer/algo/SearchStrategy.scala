@@ -1,13 +1,11 @@
-package placer
+package placer.algo
 
 import oscar.algo.search.Branching
 import oscar.cp.{CPSolver, binaryFirstFail, binarySplit, conflictOrderingSearch, minRegret}
-import placer.algo.{CPMappingProblem, MapperConfig}
-import placer.metadata.MappingObjective
 
-class AbstractPureCPSolver(cpProblem: CPMappingProblem,
-                           config:MapperConfig,
-                           solver:CPSolver) {
+class SearchStrategy(cpProblem: CPMappingProblem,
+                     config:MapperConfig,
+                     solver:CPSolver) {
 
   implicit val solver2:oscar.cp.core.CPSolver = solver
 

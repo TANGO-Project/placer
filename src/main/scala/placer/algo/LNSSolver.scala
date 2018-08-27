@@ -6,7 +6,6 @@ import oscar.cp.core.CPSol
 import oscar.cp.core.variables.CPIntVar
 import oscar.cp.preprocessing.ShavingUtils
 import oscar.cp.{multiobjective, _}
-import placer.AbstractPureCPSolver
 import placer.algo.hw.CPProcessor
 import placer.algo.sw.{CPTask, CPTransmission}
 import placer.metadata._
@@ -20,7 +19,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
                 config:MapperConfig,
                 solver:oscar.cp.CPSolver,
                 bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
-  extends AbstractPureCPSolver(cpProblem: CPMappingProblem,
+  extends SearchStrategy(cpProblem: CPMappingProblem,
   config:MapperConfig,
   solver:CPSolver){
 
