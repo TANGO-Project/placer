@@ -66,6 +66,8 @@ case class SymmetricPEConstraint(processors:List[ProcessingElement],breaking:Sym
   override def toString: String = "SymmetricPEConstraint(" + processors.map(_.name) + ")"
 }
 
+case class SymmetricTasksConstraint(tasks:List[AtomicTask]) extends MappingConstraint
+
 object SymmetricPEConstraintType extends Enumeration {
   val Workload,LongTask = Value
 }

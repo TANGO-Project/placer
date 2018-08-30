@@ -500,6 +500,16 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
               add(task.isRunningOnProcessor(processor.id) === 0)
             }
           }
+        case SymmetricTasksConstraint(tasks:List[AtomicTask]) =>
+          val theCPTasks = tasks.map(task => cpTasks(task.id))
+
+          val processorImplementationComboS:Array[CPIntVar] = theCPTasks.map(cpTask => cpTask.processorImplementationCombo).toArray
+
+          for(i <- 1 until processorImplementationComboS.length){
+            add(processorImplementationComboS(i-1) <= processorImplementationComboS(i))
+          }
+
+
         case SymmetricPEConstraint(processors: List[ProcessingElement], breaking) =>
           if (config.lns) {
             println("symmetry among " + processors.map(_.name) + " is disabled because using LNS")

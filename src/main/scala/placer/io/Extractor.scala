@@ -90,6 +90,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               mustBeUsed:Option[String],
                               mustNotBeUsed:Option[String],
                               symmetricPE:Option[List[String]],
+                              symmetricTasks:Option[List[String]],
                               simpleObjective:Option[String],
                               multiObjective:Option[EPareto],
                               powerCap:Option[Int],
@@ -148,6 +149,14 @@ case class EMappingConstraint(runOn:Option[ERunOn],
       }
     }
 
+    def extractSymmetricTasksConstraint(tasks:List[String]) : SymmetricTasksConstraint = {
+      val processes = tasks.map(task => sw.simpleProcesses.find(p => p.name equals task) match {
+        case Some(x) => x
+        case None => throw new Error("cannot find task " + task + " used in mappingConstraint SymmetricTasks(" + tasks.mkString(",") + ")")
+      })
+      SymmetricTasksConstraint(processes)
+    }
+
     var toReturn:MappingConstraint = null
     def acc(c:MappingConstraint): Unit ={
       require(toReturn == null,"only one constraint can be specified at a time")
@@ -187,6 +196,11 @@ case class EMappingConstraint(runOn:Option[ERunOn],
     symmetricPE match{
       case Some(s) =>
         acc(extractPESymmetry(s))
+      case _ => ;
+    }
+    symmetricTasks match{
+      case Some(taskNames) =>
+        acc(extractSymmetricTasksConstraint(taskNames))
       case _ => ;
     }
     simpleObjective match{

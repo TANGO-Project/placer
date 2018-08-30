@@ -161,7 +161,7 @@ case class CPTask(id: Int,
     toReturn
   }
 
-  private val processorImplementationCombo = CPIntVar(0,indice-1)
+  val processorImplementationCombo = CPIntVar(0,indice-1)
 
   //duration
   private val possibleDurations = implemAndProcessorAndDurationAndEnergyAndPower.map(_.duration)

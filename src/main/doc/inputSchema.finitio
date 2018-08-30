@@ -163,7 +163,8 @@ ConstraintOrObjective =
    | {mustNotBeUsed:ProcessingElementRef}
    | {samePE:[TaskTef]}
    | {notSamePE:[TaskTef]}
-   | {symmetricPE:[String]}
+   | {symmetricPE:[ProcessingElementRef]}
+   | {symmetricTasks:[TaskTef]}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
    | {powerCap:Integer}
