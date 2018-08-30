@@ -163,7 +163,10 @@ ConstraintOrObjective =
    | {mustNotBeUsed:ProcessingElementRef}
    | {samePE:[TaskTef]}
    | {notSamePE:[TaskTef]}
-   | {symmetricPE:[ProcessingElementRef]}
+   | {
+        symmetricPE:[ProcessingElementRef]
+        breaking:?("workLoad" | "longTask")
+      }
    | {symmetricTasks:[TaskTef]}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
@@ -173,8 +176,7 @@ ConstraintOrObjective =
    | {simpleObjective:SimpleGoal}
 
 #there should be at most one objective; which might be either multiObjective or simpleObjective
-
-SimpleGoal = String #minMakeSpan,minEnergy,minFrame
+SimpleGoal = "minMakeSpan" | "minEnergy" | "minFrame"
 
 MultiObjectiveGoal = {
     a:SimpleGoal

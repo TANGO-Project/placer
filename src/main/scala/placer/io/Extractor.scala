@@ -83,6 +83,7 @@ case class EMappingProblem(timeUnit:String,
   }
 }
 
+
 case class EMappingConstraint(runOn:Option[ERunOn],
                               notRunOn:Option[ERunOn],
                               samePE:Option[List[String]],
@@ -90,6 +91,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               mustBeUsed:Option[String],
                               mustNotBeUsed:Option[String],
                               symmetricPE:Option[List[String]],
+                              breaking:Option[String],
                               symmetricTasks:Option[List[String]],
                               simpleObjective:Option[String],
                               multiObjective:Option[EPareto],
@@ -136,7 +138,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
       }
     }
 
-    def extractPESymmetry(symmetricPENames:List[String]):SymmetricPEConstraint = {
+    def extractPESymmetry(symmetricPENames:List[String], breaking:Option[String]):SymmetricPEConstraint = {
       hwOpt match {
         case None => throw new Error("symmetricPE constraints must be defined in hardware section if multiple hardware used")
         case Some(hw) =>
@@ -145,9 +147,20 @@ case class EMappingConstraint(runOn:Option[ERunOn],
             case None => throw new Error("cannot find processor" + processorName + " used in mappingConstraint")
           })
 
-          SymmetricPEConstraint(processors)
+          SymmetricPEConstraint(processors,extractBreaking(breaking))
       }
     }
+
+
+    def extractBreaking(breaking:Option[String]):SymmetricPEConstraintType.Value = {
+      breaking match{
+        case None => SymmetricPEConstraintType.Workload
+        case Some("longTask") => SymmetricPEConstraintType.LongTask
+        case Some("workload") => SymmetricPEConstraintType.Workload
+        case _ => throw new Error("unknown breaking for task symmetry constraint:" + breaking)
+      }
+    }
+
 
     def extractSymmetricTasksConstraint(tasks:List[String]) : SymmetricTasksConstraint = {
       val processes = tasks.map(task => sw.simpleProcesses.find(p => p.name equals task) match {
@@ -195,7 +208,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
     }
     symmetricPE match{
       case Some(s) =>
-        acc(extractPESymmetry(s))
+        acc(extractPESymmetry(s, breaking))
       case _ => ;
     }
     symmetricTasks match{
