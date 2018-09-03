@@ -60,7 +60,7 @@ extends SearchStrategy(cpProblem: CPMappingProblem,
     solver.addDecisionVariables(theVars)
 
     search {
-     searchStrategy(isParetoSearch)
+      searchStrategy(isParetoSearch)
     } onSolution {
       println("solution found, makespan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
     }

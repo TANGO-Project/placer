@@ -22,7 +22,7 @@ package placer
 import java.io.{File, PrintWriter}
 
 import net.liftweb.json._
-import placer.algo.{Mapper, MapperConfig}
+import placer.algo.{Mapper, MapperConfig, Strategy}
 import placer.io.Extractor
 import placer.metadata.MappingProblem
 
@@ -33,6 +33,7 @@ case class Config(in: File = new File("."),
                   verbose: Boolean = false,
                   license:Boolean = false,
                   discrepancy:Int = Int.MaxValue,
+                  strategies:Option[List[Strategy.Value]] = None,
                   timeLimit:Int = Int.MaxValue,
                   lns:Boolean = false,
                   lnsMaxFails:Int = 2000,
@@ -47,62 +48,88 @@ object Main extends App {
   val parser = new scopt.OptionParser[Config]("placer") {
     head("placer", "beta3")
 
-    opt[File]("in").required().valueName("<file>").
+    help("help").text("prints this usage text")
+
+    opt[File]("in").required().maxOccurs(1).valueName("<file>").
       action((x, c) => c.copy(in = x)).
       text("the JSon file representing the placement problem")
 
-    opt[File]("out").required().valueName("<file>").
+    opt[File]("out").required().maxOccurs(1).valueName("<file>").
       action((x, c) => c.copy(out = x)).
       text("the file where the JSon representing the placements will be stored")
 
-    opt[Int]("discrepancy").
+    opt[Int]("discrepancy").maxOccurs(1).
       action((x, c) => c.copy(discrepancy = x)).
       text("the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is MaxInt")
 
-    opt[Int]("timeLimit").
+    opt[Seq[String]]("strategy").maxOccurs(1).valueName("strategy1,strategy2,...").action( (strategies,c) =>
+      c.copy(strategies = Some(strategies.toList.map(decodeStrategy)))).text(
+      """|Search strategies to use, in the order they must be searched. The available search stategies are:
+                                 TransmissionRouting
+                                 TaskPlacementLessBuzyProcFirst
+                                 LocalOrBusTransmissionLargestFirstLocalFirst
+                                 LocalOrBusTransmissionLongestAdjFirstNonLocalFirst
+                                 TaskPlacementFastestImplemPlusLessBuzyProcFirst
+                                 SharedImplementationInstances
+                                 TaskAndTransmissionStarts
+                 when not specified, a defulat search strategy is used.
+        """.stripMargin('|'))
+
+    import Strategy._
+    def decodeStrategy(s:String):Strategy.Value = {
+      s match{
+        case "TransmissionRouting" => TransmissionRouting
+        case "TaskPlacementLessBuzyProcFirst" => TaskPlacementLessBuzyProcFirst
+        case "LocalOrBusTransmissionLargestFirstLocalFirst" => LocalOrBusTransmissionLargestFirstLocalFirst
+        case "LocalOrBusTransmissionLongestAdjFirstNonLocalFirst" => LocalOrBusTransmissionLongestAdjFirstNonLocalFirst
+        case "TaskPlacementFastestImplemPlusLessBuzyProcFirst" => TaskPlacementFastestImplemPlusLessBuzyProcFirst
+        case "SharedImplementationInstances" => SharedImplementationInstances
+        case "TaskAndTransmissionStarts" => TaskAndTransmissionStarts
+        case _ => throw new Error("unknown search strategy:" + s)
+      }
+    }
+
+    opt[Int]("timeLimit").maxOccurs(1).
       action((x, c) => c.copy(timeLimit = x)).
       text("the maximal run time for Placer in seconds, default is MaxInt. In case of LNS it is taken as the time limit pers CP exploration; if no solution found within this time limit, exploration is stopped. ")
 
-    opt[Unit]("verbose").action((_, c) =>
+    opt[Unit]("verbose").maxOccurs(1).action((_, c) =>
       c.copy(verbose = true)).text("prints some verbosities")
 
-    opt[Unit]("license").action((_, c) =>
+    opt[Unit]("license").maxOccurs(1).action((_, c) =>
       c.copy(license = true)).text("prints license and stops")
 
-    opt[Boolean]("lns").action((bool,c) =>
+    //LNS stuff
+
+    opt[Boolean]("lns").maxOccurs(1).action((bool,c) =>
       c.copy(lns = bool)).text("use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto")
 
-    opt[Int]("lnsMaxFails").
+    opt[Int]("lnsMaxFails").maxOccurs(1).
       action((x, c) => c.copy(lnsMaxFails = x)).
       text("for LNS: the maximal number of fail per CP search default is 2000")
 
-    opt[Int]("lnsRelaxProba").
+    opt[Int]("lnsRelaxProba").maxOccurs(1).
       action((x, c) => c.copy(lnsRelaxProba = x)).
       text("for LNS: the probability (in percentage) to maintain an element from one solution to the relaxed one, default is 90")
 
-    opt[Int]("lnsNbRelaxations").
+    opt[Int]("lnsNbRelaxations").maxOccurs(1).
       action((x, c) => c.copy(lnsNbRelaxations = x)).
       text("for LNS: the total number of relaxation to try out, default is 500")
 
-    opt[Int]("lnsNbRelaxationNoImprove").
+    opt[Int]("lnsNbRelaxationNoImprove").maxOccurs(1).
       action((x, c) => c.copy(lnsNbRelaxationNoImprove = x)).
       text("for LNS: the maximal number of consecutive relaxation without improvement, default is 200")
 
-    opt[Int]("lnsCarryOnObjForMultiHardware").action((int,c) =>
+    opt[Int]("lnsCarryOnObjForMultiHardware").maxOccurs(1).action((int,c) =>
       c.copy(lnsCarryOnObjForMultiHardware = int)).
-        text("when using multi hardware, " +
-          "should Placer carry on the best values for the objective function " +
-          "from one hardware to the next one? (" +
-          "0 is no; " +
-          "1 is yes, but if first solution cannot be found, try again without carry on; " +
-          "2 is yes, and without retry)" +
-          "default is 1")
+      text("""|when using multi hardware, should Placer carry on the best values for the objective function from one hardware to the next one?
+                                 0 is no;
+                                 1 is yes, but if first solution cannot be found, try again without carry on (this is the default)
+                                 2 is yes, and without retry""".stripMargin('|'))
 
-    opt[Boolean]("lnsUseEarlyStop").action((bool,c) =>
+    opt[Boolean]("lnsUseEarlyStop").maxOccurs(1).action((bool,c) =>
       c.copy(lnsUseEarlyStop = bool)).text("when using LNS, this option ask the solver to first make a search with all limits (time and fails) divided by ten, " +
       "and stop if this search was not fruitful. If the search was fruitful, it then proceeds with the normal set limits (time and fails)")
-
-    help("help").text("prints this usage text")
 
     note("""|Note: Placer is a java software so that all options taken by the JVM also apply.
             |Among them, you should consider the -Xmx and -Xms parameters to grant more memory to Placer:
@@ -146,6 +173,7 @@ object Main extends App {
         MapperConfig(maxDiscrepancy = config.discrepancy,
           timeLimit = config.timeLimit,
           lns = config.lns,
+          strategy = config.strategies,
           lnsMaxFails = config.lnsMaxFails,
           lnsRelaxProba = config.lnsRelaxProba,
           lnsNbRelaxations = config.lnsNbRelaxations,

@@ -33,6 +33,7 @@ import scala.collection.immutable.SortedSet
 case class MapperConfig(maxDiscrepancy:Int,
                         timeLimit:Int,
                         lns:Boolean,
+                        strategy:Option[List[Strategy.Value]],
                         lnsMaxFails:Int,
                         lnsRelaxProba:Int,
                         lnsNbRelaxations:Int,
@@ -501,18 +502,27 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
             }
           }
         case SymmetricTasksConstraint(tasks:List[AtomicTask]) =>
-          val theCPTasks = tasks.map(task => cpTasks(task.id))
+          if (config.lns) {
+            System.err.println("symmetry among tasks " + tasks.map(_.name) + " is disabled because using LNS")
+            //TODO: use them for first search
 
-          val processorImplementationComboS:Array[CPIntVar] = theCPTasks.map(cpTask => cpTask.processorImplementationCombo).toArray
+          } else {
+            println("breaking symmetry among tasks " + tasks.map(_.name) + " by (processingElement;implementation) combo")
 
-          for(i <- 1 until processorImplementationComboS.length){
-            add(processorImplementationComboS(i-1) <= processorImplementationComboS(i))
+            val theCPTasks = tasks.map(task => cpTasks(task.id))
+
+            val processorImplementationComboS: Array[CPIntVar] = theCPTasks.map(cpTask => cpTask.processorImplementationCombo).toArray
+
+            for (i <- 1 until processorImplementationComboS.length) {
+              add(processorImplementationComboS(i - 1) <= processorImplementationComboS(i), Strong)
+            }
           }
-
 
         case SymmetricPEConstraint(processors: List[ProcessingElement], breaking) =>
           if (config.lns) {
-            println("symmetry among " + processors.map(_.name) + " is disabled because using LNS")
+            System.err.println("symmetry among processing elements " + processors.map(_.name) + " is disabled because using LNS")
+            //TODO: use them for first search
+
           } else {
             //TODO: check that PE are indeed symmetric
             breaking match {

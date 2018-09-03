@@ -1038,12 +1038,26 @@
             "symmetricPE": [
                 "GPUsOfNode1",
                 "GPUsOfNode2"
-            ]
+            ],
+            "breaking":"workload"
         },
         {
             "symmetricPE": [
                 "CPUsOfNode1",
                 "CPUsOfNode2"
+            ],
+            "breaking":"workload"
+        },
+        {
+            "symmetricTasks":[
+                "multiplyChain1Block1",
+                "multiplyChain2Block1",
+                "multiplyChain3Block1",
+                "multiplyChain4Block1",
+                "multiplyChain5Block1",
+                "multiplyChain6Block1",
+                "multiplyChain7Block1",
+                "multiplyChain8Block1"
             ]
         }
     ]

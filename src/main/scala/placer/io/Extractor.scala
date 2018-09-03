@@ -258,7 +258,6 @@ case class EMappingConstraint(runOn:Option[ERunOn],
   }
 }
 
-
 case class ERunOn(task:String,processingElement:String)
 
 object EGoal{
