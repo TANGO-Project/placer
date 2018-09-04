@@ -58,7 +58,7 @@ class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapp
     }
   }
 
-  override def close() {
+  override def close(verbose:Boolean) {
 
     require(hostedSharedImplementations.forall(_.isClosed))
 
@@ -85,10 +85,10 @@ class CPPermanentTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, mapp
       solver.add(weightedSum(concatenatedRequirementsArray,concatenatedUsageArray,resourceToUsage(resource)))
     }
 
-    closeTransmissionAndComputationMemory()
+    closeTransmissionAndComputationMemory(verbose = verbose)
   }
 
-  override def timeWidth: cp.CPIntVar = {
+  override def timeWidth(verbose:Boolean): cp.CPIntVar = {
     val simpleTasks = tasksPotentiallyExecutingHere.map(cpTask =>
       new SimpleTask(cpTask.start,cpTask.taskDuration,cpTask.end,cpTask.isRunningOnProcessor(id))
     )

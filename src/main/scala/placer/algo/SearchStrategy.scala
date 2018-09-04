@@ -1,7 +1,7 @@
 package placer.algo
 
 import oscar.algo.search.Branching
-import oscar.cp.{CPSolver, binaryFirstFail, binarySplit, conflictOrderingSearch, minRegret}
+import oscar.cp.{CPIntVar, CPSolver, binaryFirstFail, binarySplit, conflictOrderingSearch, minRegret}
 
 object Strategy extends Enumeration {
   val TransmissionRouting,
@@ -10,7 +10,8 @@ object Strategy extends Enumeration {
   LocalOrBusTransmissionLongestAdjFirstNonLocalFirst,
   TaskPlacementFastestImplemPlusLessBuzyProcFirst,
   SharedImplementationInstances,
-  TaskAndTransmissionStarts = Value
+  TaskAndTransmissionStarts,
+  GlobalSmart = Value
 }
 
 import Strategy._
@@ -107,6 +108,55 @@ class SearchStrategy(cpProblem: CPMappingProblem,
               + cpProblem.cpTransmissions(transmissionID).transmissionDuration.max),
             transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
 
+        case GlobalSmart =>
+
+          val taskToPEAndTransmissionToBus: Array[CPIntVar] = (cpProblem.cpTasks.toList.map(_.processorID) ::: cpProblem.cpTransmissions.toList.map(_.busID)).toArray
+          //def taskAndTransID(id:Int)=if(id >= cpProblem.cpTasks.length) //transmission
+          //else // task
+
+          conflictOrderingSearch(
+            taskToPEAndTransmissionToBus,
+            varHeuristic = (id: Int) => if (id >= cpProblem.cpTasks.length){ //au plus petit, au plus prioritaire
+              //c'est une transmission
+              val transmissionID = id - cpProblem.cpTasks.length
+              1
+
+              //le choix est le delta entre le pire des cas et le meilleur des cas, on additionne le pire schéma:
+              // assignation des tâches aux processeurs les plus chargés, plus transmission
+
+            } else{
+              //c'est une tâche
+              val taskID = id
+
+              1
+            },
+            valHeuristic = (id: Int) => if (id >= cpProblem.cpTasks.length){ //quelle valeur choisir
+              //c'est une transmission
+              val transmissionID = id - cpProblem.cpTasks.length
+
+              1
+            } else{
+              //c'est une tâche
+              val taskID = id
+
+              1
+            })
+
+
+
+        //l'idée est de distribuer sur ce qui a le plus d'impact en premier, que ce soit une transmission ou le placement d'une tâche.
+        //pour commencer, on va jouer sur la durée brute:
+        //les tâche avec leur durée, et les transmission avec leur durées
+        // on fixe la tâche au proco le moins ocupé et la transmission en local first
+        // le souci des transmission, c'est qu'elles impactement les tâches, donc on peut aussi décider du placement des tâches
+
+        //on peut ajouter les transmisions local/global et décider sur base des sommes des durées des tâches + de la transmission.
+
+        //pour les transmissions,
+        // sélectionner par impact le plus grand = delta entre le min et le max en tenant compte des durées des tâches, qui varient selon le PE
+        //sélectionner quoi en priorité?
+
+          //on pourrait aussi faore une procédure custom, avec une bonne vielle récursion...
       }
 
     instantiateStrategyFromGivenListRecur(a)
@@ -129,7 +179,6 @@ class SearchStrategy(cpProblem: CPMappingProblem,
       ).toArray
 
     val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
-
 
     //basic distribution procedures
     def distributeOnTaskPlacementLessBuzyProcFirst = conflictOrderingSearch(
@@ -211,29 +260,13 @@ class SearchStrategy(cpProblem: CPMappingProblem,
         ++ distributeOnTransmissionRouting
         ++ distributeOnTaskPlacementLessBuzyProcFirst //TODO: should consider the fastest implementation first!!
         ++ */
-      //distributeOnLocalOrBusTransmissionLargestFirstLocalFirst
+      //distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst
       distributeOnTaskPlacementLessBuzyProcFirst
-        ++ distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst
+        ++ distributeOnLocalOrBusTransmissionLargestFirstLocalFirst
         ++ distributeOnSharedImplementationInstances
         ++ binarySplit(taskAndTransmissionStarts, varHeuris = cpVar => cpVar.max - cpVar.min)
         ++ conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min)
       )
-
-
-    /*
-    (conflictOrderingSearch(
-      processorIDChoices,
-      taskMaxDurations(_),
-      processorIDChoices(_).iterator.toList.maxBy(procID => cpProblem.processorLoadArrayUnderApprox(procID).max))
-      ++ (if (arrayOfNbInstancesOfSharedFunctions.nonEmpty) conflictOrderingSearch(
-      arrayOfNbInstancesOfSharedFunctions,
-      (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).max,
-      (fnID) => arrayOfNbInstancesOfSharedFunctions(fnID).min
-    ) else oscar.algo.search.Branching({
-      Seq.empty
-    }))
-      ++ binarySplit(taskStarts, varHeuris = (cpVar => cpVar.max - cpVar.min))
-      ++ discrepancy(conflictOrderingSearch(allVars, minRegret(allVars), allVars(_).min), config.maxDiscrepancy))*/
   }
 }
 

@@ -29,7 +29,7 @@ import placer.metadata.MappingProblem
 import scala.io.Source
 
 case class Config(in: File = new File("."),
-                  out: File = new File("."),
+                  out: File = null,
                   verbose: Boolean = false,
                   license:Boolean = false,
                   discrepancy:Int = Int.MaxValue,
@@ -41,7 +41,8 @@ case class Config(in: File = new File("."),
                   lnsNbRelaxations:Int = 500,
                   lnsNbRelaxationNoImprove:Int = 200,
                   lnsCarryOnObjForMultiHardware:Int = 1,
-                  lnsUseEarlyStop:Boolean = true)
+                  lnsUseEarlyStop:Boolean = true,
+                  benchmark:Boolean = false)
 
 object Main extends App {
 
@@ -54,7 +55,7 @@ object Main extends App {
       action((x, c) => c.copy(in = x)).
       text("the JSon file representing the placement problem")
 
-    opt[File]("out").required().maxOccurs(1).valueName("<file>").
+    opt[File]("out").maxOccurs(1).valueName("<file>").
       action((x, c) => c.copy(out = x)).
       text("the file where the JSon representing the placements will be stored")
 
@@ -131,6 +132,9 @@ object Main extends App {
       c.copy(lnsUseEarlyStop = bool)).text("when using LNS, this option ask the solver to first make a search with all limits (time and fails) divided by ten, " +
       "and stop if this search was not fruitful. If the search was fruitful, it then proceeds with the normal set limits (time and fails)")
 
+    opt[Boolean]("benchmark").maxOccurs(1).action((bool,c) =>
+      c.copy(benchmark = bool)).text("run the tool, reports the run time and obj, and optionally saves the outfile, if an outfile is given. ")
+
     note("""|Note: Placer is a java software so that all options taken by the JVM also apply.
             |Among them, you should consider the -Xmx and -Xms parameters to grant more memory to Placer:
             |example: java -Xms4G -Xmx15G -jar Placer.jar --in=...""".stripMargin('|'))
@@ -139,6 +143,7 @@ object Main extends App {
   parser.parse(args, Config()) match {
     case None =>
       // arguments are bad, error message will have been displayed
+      System.err.println("exiting Placer")
       System.exit(-1)
     case Some(config) if config.license =>
       // do stuff
@@ -167,8 +172,11 @@ object Main extends App {
       val parsed = parse(problemFile.mkString)
       val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
+      require(config.out != null || config.benchmark, "---out must be specified if not running benchmark mode")
+
       if (config.verbose) println(problem)
 
+      val startTime = System.nanoTime()
       val mappingSet = Mapper.findMapping(problem,
         MapperConfig(maxDiscrepancy = config.discrepancy,
           timeLimit = config.timeLimit,
@@ -179,15 +187,30 @@ object Main extends App {
           lnsNbRelaxations = config.lnsNbRelaxations,
           lnsNbRelaxationNoImprove = config.lnsNbRelaxationNoImprove,
           lnsCarryOnObjForMultiHardware = config.lnsCarryOnObjForMultiHardware,
-          lnsUseEarlyStop = config.lnsUseEarlyStop))
+          lnsUseEarlyStop = config.lnsUseEarlyStop,
+          verbose = verbose))
+
+      val endTime = System.nanoTime()
 
       if (config.verbose) println(mappingSet)
 
-      val outJSon = mappingSet.toJSon
-      new PrintWriter(config.out) {
-        val parsed = parse(outJSon)
-        write(prettyRender(parsed))
-        close()
+      if(config.benchmark){
+        println("runTime: " + ((endTime - startTime)/(1000*1000)) + " ms" + " obj: " + mappingSet.mapping.map(_.objValues.mkString(",")))
+        if(config.out != null) {
+          val outJSon = mappingSet.toJSon
+          new PrintWriter(config.out) {
+            val parsed = parse(outJSon)
+            write(prettyRender(parsed))
+            close()
+          }
+        }
+      }else{
+        val outJSon = mappingSet.toJSon
+        new PrintWriter(config.out) {
+          val parsed = parse(outJSon)
+          write(prettyRender(parsed))
+          close()
+        }
       }
       System.exit(0)
   }

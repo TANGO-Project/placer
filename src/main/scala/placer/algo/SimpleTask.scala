@@ -88,10 +88,10 @@ object SimpleTask extends Constraints {
     maximum(endTimeArrayMinIfNotNeeded) - minimum(startTimeArrayMaxIfNotNeeded)
   }
 
-  def postCumulativeResourceForSimpleTasks(simpleTasks: List[SimpleTask], maxResource: CPIntVar,origin:String) {
+  def postCumulativeResourceForSimpleTasks(simpleTasks: List[SimpleTask], maxResource: CPIntVar,origin:String,verbose:Boolean) {
     CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleTasks.map(
       s => CumulativeTask(s.start, s.duration, s.end, amount = s.isNeeded, origin)
-    ), maxResource, origin)
+    ), maxResource, origin,verbose)
   }
 }
 
@@ -103,7 +103,7 @@ object CumulativeTask extends Constraints {
    * @param maxResource the maximal amount of available resources
    * @return the width of the resource, that is the spacing before the same usage pattern can be repeated
    */
-  def defineResourceWidth(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String):CPIntVar = {
+  def defineResourceWidth(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String,verbose:Boolean ):CPIntVar = {
     val relevantTasks = cumulativeTasks.filter(!_.amount.isBoundTo(0))
 
     val minimumStartTime:Int = (for (task <- relevantTasks) yield task.start.getMin).min
@@ -118,7 +118,7 @@ object CumulativeTask extends Constraints {
 
     val allRelevantTasks = relevantTasks ++ mirrorTasks
 
-    postCumulativeForSimpleCumulativeTasks(allRelevantTasks, maxResource, origin)
+    postCumulativeForSimpleCumulativeTasks(allRelevantTasks, maxResource, origin,verbose)
 
     width
   }
@@ -128,11 +128,11 @@ object CumulativeTask extends Constraints {
    * @param cumulativeTasks a set of cumulative tasks, which require a certain amount of resource (zero means that it does not use the resource, actually)
    * @param maxResource the maximal amount of available resources
    */
-  def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String) {
+  def postCumulativeForSimpleCumulativeTasks(cumulativeTasks: List[CumulativeTask], maxResource: CPIntVar,origin:String,verbose:Boolean ) {
     val simpleTasksArray = cumulativeTasks.filter(t => !t.amount.isBoundTo(0)).toArray
     val summedMaxAmount = simpleTasksArray.map(_.amount.max).sum
     if (summedMaxAmount < maxResource.min) {
-      println("INFO: skipping tautological cumulative constraint: " + origin + ", summedMaxAmount:" + summedMaxAmount + ", min available resource:" + maxResource.min)
+      if(verbose) println("INFO: skipping tautological cumulative constraint: " + origin + ", summedMaxAmount:" + summedMaxAmount + ", min available resource:" + maxResource.min)
     } else {
       if (simpleTasksArray.length != 0) {
         val startTimeArray = simpleTasksArray.map(_.start)

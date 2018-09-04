@@ -56,7 +56,7 @@ abstract class AbstractCPSwitchingTaskProcessor(id: Int, p: ProcessingElement, m
     }
   }
 
-  override def timeWidth: CPIntVar = {
+  override def timeWidth(verbose:Boolean): CPIntVar = {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)
     else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))))
   }
@@ -71,10 +71,10 @@ case class CPInstantiatedPermanentFunction(override val id: Int, host:CPPermanen
   //we need to check this because there are two possible closing fo this PE class
   var isClosed = false
 
-  override def close(){
+  override def close(verbose:Boolean){
     require(!isClosed)
     if(allSimpleTasksPotentiallyExecutingHere.isEmpty) nbInstances.assign(0)
-    else CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name)
+    else CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, nbInstances, origin = "usage of CPInstantiatedPermanentFunction" + p.name,verbose:Boolean)
     //we do not close anything about memory since this is incorporated into the hosting PE
     isClosed = true
   }
@@ -108,17 +108,17 @@ class CPSwitchingTaskProcessor(id: Int, p: ProcessingElement, memSize: Int, val 
   require(p.processorClass.isInstanceOf[SwitchingTask])
   require(nbCores ==1 || switchingDelay==0, "cannot have switching delay with multi cores")
 
-  override def timeWidth: CPIntVar = {
+  override def timeWidth(verbose:Boolean): CPIntVar = {
     if (allSimpleTasksPotentiallyExecutingHere.isEmpty) CPIntVar(0)
     else SimpleTask.resourceWidthOfUse(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))))
   }
 
-  override def close() {
+  override def close(verbose:Boolean) {
     if(nbCores == 1) {
       SimpleTask.postUnaryResourceForSimpleTasks(allSimpleTasksPotentiallyExecutingHere.map((c:CumulativeTask) => SimpleTask(c.start,c.duration,c.end,c.amount.isEq(1))), switchingDelay, origin = "usage of CPSwitchingTaskProcessor" + p.name)
     }else{
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores),origin = "usage of CPSwitchingTaskProcessor" + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(allSimpleTasksPotentiallyExecutingHere, CPIntVar(nbCores),origin = "usage of CPSwitchingTaskProcessor" + p.name,verbose)
     }
-    closeTransmissionAndComputationMemory()
+    closeTransmissionAndComputationMemory(verbose = verbose)
   }
 }

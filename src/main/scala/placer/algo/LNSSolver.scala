@@ -52,7 +52,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     } onSolution {
       bestSolution = Some(cpProblem.getMapping(solver.lastSol,List(theVar)))
       bestValue = varToMinimize.value
-      println("solution found, makeSpan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
+      if(config.verbose) println("solution found, makeSpan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
     }
 
 
@@ -60,10 +60,10 @@ class LNSSolver(cpProblem: CPMappingProblem,
     config.lnsCarryOnObjForMultiHardware match {
       case 0 =>
         val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
-        println("stat of initial solution (no carry on lns): ")
-        println(stat)
+        if(config.verbose) println("stat of initial solution (no carry on lns): ")
+        if(config.verbose) println(stat)
       case 1 =>
-        println("first attempt of initial solution with lns carry on")
+        if(config.verbose) println("first attempt of initial solution with lns carry on")
         val firstAttempt = startSubjectTo(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue) {
           if (!bestSolutionsSoFar.isEmpty) {
             require(bestSolutionsSoFar.size == 1)
@@ -72,21 +72,21 @@ class LNSSolver(cpProblem: CPMappingProblem,
         }
 
         if (firstAttempt.nSols == 0) {
-          println("initial solution with lns carry on failed: ")
+          if(config.verbose) println("initial solution with lns carry on failed: ")
           println(firstAttempt)
 
           if(bestSolutionsSoFar.size == 1) {
-            println("starting second attempt without carry on")
+            if(config.verbose) println("starting second attempt without carry on")
             val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
-            println("stat of second attempt without lns carry on: ")
-            println(stat)
+            if(config.verbose) println("stat of second attempt without lns carry on: ")
+            if(config.verbose) println(stat)
           }else{
-            println("there is no actual value carried on, so no second attempt")
+            if(config.verbose) println("there is no actual value carried on, so no second attempt")
           }
 
         } else {
-          println("initial solution with lns carry on:")
-          println(firstAttempt)
+          if(config.verbose) println("initial solution with lns carry on:")
+          if(config.verbose) println(firstAttempt)
         }
 
       case 2 =>
@@ -117,7 +117,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
 
     //LNS restart stuff here!
     if(!performTimeShavings()){
-      println("first solution of LNS is proven best")
+      if(config.verbose) println("first solution of LNS is proven best")
       return bestSolution
     }
 
@@ -129,7 +129,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
       remainigRelaxationNoImprove -= 1
       currentRelaxation = currentRelaxation + 1
-      println("relaxation " + currentRelaxation)
+      if(config.verbose) println("relaxation " + currentRelaxation)
 
       val constraintsForThisRelaxation = generateConstraintsForRelaxation(relaxProba,bestSolution.get,allProcessesInSamePEConstraints,samePEConstraints)
 
@@ -153,7 +153,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
         }
         if (config.performShavings && stats2.nSols > 0) performTimeShavings()
       }else {
-        println("early stop")
+        if(config.verbose) println("early stop")
       }
     }
 
@@ -178,7 +178,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     val startDomSizeBefore = a.map(sv => sv.size)
     ShavingUtils.boundsShaving(solver, a)
     val startDomSizeAfter = a.map(sv => sv.size)
-    println(s"Shaving on min and max has removed ${a.indices.foldLeft(0)((acc, i) => acc + (startDomSizeBefore(i) - startDomSizeAfter(i)))} values from the domains of ${a.length} variables.")
+    if(config.verbose) println(s"Shaving on min and max has removed ${a.indices.foldLeft(0)((acc, i) => acc + (startDomSizeBefore(i) - startDomSizeAfter(i)))} values from the domains of ${a.length} variables.")
     true
   }
 
@@ -289,7 +289,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     Random.nextInt(6) match {
       case 0 =>
 
-        println("selectTasksToRelaxFullRANDOM with CAP")
+        if(config.verbose) println("selectTasksToRelaxFullRANDOM with CAP")
         selectTasksToRelaxFullRANDOM(relaxProba: Int,
           bestSolution: Mapping,
           allProcessesInSamePEConstraints: SortedSet[Int],
@@ -298,7 +298,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
         setPEForNonRelaxedTasks(isTaskRelaxed,bestSolution) ::: /*restrictTimeShiftForNonRelaxedTasks*/setTimeForNonRelaxedTasks(isTaskRelaxed:Array[Boolean], bestSolution:Mapping)
 
       case 1 =>
-        println("selectTasksToRelaxFullRANDOM")
+        if(config.verbose) println("selectTasksToRelaxFullRANDOM")
 
         selectTasksToRelaxFullRANDOM(relaxProba: Int,
           bestSolution: Mapping,
@@ -308,7 +308,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
         setPEForNonRelaxedTasks(isTaskRelaxed,bestSolution)
 
       case 2 =>
-        println("selectTasksToRelaxRANDOMAndImpactZone with CAP")
+        if(config.verbose) println("selectTasksToRelaxRANDOMAndImpactZone with CAP")
         selectTasksToRelaxRANDOMAndImpactZone(
           relaxProba: Int,
           bestSolution: Mapping,
@@ -317,7 +317,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
         setPEForNonRelaxedTasks(isTaskRelaxed,bestSolution) ::: /*restrictTimeShiftForNonRelaxedTasks*/setTimeForNonRelaxedTasks(isTaskRelaxed:Array[Boolean], bestSolution:Mapping)
 
       case 3 =>
-        println("selectTasksToRelaxRANDOMAndImpactZone")
+        if(config.verbose) println("selectTasksToRelaxRANDOMAndImpactZone")
         selectTasksToRelaxRANDOMAndImpactZone(
           relaxProba: Int,
           bestSolution: Mapping,
@@ -326,12 +326,12 @@ class LNSSolver(cpProblem: CPMappingProblem,
         setPEForNonRelaxedTasks(isTaskRelaxed,bestSolution)
 
       case 4 =>
-        println("scheduleNoMove")
+        if(config.verbose) println("scheduleNoMove")
 
         generateMappingNoPlacementRelax(bestSolution)
 
       case 5 =>
-        println("flexiblesOnly")
+        if(config.verbose) println("flexiblesOnly")
 
         val isTaskRelaxed = selectTasksOnFlexible(relaxProba:Int,
           bestSolution:Mapping,

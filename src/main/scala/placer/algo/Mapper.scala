@@ -40,7 +40,8 @@ case class MapperConfig(maxDiscrepancy:Int,
                         lnsNbRelaxationNoImprove:Int,
                         lnsCarryOnObjForMultiHardware:Int,
                         performShavings:Boolean = false,
-                        lnsUseEarlyStop:Boolean = true)
+                        lnsUseEarlyStop:Boolean = true,
+                        verbose:Boolean)
 
 object Mapper {
 
@@ -135,7 +136,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
   def reportProgress(startedUpTask: String): Unit = {
     this.solver.propagate()
     if (this.solver.isFailed) throw new Error("solver trivially concluded to no solution or overflowed during latest modeling step")
-    println(startedUpTask)
+    if(config.verbose) println(startedUpTask)
   }
 
   def postProblem(softwareModel: SoftwareModel,
@@ -156,12 +157,12 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       case None => staticMaxHorizon
     }
 
-    println("staticMaxHorizon:" + staticMaxHorizon)
-    println("maxHorizon:      " + maxHorizon)
-
-    println("nbTasks:" + softwareModel.simpleProcesses.length)
-    println("nbTransmissions:" + softwareModel.transmissions.length)
-
+    if(config.verbose) {
+      println("staticMaxHorizon:" + staticMaxHorizon)
+      println("maxHorizon:      " + maxHorizon)
+      println("nbTasks:" + softwareModel.simpleProcesses.length)
+      println("nbTransmissions:" + softwareModel.transmissions.length)
+    }
     reportProgress("creating processors")
 
     //creating the CPPRocessors
@@ -329,16 +330,16 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       }
 
       if(isWidthNeeded){
-        widthVarList = proc.timeWidth :: widthVarList //TODO: add proc.temporaryStorageWidth
+        widthVarList = proc.timeWidth(config.verbose) :: widthVarList //TODO: add proc.temporaryStorageWidth
       }
     }
     //processors are closed in a second round because of the shared implementations.
     for (proc <- cpProcessorsVirtual) {
-      proc.close()
+      proc.close(config.verbose)
     }
 
     for (proc <- cpProcessorsSimple) {
-      proc.close()
+      proc.close(config.verbose)
     }
 
     widthVar match {
@@ -419,7 +420,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         case ForbidHardwarePlatform(set) =>
 
           if(set contains hardwareModel.name) {
-            println("forbidden hardware: " + hardwareModel.name)
+            if(config.verbose) println("forbidden hardware: " + hardwareModel.name)
             return null
           }
 
@@ -428,7 +429,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
           val simpleCumulativeTasks = cpTasks.toList.map(
             task => CumulativeTask(start = task.start, duration = task.taskDuration, end = task.end, amount = task.power, explanation = "power of task " + task)
           )
-          CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(maxPower - backgroundPower), "powerCap")
+          CumulativeTask.postCumulativeForSimpleCumulativeTasks(simpleCumulativeTasks, CPIntVar(maxPower - backgroundPower), "powerCap",config.verbose)
 
         case EnergyCap(maxEnergy:Int) =>
           reportProgress("posting energyCap")
@@ -475,7 +476,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
                 }
               }
             } else {
-              println("requiring same core for an empty set of tasks?")
+              if(config.verbose) System.err.println("requiring same core for an empty set of tasks?")
             }
           } else {
             //different cores all
@@ -492,22 +493,22 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         case x@MustBeUsedConstraint(processor, value) =>
 
           if (value) {
-            println("posting MustBeUsedConstraint(" + processor.name + ")")
+            if(config.verbose) println("posting MustBeUsedConstraint(" + processor.name + ")")
             val isRunningOnProcessor: Array[CPBoolVar] = cpTasks.map(task => task.isRunningOnProcessor(processor.id))
             add(new oscar.cp.constraints.Or(isRunningOnProcessor))
           } else {
-            println("posting MustNotBeUsedConstraint(" + processor.name + ")")
+            if(config.verbose) println("posting MustNotBeUsedConstraint(" + processor.name + ")")
             for (task <- cpTasks) {
               add(task.isRunningOnProcessor(processor.id) === 0)
             }
           }
         case SymmetricTasksConstraint(tasks:List[AtomicTask]) =>
           if (config.lns) {
-            System.err.println("symmetry among tasks " + tasks.map(_.name) + " is disabled because using LNS")
+            if(config.verbose) System.err.println("symmetry among tasks " + tasks.map(_.name) + " is disabled because using LNS")
             //TODO: use them for first search
 
           } else {
-            println("breaking symmetry among tasks " + tasks.map(_.name) + " by (processingElement;implementation) combo")
+            if(config.verbose) println("breaking symmetry among tasks " + tasks.map(_.name) + " by (processingElement;implementation) combo")
 
             val theCPTasks = tasks.map(task => cpTasks(task.id))
 
@@ -520,14 +521,14 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
         case SymmetricPEConstraint(processors: List[ProcessingElement], breaking) =>
           if (config.lns) {
-            System.err.println("symmetry among processing elements " + processors.map(_.name) + " is disabled because using LNS")
+            if(config.verbose) System.err.println("symmetry among processing elements " + processors.map(_.name) + " is disabled because using LNS")
             //TODO: use them for first search
 
           } else {
             //TODO: check that PE are indeed symmetric
             breaking match {
               case SymmetricPEConstraintType.Workload =>
-                println("breaking symmetry among " + processors.map(_.name) + " by workload")
+                if(config.verbose) println("breaking symmetry among " + processors.map(_.name) + " by workload")
                 val processorIDs = processors.map(_.id)
                 val loadVariables = processorIDs.map(processorLoadArrayUnderApprox(_))
 
@@ -543,7 +544,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
                 makeSorted(loadVariables)
 
               case SymmetricPEConstraintType.LongTask =>
-                println("breaking symmetry among " + processors.map(_.name) + " by longest tasks assignment")
+                if(config.verbose) println("breaking symmetry among " + processors.map(_.name) + " by longest tasks assignment")
                 assert(false, "this should not be used because it only works if the selected tasks hae no additional constraints on it, such as SamePE")
                 val witnessProcessorID = processors.head.id
                 val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessorID).isFalse)

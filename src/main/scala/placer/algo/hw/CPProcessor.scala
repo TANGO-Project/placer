@@ -131,21 +131,21 @@ abstract class CPProcessor(val id: Int, val p: ProcessingElement, memSize: Optio
     }
   }
 
-  def closeTransmissionAndComputationMemory(memoryVar:CPIntVar = CPIntVar(memSize.get)): Unit = {
+  def closeTransmissionAndComputationMemory(memoryVar:CPIntVar = CPIntVar(memSize.get),verbose:Boolean): Unit = {
     if (temporaryStorages.isEmpty) {
       System.err.println("WARNING: no temporary storage will ever be used on " + p.name)
     } else {
-      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, memoryVar,"temporary storage for processor " + p.name)
+      CumulativeTask.postCumulativeForSimpleCumulativeTasks(temporaryStorages, memoryVar,"temporary storage for processor " + p.name,verbose)
     }
   }
 
-  def temporaryStorageWidth:CPIntVar = {
+  def temporaryStorageWidth(verbose:Boolean):CPIntVar = {
     //TODO: this is redundant with the "postCumulativeForSimpleCumulativeTasks" in closeTransmissionAndComputationMemory
     if(temporaryStorages.isEmpty) CPIntVar(0)
-    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize.get),"temporaryStorageWidth for processor " + p.name)
+    else CumulativeTask.defineResourceWidth(temporaryStorages,CPIntVar(memSize.get),"temporaryStorageWidth for processor " + p.name,verbose)
   }
 
-  def timeWidth:CPIntVar
+  def timeWidth(verbose:Boolean):CPIntVar
 
-  def close()
+  def close(verbose:Boolean)
 }

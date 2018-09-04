@@ -62,11 +62,11 @@ extends SearchStrategy(cpProblem: CPMappingProblem,
     search {
       searchStrategy(isParetoSearch)
     } onSolution {
-      println("solution found, makespan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
+      if(config.verbose) println("solution found, makespan=" + cpProblem.makeSpan.value + " energy:" + cpProblem.energy.value)
     }
 
     val stat = start(nSols = if (isSearchOnlyOne) 1 else Int.MaxValue, timeLimit = config.timeLimit)
-    println(stat)
+    if(config.verbose) println(stat)
 
     goal match {
       case Some(MinPareto(a, b)) =>
