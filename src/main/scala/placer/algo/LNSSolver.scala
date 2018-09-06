@@ -57,27 +57,30 @@ class LNSSolver(cpProblem: CPMappingProblem,
 
 
 
+    var remainingTimeLimit = config.timeLimit
     config.lnsCarryOnObjForMultiHardware match {
       case 0 =>
-        val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
+        val stat = start(nSols = 1, timeLimit = remainingTimeLimit, maxDiscrepancy = Int.MaxValue)
         if(config.verbose) println("stat of initial solution (no carry on lns): ")
         if(config.verbose) println(stat)
+        remainingTimeLimit -= (stat.time/1000).toInt
       case 1 =>
         if(config.verbose) println("first attempt of initial solution with lns carry on")
-        val firstAttempt = startSubjectTo(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue) {
+        val firstAttempt = startSubjectTo(nSols = 1, timeLimit = remainingTimeLimit, maxDiscrepancy = Int.MaxValue) {
           if (!bestSolutionsSoFar.isEmpty) {
             require(bestSolutionsSoFar.size == 1)
             add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
           }
         }
-
+        remainingTimeLimit -= (firstAttempt.time/1000).toInt
         if (firstAttempt.nSols == 0) {
           if(config.verbose) println("initial solution with lns carry on failed: ")
           println(firstAttempt)
 
           if(bestSolutionsSoFar.size == 1) {
             if(config.verbose) println("starting second attempt without carry on")
-            val stat = start(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue)
+            val stat = start(nSols = 1, timeLimit = remainingTimeLimit, maxDiscrepancy = Int.MaxValue)
+            remainingTimeLimit -= (stat.time/1000).toInt
             if(config.verbose) println("stat of second attempt without lns carry on: ")
             if(config.verbose) println(stat)
           }else{
@@ -90,12 +93,13 @@ class LNSSolver(cpProblem: CPMappingProblem,
         }
 
       case 2 =>
-        val stat = startSubjectTo(nSols = 1, timeLimit = Int.MaxValue, maxDiscrepancy = Int.MaxValue) {
+        val stat = startSubjectTo(nSols = 1, timeLimit = remainingTimeLimit, maxDiscrepancy = Int.MaxValue) {
           if (!bestSolutionsSoFar.isEmpty) {
             require(bestSolutionsSoFar.size == 1)
             add(ParetoConstraint(bestSolutionsSoFar, Array(false), Array(theVar)))
           }
         }
+        remainingTimeLimit -= (stat.time/1000).toInt
       case x => "undefined value of lnsCarryOn:" + x
     }
 
@@ -126,7 +130,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     val nRelaxations = config.lnsNbRelaxations
     var remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
     var currentRelaxation = 0
-    while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0){
+    while(currentRelaxation < nRelaxations && remainigRelaxationNoImprove > 0 && remainingTimeLimit > 0){
       remainigRelaxationNoImprove -= 1
       currentRelaxation = currentRelaxation + 1
       if(config.verbose) println("relaxation " + currentRelaxation)
@@ -137,20 +141,22 @@ class LNSSolver(cpProblem: CPMappingProblem,
       val shouldPerformShortSearch = config.lnsUseEarlyStop
 
       val quickSearchDidFindSomething = if (shouldPerformShortSearch){
-        val stats1 = startSubjectTo(failureLimit = maxFails, timeLimit = config.timeLimit) {
+        val stats1 = startSubjectTo(failureLimit = maxFails/10, timeLimit = remainingTimeLimit min config.lnsTimeLimit/10) {
           //relaxation strategy (actually it is more a non-relaxation strategy)
           add(constraintsForThisRelaxation)
           //print("innerShavings:") performTimeShavings() ths reduces a lot, but is very costly, compared to classical propagation.
         }
+        remainingTimeLimit -= (stats1.time/1000).toInt
         stats1.nSols > 0
       } else false
 
       val shouldPerformLongSearch = !config.lnsUseEarlyStop || config.lnsUseEarlyStop && quickSearchDidFindSomething
       if(shouldPerformLongSearch){
         remainigRelaxationNoImprove = config.lnsNbRelaxationNoImprove
-        val stats2 = startSubjectTo(failureLimit = maxFails*10,timeLimit = config.timeLimit){
+        val stats2 = startSubjectTo(failureLimit = maxFails,timeLimit = remainingTimeLimit min config.lnsTimeLimit){
           add(constraintsForThisRelaxation)
         }
+        remainingTimeLimit -= (stats2.time/1000).toInt
         if (config.performShavings && stats2.nSols > 0) performTimeShavings()
       }else {
         if(config.verbose) println("early stop")

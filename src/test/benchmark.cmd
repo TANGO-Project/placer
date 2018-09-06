@@ -8,10 +8,32 @@ REM placer.Main
 REM --in=
 SET IN="C:\Users\rdl\Documents\TANGO\Optim5TANGO\placer\data\matMul\MatMulLarger.json"
 REM --out=
-SET OUT="C:\Users\rdl\Documents\TANGO\Optim5TANGO\placer\data\matMul\MatMulLargerOut"
-REM -lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=TaskPlacementLessBuzyProcFirst,LocalOrBusTransmissionLargestFirstLocalFirst,TaskAndTransmissionStarts --benchmark=true
+SET OUT="C:\Users\rdl\Documents\TANGO\Optim5TANGO\placer\data\matMul\MatMulLargerOut.json"
+REM --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=TaskPlacementLessBuzyProcFirst,LocalOrBusTransmissionLargestFirstLocalFirst,TaskAndTransmissionStarts --benchmark=true
 
 SET STRATEGY1="TaskPlacementLessBuzyProcFirst,LocalOrBusTransmissionLargestFirstLocalFirst,TaskAndTransmissionStarts"
 
-%JAVA% -Xms5G -Xmx20G %ALLJARS% placer.Main --in=%IN% --out=%OUT% --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=%STRATEGY1% --benchmark=true
+SET STRATEGY=%STRATEGY1%
+
+
+REM %JAVA% -Xms5G -Xmx20G %ALLJARS% placer.Main --benchmark=true --in=%IN% --out=%OUT% --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=%STRATEGY%
+
+SET BASICPLACERCOMMAND=%JAVA% -Xms5G -Xmx20G %ALLJARS% placer.Main --benchmark=true --in=%IN% --out=%OUT% --timeLimit=300
+
+
+ECHO %STRATEGY1%
+%BASICPLACERCOMMAND% --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=%STRATEGY1%
+
+
+SET STRATEGY1="LocalOrBusTransmissionLargestFirstLocalFirst,TaskPlacementLessBuzyProcFirst,TaskAndTransmissionStarts"
+ECHO %STRATEGY1%
+%BASICPLACERCOMMAND% --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=%STRATEGY1%
+
+SET STRATEGY1="TaskPlacementLessBuzyProcFirst,TaskAndTransmissionStarts,LocalOrBusTransmissionLargestFirstLocalFirst"
+ECHO %STRATEGY1%
+%BASICPLACERCOMMAND% --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=%STRATEGY1%
+
+SET STRATEGY1="TaskAndTransmissionStarts,TaskPlacementLessBuzyProcFirst,LocalOrBusTransmissionLargestFirstLocalFirst"
+ECHO %STRATEGY1%
+%BASICPLACERCOMMAND% --lns=true --lnsNbRelaxationNoImprove=50 --lnsMaxFails=5000 --lnsRelaxProba=5 --lnsUseEarlyStop=true --strategy=%STRATEGY1%
 

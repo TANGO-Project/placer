@@ -41,6 +41,7 @@ case class MapperConfig(maxDiscrepancy:Int,
                         lnsCarryOnObjForMultiHardware:Int,
                         performShavings:Boolean = false,
                         lnsUseEarlyStop:Boolean = true,
+                        lnsTimeLimit:Int = Int.MaxValue,
                         verbose:Boolean)
 
 object Mapper {

@@ -36,6 +36,7 @@ case class Config(in: File = new File("."),
                   strategies:Option[List[Strategy.Value]] = None,
                   timeLimit:Int = Int.MaxValue,
                   lns:Boolean = false,
+                  lnsTimeLimit:Int = Int.MaxValue,
                   lnsMaxFails:Int = 2000,
                   lnsRelaxProba:Int = 90,
                   lnsNbRelaxations:Int = 500,
@@ -92,7 +93,7 @@ object Main extends App {
 
     opt[Int]("timeLimit").maxOccurs(1).
       action((x, c) => c.copy(timeLimit = x)).
-      text("the maximal run time for Placer in seconds, default is MaxInt. In case of LNS it is taken as the time limit pers CP exploration; if no solution found within this time limit, exploration is stopped. ")
+      text("the maximal run time for Placer in seconds, default is MaxInt, also used for LNS")
 
     opt[Unit]("verbose").maxOccurs(1).action((_, c) =>
       c.copy(verbose = true)).text("prints some verbosities")
@@ -108,6 +109,11 @@ object Main extends App {
     opt[Int]("lnsMaxFails").maxOccurs(1).
       action((x, c) => c.copy(lnsMaxFails = x)).
       text("for LNS: the maximal number of fail per CP search default is 2000")
+
+    opt[Int]("lnsTimeLimit").maxOccurs(1).
+      action((x, c) => c.copy(lnsTimeLimit = x)).
+      text("for LNS: the time limit for each LNS search. ")
+
 
     opt[Int]("lnsRelaxProba").maxOccurs(1).
       action((x, c) => c.copy(lnsRelaxProba = x)).
@@ -181,6 +187,7 @@ object Main extends App {
         MapperConfig(maxDiscrepancy = config.discrepancy,
           timeLimit = config.timeLimit,
           lns = config.lns,
+          lnsTimeLimit = config.lnsTimeLimit,
           strategy = config.strategies,
           lnsMaxFails = config.lnsMaxFails,
           lnsRelaxProba = config.lnsRelaxProba,
