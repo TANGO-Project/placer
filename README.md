@@ -33,24 +33,47 @@ Placer is a command-line tool. A documentation of all parameter is available thr
 ```
 > java -jar Placer.jar --help
 
-placer beta1
+Placer version Beta5
+
 Usage: placer [options]
 
-  --in <file>	the JSon file representing the placement problem
-  --out <file>	the file where the JSon representing the placements will be stored
-  --discrepancy <value> 	the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is MaxInt
-  --timeLimit <value>	the maximal run time for Placer in seconds, default is MaxInt. In case of LNS it is taken as the time limit pers CP exploration.
-  --verbose	prints some verbosities
-  --license	prints license and stops
-  --lns <value>	use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto
-  --lnsMaxFails <value>	for LNS: the maximal number of fail per CP search default is 2000
-  --lnsRelaxProba <value>	for LNS: the probability (in percentage) to maintain an element from one solution to the relaxed one, default is 90
-  --lnsNbRelaxations <value> 	for LNS: the total number of relaxation to try out, default is 500
-  --lnsNbRelaxationNoImprove <value>	for LNS: the maximal number of consecutive relaxation without improvement, default is 200
-  --help	prints this usage text
+  --help                   prints this usage text
+  --in <file>              the JSon file representing the placement problem
+  --out <file>             the file where the JSon representing the placements will be stored
+  --discrepancy <value>    the maximal discrepancy to use during the search must be >=0 , lower is faster but incomplete, use 20 for instance (5 if in a hurry). default is MaxInt
+  --strategy strategy1,strategy2,...
+                           Search strategies to use, in the order they must be searched. The available search stategies are:
+                                 TransmissionRouting
+                                 TaskPlacementLessBuzyProcFirst
+                                 LocalOrBusTransmissionLargestFirstLocalFirst
+                                 LocalOrBusTransmissionLongestAdjFirstNonLocalFirst
+                                 TaskPlacementFastestImplemPlusLessBuzyProcFirst
+                                 SharedImplementationInstances
+                                 TaskAndTransmissionStarts
+                                 HEFT  (not very good in CP context)
+                 when not specified, a default search strategy is used.
 
-Note: Placer is a java software so that all options taken by the JVM also apply. Among them, you should consider the -Xmx and -Xms parameters to grant more memory to Placer.
-
+  --timeLimit <value>      the maximal run time for Placer in seconds, default is MaxInt, also used for LNS
+  --verbose                prints some verbosities
+  --license                prints license and stops
+  --lns <value>            use LNS, only for single objective goal (minMakespan,minEnergy,...) not for sat or Pareto
+  --lnsMaxFails <value>    for LNS: the maximal number of fail per CP search default is 2000
+  --lnsTimeLimit <value>   for LNS: the time limit for each LNS search.
+  --lnsRelaxProba <value>  for LNS: the probability (in percentage) to maintain an element from one solution to the relaxed one, default is 90
+  --lnsNbRelaxations <value>
+                           for LNS: the total number of relaxation to try out, default is 500
+  --lnsNbRelaxationNoImprove <value>
+                           for LNS: the maximal number of consecutive relaxation without improvement, default is 200
+  --lnsCarryOnObjForMultiHardware <value>
+                           when using multi hardware, should Placer carry on the best values for the objective function from one hardware to the next one?
+                                 0 is no;
+                                 1 is yes, but if first solution cannot be found, try again without carry on (this is the default)
+                                 2 is yes, and without retry
+  --lnsUseEarlyStop <value>
+                           when using LNS, this option ask the solver to first make a search with all limits (time and fails) divided by ten, and stop if this search was not fruitful. If the search was fruitful, it then proceeds with the normal set limits (time and fails)
+  --benchmark <value>      run the tool, reports the run time and obj, and optionally saves the outfile, if an outfile is given.
+Note: Placer is a java software so that all options taken by the JVM also apply.
+Among them, you should consider the -Xmx and -Xms parameters to grant more memory to Placer:
 example: java -Xms4G -Xmx15G -jar Placer.jar --in=...
 ```
 

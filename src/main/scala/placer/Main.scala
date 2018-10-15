@@ -48,7 +48,7 @@ case class Config(in: File = new File("."),
 object Main extends App {
 
   val parser = new scopt.OptionParser[Config]("placer") {
-    head("placer", "beta3")
+    head("placer", "version Beta5")
 
     help("help").text("prints this usage text")
 
