@@ -22,24 +22,23 @@
 #uses the finitio language: http://www.finitio.io/
 
 HardwareModel = {
-    name:String
-    processingElements:[ProcessingElement]
-    busses:[Bus]
-    properties:[NameValue]
+    name: String
+    processingElements: [ProcessingElement]
+    busses: [Bus]
+    properties: [NameValue]
 }
 
 ProcessingElement = {
-    processorClass:ProcessingElementClassRef
-    name:String
-    memSize:Integer
+    processorClass: ProcessingElementClassRef
+    name: String
+    memSize: Integer
     resources:[NameValue]
     properties:[NameValue]
     powerModel:Formula
-    multiCore:?Int
+    multiCore:?Integer
     switchingDelay:?Integer
 }
 
-#referencing a processing element that is declared in HardwareModel/processingElements
 ProcessingElementRef = String
 
 Bus = {halfDuplexBus:HalfDuplexBus}|{singleWayBus:SingleWayBus}
@@ -59,26 +58,31 @@ SingleWayBus = {
     latency:Integer
 }
 
-NameValue = {
-    name:String
-    value:Integer
-}
-
 ProcessingElementClass =
-    {switchingTask:switchingTaskClass}
-    | {multiTaskPermanentTasks:MultiTaskPermanentTasksClass}
+    {switchingTask:SwitchingTaskClass} | {multiTaskPermanentTasks:MultiTaskPermanentTasksClass}
 
-switchingTaskClass = {
-    name:String
-    resources:[String]
-    properties:[String]
+SwitchingTaskClass = {
+    name: String
+    resources: [String]
+    properties: [String]
 }
 
 MultiTaskPermanentTasksClass ={
     name:String
-    resources:[String]
-    properties:[String]
+    resources: [String]
+    properties: [String]
 }
+
+NameValue = {
+    name: String
+    value: Integer
+}
+
+NameFormula = {
+    name:String
+    formula:Formula
+}
+
 
 SoftwareModel =  {
     sharedPermanentFunctions:[Implementation]
@@ -94,9 +98,7 @@ Task = {
     sharedImplementation:[SharedImplementationRef]
 }
 
-#refers to a declared task
 TaskRef = String
-
 
 SharedImplementationRef = String
 
@@ -110,12 +112,8 @@ Implementation = {
     nbThreads:?Formula
 }
 
-NameFormula = {
-    name:String
-    formula:Formula
-}
 
-#referencing a processing element class that is declared in HardwareModel/processingElementClasses
+
 ProcessingElementClassRef = String
 
 #example: buzy*mflops*30+5
@@ -139,35 +137,29 @@ Transmission = {
     timing:TransmissionTimingConstraint
 }
 
-#Asap,Free,Alap
-TransmissionTimingConstraint = String
 
-SoftwareClass = String #iterativeSoftware,oneShotSoftware
+TransmissionTimingConstraint = String #asap | free | alap
 
-IterativeSoftware={
-    maxFrameDelay:?Integer
-    maxMakespan:?Integer
-}
+SoftwareClass = String #"iterativeSoftware" | "oneShotSoftware"
 
-OneShotSoftware = {
-    maxMakespan:?Integer
-}
+
+
 
 TaskPE = {
-    task:TaskTef
+    task:TaskRef
     processingElement:ProcessingElementRef
 }
 
 ConstraintOrObjective =
      {mustBeUsed:ProcessingElementRef}
    | {mustNotBeUsed:ProcessingElementRef}
-   | {samePE:[TaskTef]}
-   | {notSamePE:[TaskTef]}
+   | {samePE:[TaskRef]}
+   | {notSamePE:[TaskRef]}
    | {
         symmetricPE:[ProcessingElementRef]
-        breaking:?("workLoad" | "longTask")
+        breaking:?String #("workLoad" | "longTask")
       }
-   | {symmetricTasks:[TaskTef]}
+   | {symmetricTasks:[TaskRef]}
    | {runOn:TaskPE}
    | {notRunOn:TaskPE}
    | {powerCap:Integer}
@@ -176,7 +168,7 @@ ConstraintOrObjective =
    | {simpleObjective:SimpleGoal}
 
 #there should be at most one objective; which might be either multiObjective or simpleObjective
-SimpleGoal = "minMakeSpan" | "minEnergy" | "minFrame"
+SimpleGoal = String #"minMakeSpan" | "minEnergy" | "minFrame"
 
 MultiObjectiveGoal = {
     a:SimpleGoal
@@ -184,9 +176,10 @@ MultiObjectiveGoal = {
 }
 
 
-Main = {
+#this is the main structure
+{
     info:?String
-    jsonFormat:String #must be equal to the jsonFormat given in the header of this file
+    jsonFormat:String
     timeUnit:String
     dataUnit:String
     processingElementClasses:[ProcessingElementClass]
@@ -195,3 +188,4 @@ Main = {
     properties:?[NameValue]
     constraintsAndObjectives:?[ConstraintOrObjective]
 }
+

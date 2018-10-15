@@ -42,7 +42,7 @@ case class Mapping(hardwareName: String,
                    sharedFunctionMapping:Iterable[SharedFunctionMapping],
                    taskMapping: Array[TaskMapping],
                    transmissionMapping: Array[(Transmission, ProcessingElement, ProcessingElement, Bus, Int, Int, Int)],
-                   makeSpan: Int,
+                   makespan: Int,
                    energy: Int,
                    width:Option[Int],
                    objValues:List[Int],
@@ -84,7 +84,7 @@ case class Mapping(hardwareName: String,
     val usages = coreUsages.mkString("\n\t\t","\n\t\t","") +
       (if(busUsages.nonEmpty) {busUsages.mkString("\n\t\t","\n\t\t","\n\t")} else "\n\t")
 
-    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makeSpan + " width:" + width + " energy:" + energy + ")" +
+    "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makespan + " width:" + width + " energy:" + energy + ")" +
       "{\n\tsharedFunctions{\n\t\t" + sharedFunctionMapping.map(s => "(implem:" + s.implem.name +
        "(" + s.implem.parameterValues.map({ case (name, value) => name + ":" + value}).mkString(",") + ")" +
       " pe:" + s.pe.name + " nbInstances:" + s.nbInstances + ")").mkString("\n\t\t") + "\n\t}" +
@@ -94,7 +94,7 @@ case class Mapping(hardwareName: String,
 
   def toJSon: String = "{" +
     JSonHelper.string("hardwareName", hardwareName) + "," +
-    JSonHelper.int("makeSpan", makeSpan) + "," +
+    JSonHelper.int("makespan", makespan) + "," +
     JSonHelper.optionIntComa("width", width) +
     JSonHelper.int("energy", energy) + "," +
     JSonHelper.multiples("sharedFunctions", sharedFunctionMapping.map(sharedFunctionToJSon)) + "," +
@@ -136,7 +136,9 @@ case class Mappings(timeUnit:String,
                     mapping: Iterable[Mapping]) {
 
   def toJSon: String = {
-    "{" + JSonHelper.string("timeUnit",timeUnit) + "," +
+    "{" +
+      JSonHelper.string("jsonFormat","PlacerBeta5Out") + "," +
+      JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +
       JSonHelper.string("info",info) + "," +
       JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"

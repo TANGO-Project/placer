@@ -20,8 +20,8 @@ class LNSSolver(cpProblem: CPMappingProblem,
                 solver:oscar.cp.CPSolver,
                 bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
   extends SearchStrategy(cpProblem: CPMappingProblem,
-  config:MapperConfig,
-  solver:CPSolver){
+    config:MapperConfig,
+    solver:CPSolver){
 
   def solveMappingProblemMinimizeLNS(): Iterable[Mapping] = {
 
@@ -75,7 +75,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
         remainingTimeLimit -= (firstAttempt.time/1000).toInt
         if (firstAttempt.nSols == 0) {
           if(config.verbose) println("initial solution with lns carry on failed: ")
-          println(firstAttempt)
+          if(config.verbose) println(firstAttempt)
 
           if(bestSolutionsSoFar.size == 1) {
             if(config.verbose) println("starting second attempt without carry on")
@@ -106,7 +106,9 @@ class LNSSolver(cpProblem: CPMappingProblem,
 
 
     bestSolution match{
-      case None => throw new Error("Placer could not find an initial placement to start LNS, problem seems to have no solution")
+      case None =>
+        System.err.println("Placer could not find an initial placement to start LNS")
+        System.exit(-1)
       case _ => ;
     }
 
@@ -141,7 +143,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
       val shouldPerformShortSearch = config.lnsUseEarlyStop
 
       val quickSearchDidFindSomething = if (shouldPerformShortSearch){
-        val stats1 = startSubjectTo(failureLimit = maxFails/10, timeLimit = remainingTimeLimit min config.lnsTimeLimit/10) {
+        val stats1 = startSubjectTo(failureLimit = maxFails/10, timeLimit = remainingTimeLimit min (config.lnsTimeLimit/10)) {
           //relaxation strategy (actually it is more a non-relaxation strategy)
           add(constraintsForThisRelaxation)
           //print("innerShavings:") performTimeShavings() ths reduces a lot, but is very costly, compared to classical propagation.
@@ -163,6 +165,14 @@ class LNSSolver(cpProblem: CPMappingProblem,
       }
     }
 
+    if(config.verbose) {
+      println("global stop by " +
+        (if (currentRelaxation == nRelaxations) "max relaxation"
+        else if (remainigRelaxationNoImprove == 0) "max no improve"
+        else "global time limit"))
+    }
+
+
     bestSolution
   }
 
@@ -170,6 +180,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
   def performTimeShavings():Boolean =  {
     val startVars = (cpProblem.cpTasks.map(_.start).toList ::: cpProblem.cpTransmissions.map(_.start).toList).toArray
     performShavings(startVars)
+    true
   }
 
   /**
@@ -378,7 +389,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     //for shared function stuff
     //TODO: this is crap
     for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
-      if (scala.math.random * 100 > relaxProba) {
+      if (scala.math.random * 100 < relaxProba) {
         //must relax
         for(taskToRelaxAnyway <- listOFTaskOnSameFlexible){
           mustRelaxArray(taskToRelaxAnyway.id) = true
@@ -389,7 +400,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     //does not operate on SamePE constraints
     for (TaskMapping(task, pe, implem, s, d, e) <- bestSolution.taskMapping) {
       if(!allProcessesInSamePEConstraints.contains(task.id) && !mustRelaxArray(task.id)) {
-        if (scala.math.random * 100 > relaxProba) {
+        if (scala.math.random * 100 < relaxProba) {
           mustRelaxArray(task.id) = true
         }
       }
@@ -398,7 +409,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     for(samePEConstraint <- samePEConstraints){
       val noMustRelax = samePEConstraint.processes.forall(process => !mustRelaxArray(process.id))
       if (noMustRelax){
-        if(scala.math.random * 100 > relaxProba) {
+        if(scala.math.random * 100 < relaxProba) {
           val witnessTaskID = samePEConstraint.processes.head.id
           val processorID = cpProblem.cpTasks(witnessTaskID).processorID
           for(task <- samePEConstraint.processes) {
@@ -454,7 +465,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     //for shared function stuff
     for(listOFTaskOnSameFlexible:List[CPTask] <- cpProblem.pEToTasksOnFlexible){
       //this is per flexible PE
-      if (scala.math.random * 100 > relaxProba) {
+      if (scala.math.random * 100 < relaxProba) {
         //must relax all tasks potentially running on this flexible
         for(taskThatCouldRunOnThisFlexible <- listOFTaskOnSameFlexible){
           relaxTaskAndImpactZone(taskThatCouldRunOnThisFlexible,0)
@@ -485,7 +496,7 @@ class LNSSolver(cpProblem: CPMappingProblem,
     println("pEWithFLexibles:" + pEWithFLexibles.mkString(","))
 
     for(flexiblePE <- pEWithFLexibles){
-      if(scala.math.random * 100 > relaxProba) {
+      if(scala.math.random * 100 < relaxProba) {
         for(taskToRelaxAnyway <- cpProblem.pEToTasksOnFlexible(flexiblePE)){
           if(!isRelaxed(taskToRelaxAnyway.id)){
             isRelaxed(taskToRelaxAnyway.id) = true
@@ -551,5 +562,3 @@ class LNSSolver(cpProblem: CPMappingProblem,
     toReturn
   }
 }
-
-

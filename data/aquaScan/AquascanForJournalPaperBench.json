@@ -1,8 +1,8 @@
 {
    "timeUnit":"us",
    "dataUnit":"8*32bit",
-   "info":"the simple unconstrained aquaScan model with two different hardwares",
-   "jsonFormat":"PlacerBeta4",
+   "info":"the simple unconstrained aquaScan model",
+   "jsonFormat":"PlacerBeta5",
    "processingElementClasses":
    [
       {
@@ -15,9 +15,9 @@
          }
       }
    ],
-   "hardwareModels":[
-      {
-      "name":"HardwareWith4Cores",
+   "hardwareModel":
+   {
+      "name":"ExampleHardware1",
       "processingElements":
       [
          {
@@ -71,80 +71,11 @@
             }
          }
       ],
-      "properties":[],
-     "constraints":
-     [
-       {
-         "mustBeUsed":"Core1"
-       },
-       {
-         "mustBeUsed":"Core2"
-       },
-       {
-         "mustBeUsed":"Core3"
-       },
-       {
-         "mustBeUsed":"Core4"
-       },
-       {
-         "symmetricPE":["Core1","Core2","Core3","Core4"]
-       }
-       ]
+      "properties":[]
    },
-      {
-      "name":"HardwareWith2Cores",
-         "processingElements":
-         [
-            {
-               "processorClass":"cpu",
-               "name":"Core1",
-               "memSize":32768,
-               "resources":[],
-               "properties":[],
-               "powerModel":"0"
-            },
-            {
-               "processorClass":"cpu",
-               "name":"Core2",
-               "memSize":32768,
-               "resources":[],
-               "properties":[],
-               "powerModel":"0"
-            }
-         ],
-         "busses":
-         [
-            {
-               "halfDuplexBus":
-               {
-                  "name":"globalBus",
-                  "relatedProcessors":
-                  [
-                     "Core1",
-                     "Core2"
-                  ],
-                  "timeUnitPerDataUnit":1,
-                  "latency":2
-               }
-            }
-         ],
-         "properties":[],
-     "constraints":[
-       {
-         "mustBeUsed":"Core1"
-       },
-       {
-         "mustBeUsed":"Core2"
-       },
-       {
-         "symmetricPE":["Core1","Core2"]
-       }
-     ]
-      }
-   ],
    "softwareModel":
    {
-      "simpleProcesses":
+      "tasks":
       [
          {
             "name":"Input",
@@ -1304,16 +1235,26 @@
             "timing":"Sticky"
          }
       ],
-      "softwareClass":
-      {
-         "oneShotSoftware":
-         {
-           "maxMakespanDISABLED":82907
-         }
-      }
+      "softwareClass":"oneShotSoftware"
    },
    "constraintsAndObjectives":
    [
+     {
+       "mustBeUsed":"Core1"
+     },
+     {
+       "mustBeUsed":"Core2"
+     },
+     {
+       "mustBeUsed":"Core3"
+     },
+     {
+       "mustBeUsed":"Core4"
+     },
+     {
+       "symmetricPE":["Core1","Core2","Core3","Core4"],
+        "breaking":"workload"
+     },
       {
          "samePE":[
             "LightingNormalisation",

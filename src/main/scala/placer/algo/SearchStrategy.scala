@@ -1,6 +1,7 @@
 package placer.algo
 
 import oscar.algo.search.Branching
+import oscar.cp.scheduling.search.SetTimesBranching
 import oscar.cp.{CPIntVar, CPSolver, binaryFirstFail, binarySplit, conflictOrderingSearch, minRegret}
 
 object Strategy extends Enumeration {
@@ -11,7 +12,7 @@ object Strategy extends Enumeration {
   TaskPlacementFastestImplemPlusLessBuzyProcFirst,
   SharedImplementationInstances,
   TaskAndTransmissionStarts,
-  GlobalSmart = Value
+  HEFT = Value
 }
 
 import Strategy._
@@ -34,7 +35,7 @@ class SearchStrategy(cpProblem: CPMappingProblem,
 
       config.strategy match {
         case Some(l) =>
-          instantiateStrategyFromGivenList(l: List[Strategy.Value])
+          instantiateStrategyFromGivenList(l: List[Strategy.Value]) ++ defaultSearchStrategy
         case None =>
           defaultSearchStrategy
 
@@ -52,6 +53,17 @@ class SearchStrategy(cpProblem: CPMappingProblem,
         cpProblem.cpTasks.map(task => task.start) ++
         cpProblem.cpTransmissions.map(transmission => transmission.start)
       ).toArray
+    val taskAndTransmissionDuration = (
+      List.empty ++
+        cpProblem.cpTasks.map(task => task.taskDuration) ++
+        cpProblem.cpTransmissions.map(transmission => transmission.transmissionDuration)
+      ).toArray
+    val taskAndTransmissionEnds = (
+      List.empty ++
+        cpProblem.cpTasks.map(task => task.end) ++
+        cpProblem.cpTransmissions.map(transmission => transmission.end)
+      ).toArray
+
     val arrayOfNbInstancesOfSharedFunctions = cpProblem.cpSharedFunctions.map(_.nbInstances).toArray
 
     def instantiateStrategyFromGivenListRecur(a: List[Strategy.Value]): Branching = {
@@ -71,6 +83,7 @@ class SearchStrategy(cpProblem: CPMappingProblem,
             transmissionID => -cpProblem.cpTransmissions(transmissionID).transmissionDuration.size, //the one that has the most impact on the schedule?
             transmissionID => cpProblem.cpTransmissions(transmissionID).busID.min)
         case TaskPlacementLessBuzyProcFirst =>
+          //this one works great on Aquascan
           conflictOrderingSearch(
             processorIDChoices,
             taskMaxDurations(_),
@@ -96,10 +109,15 @@ class SearchStrategy(cpProblem: CPMappingProblem,
             Seq.empty
           })
         case TaskAndTransmissionStarts =>
+
           conflictOrderingSearch(
             taskAndTransmissionStarts,
             taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).size,
             taskAndTransmissionID => taskAndTransmissionStarts(taskAndTransmissionID).min)
+
+
+          //time branching from long time ago
+//          new SetTimesBranching(taskAndTransmissionStarts, taskAndTransmissionDuration, taskAndTransmissionEnds, identity) //i => -taskAndTransmissionEnds(i).min)
         case LocalOrBusTransmissionLongestAdjFirstNonLocalFirst =>
           conflictOrderingSearch(
             cpProblem.cpTransmissions.map(_.isSelfLoopTransmission),
@@ -108,55 +126,39 @@ class SearchStrategy(cpProblem: CPMappingProblem,
               + cpProblem.cpTransmissions(transmissionID).transmissionDuration.max),
             transmissionID => cpProblem.cpTransmissions(transmissionID).isSelfLoopTransmission.min)
 
-        case GlobalSmart =>
+        case HEFT =>
+          //HEFT heuristics with backtracking
 
-          val taskToPEAndTransmissionToBus: Array[CPIntVar] = (cpProblem.cpTasks.toList.map(_.processorID) ::: cpProblem.cpTransmissions.toList.map(_.busID)).toArray
-          //def taskAndTransID(id:Int)=if(id >= cpProblem.cpTasks.length) //transmission
-          //else // task
+          def selectMinID[T](ts: Iterable[T], cond:T => Boolean, value:T => Int):Option[(T,Int)] = {
+            var toReturn:Option[(T,Int)] = None
+            var currentMin = Int.MaxValue
+            var i = 0
+            for(t <- ts if cond(t)){
+              val m = value(t)
+              if(m < currentMin) {
+                toReturn = Some((t,i))
+                currentMin = m
+              }
+              i =i+1
+            }
+            toReturn
+          }
 
-          conflictOrderingSearch(
-            taskToPEAndTransmissionToBus,
-            varHeuristic = (id: Int) => if (id >= cpProblem.cpTasks.length){ //au plus petit, au plus prioritaire
-              //c'est une transmission
-              val transmissionID = id - cpProblem.cpTasks.length
-              1
+          val tasksEnds = cpProblem.cpTasks.map(_.end)
+          import oscar.algo.search._
+          Branching {
+            selectMinID[CPIntVar](tasksEnds, x => !x.isBound, _.min) match {
+              case None =>
+                noAlternative
+              case Some((end, id)) =>
+                //set it to finish the earliest; select the target accordingly
+                branch({
+                  solver.add(end === end.min)
+                  solver.add(cpProblem.cpTasks(id).processorImplementationCombo === cpProblem.cpTasks(id).processorImplementationCombo.min)
+                })(solver.add(end !== end.min))
 
-              //le choix est le delta entre le pire des cas et le meilleur des cas, on additionne le pire schéma:
-              // assignation des tâches aux processeurs les plus chargés, plus transmission
-
-            } else{
-              //c'est une tâche
-              val taskID = id
-
-              1
-            },
-            valHeuristic = (id: Int) => if (id >= cpProblem.cpTasks.length){ //quelle valeur choisir
-              //c'est une transmission
-              val transmissionID = id - cpProblem.cpTasks.length
-
-              1
-            } else{
-              //c'est une tâche
-              val taskID = id
-
-              1
-            })
-
-
-
-        //l'idée est de distribuer sur ce qui a le plus d'impact en premier, que ce soit une transmission ou le placement d'une tâche.
-        //pour commencer, on va jouer sur la durée brute:
-        //les tâche avec leur durée, et les transmission avec leur durées
-        // on fixe la tâche au proco le moins ocupé et la transmission en local first
-        // le souci des transmission, c'est qu'elles impactement les tâches, donc on peut aussi décider du placement des tâches
-
-        //on peut ajouter les transmisions local/global et décider sur base des sommes des durées des tâches + de la transmission.
-
-        //pour les transmissions,
-        // sélectionner par impact le plus grand = delta entre le min et le max en tenant compte des durées des tâches, qui varient selon le PE
-        //sélectionner quoi en priorité?
-
-          //on pourrait aussi faore une procédure custom, avec une bonne vielle récursion...
+            }
+          }
       }
 
     instantiateStrategyFromGivenListRecur(a)

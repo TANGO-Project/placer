@@ -506,8 +506,6 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         case SymmetricTasksConstraint(tasks:List[AtomicTask]) =>
           if (config.lns) {
             if(config.verbose) System.err.println("symmetry among tasks " + tasks.map(_.name) + " is disabled because using LNS")
-            //TODO: use them for first search
-
           } else {
             if(config.verbose) println("breaking symmetry among tasks " + tasks.map(_.name) + " by (processingElement;implementation) combo")
 
@@ -518,6 +516,17 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
             for (i <- 1 until processorImplementationComboS.length) {
               add(processorImplementationComboS(i - 1) <= processorImplementationComboS(i), Strong)
             }
+
+
+            /*
+            val cpTasksA = tasks.map(t => cpTasks(t.id)).toArray
+            for(taskID1 <- cpTasksA.indices){
+              for (taskID2 <- taskID1 until cpTasksA.length){
+                add(cpTasksA(taskID1).start >= cpTasksA(taskID2).start, Strong)
+              }
+            }
+*/
+
           }
 
         case SymmetricPEConstraint(processors: List[ProcessingElement], breaking) =>
@@ -546,7 +555,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
               case SymmetricPEConstraintType.LongTask =>
                 if(config.verbose) println("breaking symmetry among " + processors.map(_.name) + " by longest tasks assignment")
-                assert(false, "this should not be used because it only works if the selected tasks hae no additional constraints on it, such as SamePE")
+                assert(false, "this should not be used because it only works if the selected tasks have no additional constraints on it, such as SamePE")
                 val witnessProcessorID = processors.head.id
                 val tasksPotentiallyRunningOnprocessors = cpTasks.toList.filter(task => !task.isRunningOnProcessor(witnessProcessorID).isFalse)
 

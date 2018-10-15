@@ -74,7 +74,8 @@ object Main extends App {
                                  TaskPlacementFastestImplemPlusLessBuzyProcFirst
                                  SharedImplementationInstances
                                  TaskAndTransmissionStarts
-                 when not specified, a defulat search strategy is used.
+                                 HEFT  (not very good in CP context)
+                 when not specified, a default search strategy is used.
         """.stripMargin('|'))
 
     import Strategy._
@@ -87,6 +88,7 @@ object Main extends App {
         case "TaskPlacementFastestImplemPlusLessBuzyProcFirst" => TaskPlacementFastestImplemPlusLessBuzyProcFirst
         case "SharedImplementationInstances" => SharedImplementationInstances
         case "TaskAndTransmissionStarts" => TaskAndTransmissionStarts
+        case "HEFT" => HEFT
         case _ => throw new Error("unknown search strategy:" + s)
       }
     }

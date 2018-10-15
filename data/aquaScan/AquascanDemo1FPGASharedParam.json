@@ -1248,8 +1248,6 @@
         "size":1,
         "timing":"Sticky"
       },
-
-
       {
         "name":"BarcodeDecodeToOutput",
         "source":"BarcodeDecode",
@@ -1306,3 +1304,4 @@
     }
   ]
 }
+

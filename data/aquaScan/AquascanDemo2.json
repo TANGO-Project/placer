@@ -2,7 +2,7 @@
    "timeUnit":"us",
    "dataUnit":"8*32bit",
    "info":"the simple aquascan where we constraint the each streams to be packed onto the same processor",
-   "jsonFormat":"PlacerBeta4",
+   "jsonFormat":"PlacerBeta5",
    "processingElementClasses":
    [
       {
@@ -75,7 +75,7 @@
    },
    "softwareModel":
    {
-      "simpleProcesses":
+      "tasks":
       [
          {
             "name":"Input",
@@ -927,7 +927,7 @@
             "size":625,
             "timing":"Sticky"
          },
-         
+
          {
             "name":"FinalLightingNormalisationToDigit1Extraction",
             "source":"FinalLightingNormalisation",
@@ -998,7 +998,7 @@
             "size":1,
             "timing":"Sticky"
          },
-         
+
          {
             "name":"FinalLightingNormalisationToDigit2Extraction",
             "source":"FinalLightingNormalisation",
@@ -1069,7 +1069,7 @@
             "size":1,
             "timing":"Sticky"
          },
-         
+
          {
             "name":"FinalLightingNormalisationToDigit3Extraction",
             "source":"FinalLightingNormalisation",
@@ -1140,7 +1140,7 @@
             "size":1,
             "timing":"Sticky"
          },
-         
+
          {
             "name":"FinalLightingNormalisationToDigit4Extraction",
             "source":"FinalLightingNormalisation",
@@ -1218,8 +1218,8 @@
             "size":1,
             "timing":"Sticky"
          },
-         
-         
+
+
          {
             "name":"BarcodeDecodeToOutput",
             "source":"BarcodeDecode",
@@ -1235,92 +1235,93 @@
             "timing":"Sticky"
          }
       ],
-      "softwareClass":
-      {
-         "oneShotSoftware":
-         {
-            "maxMakespanDISABLED":84003
-         }
-      }
+      "softwareClass":"oneShotSoftware"
    },
    "constraintsAndObjectives":
    [
-     {
-       "mustBeUsed":"Core1"
-     },
-     {
-       "mustBeUsed":"Core2"
-     },
-     {
-       "mustBeUsed":"Core3"
-     },
-     {
-       "mustBeUsed":"Core4"
-     },
-     {
-       "symmetricPE":["Core1","Core2","Core3","Core4"]
-     },
-     {
-       "samePE":[
-         "LightingNormalisation",
-         "Downscale",
-         "Binarisation",
-         "DetailsSuppression",
-         "OrientationEstimation",
-         "FirstRotation",
-         "OrientationDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit1Extraction",
-         "Digit1FinalCut",
-         "Digit1LightingNormalisation",
-         "Digit1LightingEnhancement",
-         "Digit1Correlation",
-         "Digit1PatternsIdentification",
-         "Digit1Decision",
-         "Digit1ValueDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit2Extraction",
-         "Digit2FinalCut",
-         "Digit2LightingNormalisation",
-         "Digit2LightingEnhancement",
-         "Digit2Correlation",
-         "Digit2PatternsIdentification",
-         "Digit2Decision",
-         "Digit2ValueDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit3Extraction",
-         "Digit3FinalCut",
-         "Digit3LightingNormalisation",
-         "Digit3LightingEnhancement",
-         "Digit3Correlation",
-         "Digit3PatternsIdentification",
-         "Digit3Decision",
-         "Digit3ValueDetermination"
-       ]
-     },
-     {
-       "samePE":[
-         "Digit4Extraction",
-         "Digit4FinalCut",
-         "Digit4LightingNormalisation",
-         "Digit4LightingEnhancement",
-         "Digit4Correlation",
-         "Digit4PatternsIdentification",
-         "Digit4Decision",
-         "Digit4ValueDetermination"
-       ]
-     },
+      {
+         "maxMakespan":800000
+      },
+      {
+         "mustBeUsed":"Core1"
+      },
+      {
+         "mustBeUsed":"Core2"
+      },
+      {
+         "mustBeUsed":"Core3"
+      },
+      {
+         "mustBeUsed":"Core4"
+      },
+      {
+         "symmetricPE":["Core1","Core2","Core3","Core4"]
+      },
+      {
+         "maxMakespan":175000
+      },
+      {
+         "samePE":[
+            "LightingNormalisation",
+            "Downscale",
+            "Binarisation",
+            "DetailsSuppression",
+            "OrientationEstimation",
+            "FirstRotation",
+            "OrientationDetermination"
+         ]
+      },
+      {
+         "samePE":[
+            "Digit1Extraction",
+            "Digit1FinalCut",
+            "Digit1LightingNormalisation",
+            "Digit1LightingEnhancement",
+            "Digit1Correlation",
+            "Digit1PatternsIdentification",
+            "Digit1Decision",
+            "Digit1ValueDetermination"
+         ]
+      },
+      {
+         "samePE":[
+            "Digit2Extraction",
+            "Digit2FinalCut",
+            "Digit2LightingNormalisation",
+            "Digit2LightingEnhancement",
+            "Digit2Correlation",
+            "Digit2PatternsIdentification",
+            "Digit2Decision",
+            "Digit2ValueDetermination"
+         ]
+      },
+      {
+         "samePE":[
+            "Digit3Extraction",
+            "Digit3FinalCut",
+            "Digit3LightingNormalisation",
+            "Digit3LightingEnhancement",
+            "Digit3Correlation",
+            "Digit3PatternsIdentification",
+            "Digit3Decision",
+            "Digit3ValueDetermination"
+         ]
+      },
+      {
+         "samePE":[
+            "Digit4Extraction",
+            "Digit4FinalCut",
+            "Digit4LightingNormalisation",
+            "Digit4LightingEnhancement",
+            "Digit4Correlation",
+            "Digit4PatternsIdentification",
+            "Digit4Decision",
+            "Digit4ValueDetermination"
+         ]
+      },
       {
          "simpleObjective":"minMakespan"
       }
    ]
 }
+
