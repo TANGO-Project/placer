@@ -113,8 +113,6 @@ Implementation = {
     nbThreads:?Formula
 }
 
-
-
 ProcessingElementClassRef = String
 
 #example: buzy*mflops*30+5
@@ -138,13 +136,7 @@ Transmission = {
     timing:TransmissionTimingConstraint
 }
 
-
-TransmissionTimingConstraint = String #asap | free | alap
-
-SoftwareClass = String #"iterativeSoftware" | "oneShotSoftware"
-
-
-
+TransmissionTimingConstraint = String( s | s == "Asap" or s == "Alap" or s == "Free" or s == "Sticky")
 
 TaskPE = {
     task:TaskRef
@@ -158,7 +150,7 @@ ConstraintOrObjective =
    | {notSamePE:[TaskRef]}
    | {
         symmetricPE:[ProcessingElementRef]
-        breaking:?String #("workLoad" | "longTask")
+        breaking:?String( s | s == "workLoad" or s == "longTask")
       }
    | {symmetricTasks:[TaskRef]}
    | {runOn:TaskPE}
@@ -170,13 +162,12 @@ ConstraintOrObjective =
    | {simpleObjective:SimpleGoal}
 
 #there should be at most one objective; which might be either multiObjective or simpleObjective
-SimpleGoal = String #"minMakeSpan" | "minEnergy" | "minFrame"
+SimpleGoal = String( s | s == "minMakeSpan" or s == "minEnergy" or s == "minFrame")
 
 MultiObjectiveGoal = {
     a:SimpleGoal
     b:SimpleGoal
 }
-
 
 #this is the main structure
 {
