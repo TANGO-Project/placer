@@ -1,0 +1,71 @@
+# Copyright 2017 CETIC www.cetic.be
+# This is being developed for the TANGO Project: http://tango-project.eu
+#
+# Placer is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Placer is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License  for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along with Placer.
+# If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+
+@import finitio/data
+
+#definition of the JSon input format of Placer tool
+#this document describes the format "PlacerBeta5Out"
+#uses the finitio language: http://www.finitio.io/
+
+
+Mapping = {
+    hardwareName:String
+    makeSpan:Integer
+    energy:Integer
+    sharedFunctions:[SharedFunctionMapping]
+    taskMapping:[TaskMapping]
+    transmissionMapping:[TransmissionMapping]
+}
+
+SharedFunctionMapping = {
+    sharedImplem:String
+    parameters:[NameValue]
+    nbInstance:Integer
+    host:String
+}
+
+TaskMapping = {
+    task:String
+    processingElement:String
+    implementation:String
+    parameters:[NameValue]
+    start:Integer
+    duration:Integer
+    end:Integer
+}
+
+NameValue = {
+    name: String
+    value: Integer
+}
+
+TransmissionMapping = {
+    transmission:String
+    bus:String
+    start:Integer
+    duration:Integer
+    end:Integer
+}
+
+#this is the main structure
+{
+    info:?String
+    jsonFormat:String(s | s == "PlacerBeta5Out")
+    timeUnit:String
+    dataUnit:String
+    mappings:[Mapping]
+}
+
