@@ -65,6 +65,7 @@ SwitchingTaskClass = {
     name: String
     resources: [String]
     properties: [String]
+    switchingDelay: Integer
 }
 
 MultiTaskPermanentTasksClass ={
@@ -85,7 +86,7 @@ NameFormula = {
 
 
 SoftwareModel =  {
-    sharedPermanentFunctions:[Implementation]
+    sharedPermanentFunctions:?[Implementation]
     tasks:[Task]
     transmissions:[Transmission]
     softwareClass:SoftwareClass
@@ -95,7 +96,7 @@ SoftwareModel =  {
 Task = {
     name:String
     implementations:[Implementation]
-    sharedImplementation:[SharedImplementationRef]
+    sharedImplementation:?[SharedImplementationRef]
 }
 
 TaskRef = String
@@ -164,6 +165,7 @@ ConstraintOrObjective =
    | {notRunOn:TaskPE}
    | {powerCap:Integer}
    | {energyCap:Integer}
+   | {maxMakespan:Integer}
    | {multiObjective:MultiObjectiveGoal}
    | {simpleObjective:SimpleGoal}
 
