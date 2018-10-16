@@ -3,7 +3,6 @@
 #
 # Placer is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
-# it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
@@ -93,6 +92,8 @@ SoftwareModel =  {
     properties:?[NameValue]
 }
 
+SoftwareClass=String(s | (s == "oneShotSoftware" || s == "iterativeSoftware"))
+
 Task = {
     name:String
     implementations:[Implementation]
@@ -136,7 +137,7 @@ Transmission = {
     timing:TransmissionTimingConstraint
 }
 
-TransmissionTimingConstraint = String( s | s == "Asap" or s == "Alap" or s == "Free" or s == "Sticky")
+TransmissionTimingConstraint = String( s | (s == "Asap" || s == "Alap" || s == "Free" || s == "Sticky"))
 
 TaskPE = {
     task:TaskRef
@@ -150,7 +151,7 @@ ConstraintOrObjective =
    | {notSamePE:[TaskRef]}
    | {
         symmetricPE:[ProcessingElementRef]
-        breaking:?String( s | s == "workLoad" or s == "longTask")
+        breaking:?String( s | (s == "workLoad" || s == "longTask"))
       }
    | {symmetricTasks:[TaskRef]}
    | {runOn:TaskPE}
@@ -162,7 +163,7 @@ ConstraintOrObjective =
    | {simpleObjective:SimpleGoal}
 
 #there should be at most one objective; which might be either multiObjective or simpleObjective
-SimpleGoal = String( s | s == "minMakeSpan" or s == "minEnergy" or s == "minFrame")
+SimpleGoal = String( s | s == "minMakespan" || s == "minEnergy" || s == "minFrame")
 
 MultiObjectiveGoal = {
     a:SimpleGoal
@@ -172,7 +173,7 @@ MultiObjectiveGoal = {
 #this is the main structure
 {
     info:?String
-    jsonFormat:String
+    jsonFormat:String(s | s == "PlacerBeta5")
     timeUnit:String
     dataUnit:String
     processingElementClasses:[ProcessingElementClass]
