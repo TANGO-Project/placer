@@ -23,7 +23,7 @@
 
 Mapping = {
     hardwareName:String
-    makeSpan:Integer
+    makespan:Integer
     energy:Integer
     sharedFunctions:[SharedFunctionMapping]
     taskMapping:[TaskMapping]

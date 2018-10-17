@@ -1,7 +1,20 @@
+
+beta5 release:
+--------------
+
+reworked the constraints and objectives
+added a lot of new constraints
+added the possibility to specify the search procedure through the command line
+improved the LNS heuristics
+documented the input and output formats
+
+beta4 release:
+------------------
+not released at all
+
 beta3 release:
 --------------
-added shared functions on FPGA: a function is instantiated once (or more) and used b several tasks
-
+added shared functions on FPGA: a function is instantiated once (or more) and used by several tasks
 
 beta2 release:
 --------------
