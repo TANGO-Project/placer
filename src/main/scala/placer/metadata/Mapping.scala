@@ -86,7 +86,7 @@ case class Mapping(hardwareName: String,
 
     "Mapping(hardwareName:" + hardwareName + " makeSpan:" + makespan + " width:" + width + " energy:" + energy + ")" +
       "{\n\tsharedFunctions{\n\t\t" + sharedFunctionMapping.map(s => "(implem:" + s.implem.name +
-       "(" + s.implem.parameterValues.map({ case (name, value) => name + ":" + value}).mkString(",") + ")" +
+      "(" + s.implem.parameterValues.map({ case (name, value) => name + ":" + value}).mkString(",") + ")" +
       " pe:" + s.pe.name + " nbInstances:" + s.nbInstances + ")").mkString("\n\t\t") + "\n\t}" +
       "\n\tschedule{\n\t\t" + stringAndStart.sortBy(_._2).map(_._1).mkString("\n\t\t") + "\n\t}" +
       "\n\tusages{" + usages + "}\n}"
@@ -120,6 +120,10 @@ case class Mapping(hardwareName: String,
     "{" +
       JSonHelper.string("transmission", m._1.name) + "," +
       JSonHelper.string("bus", m._4.name) + "," +
+      JSonHelper.string("fromPE", m._2.name) + "," +
+      JSonHelper.string("toPE", m._1.source.name) + "," +
+      JSonHelper.string("fromTask", m._3.name) + "," +
+      JSonHelper.string("toTask", m._1.target.name) + "," +
       sdetoJSon(m._5, m._6, m._7) + "}"
   }
 
@@ -137,7 +141,7 @@ case class Mappings(timeUnit:String,
 
   def toJSon: String = {
     "{" +
-      JSonHelper.string("jsonFormat","PlacerBeta5Out") + "," +
+      JSonHelper.string("jsonFormat","PlacerBeta6Out") + "," +
       JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +
       JSonHelper.string("info",info) + "," +

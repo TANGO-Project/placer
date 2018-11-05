@@ -1,11 +1,12 @@
 {
+  "jsonFormat":"PlacerBeta5Out",
   "timeUnit":"ms",
   "dataUnit":"bit",
   "info":"a representative fictive example",
   "mappings":[
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":238,
+      "makespan":238,
       "energy":25724,
       "sharedFunctions":[],
       "taskMapping":[
@@ -116,7 +117,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":226,
+      "makespan":226,
       "energy":31858,
       "sharedFunctions":[],
       "taskMapping":[
@@ -220,7 +221,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":214,
+      "makespan":214,
       "energy":39607,
       "sharedFunctions":[],
       "taskMapping":[
@@ -317,7 +318,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":197,
+      "makespan":197,
       "energy":42546,
       "sharedFunctions":[],
       "taskMapping":[
@@ -407,7 +408,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":189,
+      "makespan":189,
       "energy":45952,
       "sharedFunctions":[],
       "taskMapping":[
@@ -497,7 +498,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":196,
+      "makespan":196,
       "energy":43278,
       "sharedFunctions":[],
       "taskMapping":[
@@ -594,7 +595,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":206,
+      "makespan":206,
       "energy":39908,
       "sharedFunctions":[],
       "taskMapping":[
@@ -698,7 +699,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":223,
+      "makespan":223,
       "energy":36969,
       "sharedFunctions":[],
       "taskMapping":[
@@ -809,7 +810,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":229,
+      "makespan":229,
       "energy":28362,
       "sharedFunctions":[],
       "taskMapping":[
@@ -906,7 +907,7 @@
     },
     {
       "hardwareName":"ExampleHardware1",
-      "makeSpan":276,
+      "makespan":276,
       "energy":23343,
       "sharedFunctions":[],
       "taskMapping":[

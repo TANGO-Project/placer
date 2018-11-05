@@ -1255,9 +1255,6 @@
          "mustBeUsed":"Core4"
       },
       {
-         "symmetricPE":["Core1","Core2","Core3","Core4"]
-      },
-      {
          "maxMakespan":175000
       },
       {

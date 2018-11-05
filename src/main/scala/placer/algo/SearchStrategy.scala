@@ -263,7 +263,7 @@ class SearchStrategy(cpProblem: CPMappingProblem,
         ++ distributeOnTaskPlacementLessBuzyProcFirst //TODO: should consider the fastest implementation first!!
         ++ */
       //distributeOnTaskPlacementFastestImplemPlusLessBuzyProcFirst
-      distributeOnTaskPlacementLessBuzyProcFirst
+       distributeOnTaskPlacementLessBuzyProcFirst
         ++ distributeOnLocalOrBusTransmissionLargestFirstLocalFirst
         ++ distributeOnSharedImplementationInstances
         ++ binarySplit(taskAndTransmissionStarts, varHeuris = cpVar => cpVar.max - cpVar.min)

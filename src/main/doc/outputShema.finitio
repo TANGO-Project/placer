@@ -17,7 +17,7 @@
 @import finitio/data
 
 #definition of the JSon input format of Placer tool
-#this document describes the format "PlacerBeta5Out"
+#this document describes the format "PlacerBeta6Out"
 #uses the finitio language: http://www.finitio.io/
 
 
@@ -55,6 +55,10 @@ NameValue = {
 TransmissionMapping = {
     transmission:String
     bus:String
+    fromPE:String
+    toPE:String
+    fromTask:String
+    toTask:String
     start:Integer
     duration:Integer
     end:Integer
@@ -63,7 +67,7 @@ TransmissionMapping = {
 #this is the main structure
 {
     info:?String
-    jsonFormat:String(s | s == "PlacerBeta5Out")
+    jsonFormat:String(s | s == "PlacerBeta6Out")
     timeUnit:String
     dataUnit:String
     mappings:[Mapping]
