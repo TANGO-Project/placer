@@ -121,8 +121,8 @@ case class Mapping(hardwareName: String,
       JSonHelper.string("transmission", m._1.name) + "," +
       JSonHelper.string("bus", m._4.name) + "," +
       JSonHelper.string("fromPE", m._2.name) + "," +
-      JSonHelper.string("toPE", m._1.source.name) + "," +
-      JSonHelper.string("fromTask", m._3.name) + "," +
+      JSonHelper.string("toPE", m._3.name) + "," +
+      JSonHelper.string("fromTask", m._1.source.name) + "," +
       JSonHelper.string("toTask", m._1.target.name) + "," +
       sdetoJSon(m._5, m._6, m._7) + "}"
   }

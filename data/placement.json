@@ -1,5 +1,5 @@
 {
-  "jsonFormat":"PlacerBeta5Out",
+  "jsonFormat":"PlacerBeta6Out",
   "timeUnit":"ms",
   "dataUnit":"bit",
   "info":"a representative fictive example",
@@ -74,6 +74,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAToFPGA",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"FPGA1",
+          "toTask":"decoding",
           "start":11,
           "duration":53,
           "end":64
@@ -81,6 +85,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming",
           "start":74,
           "duration":7,
           "end":81
@@ -88,6 +96,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"procB",
+          "toTask":"watermarking",
           "start":91,
           "duration":7,
           "end":98
@@ -95,6 +107,10 @@
         {
           "transmission":"decodeToTransform2",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming2",
           "start":84,
           "duration":7,
           "end":91
@@ -102,6 +118,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busBToGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procB",
+          "toTask":"watermarking",
           "start":101,
           "duration":5,
           "end":106
@@ -109,6 +129,10 @@
         {
           "transmission":"side_comm",
           "bus":"globalBus",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"procB",
+          "toTask":"encoding",
           "start":11,
           "duration":16,
           "end":27
@@ -185,6 +209,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAtoGPGPU",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"GPGPU1",
+          "toTask":"decoding",
           "start":11,
           "duration":51,
           "end":62
@@ -192,6 +220,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"busAtoGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"decoding",
+          "fromTask":"procA",
+          "toTask":"Transforming",
           "start":72,
           "duration":3,
           "end":75
@@ -199,6 +231,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"procA",
+          "toPE":"Transforming",
+          "fromTask":"procB",
+          "toTask":"watermarking",
           "start":87,
           "duration":7,
           "end":94
@@ -206,6 +242,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busBToGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procB",
+          "toTask":"watermarking",
           "start":82,
           "duration":5,
           "end":87
@@ -213,6 +253,10 @@
         {
           "transmission":"side_comm",
           "bus":"globalBus",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"procB",
+          "toTask":"encoding",
           "start":11,
           "duration":16,
           "end":27
@@ -289,6 +333,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAtoGPGPU",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"GPGPU1",
+          "toTask":"decoding",
           "start":11,
           "duration":51,
           "end":62
@@ -296,6 +344,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"FPGA1",
+          "toTask":"watermarking",
           "start":82,
           "duration":7,
           "end":89
@@ -303,6 +355,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"FPGA1",
+          "toTask":"watermarking",
           "start":92,
           "duration":7,
           "end":99
@@ -310,6 +366,10 @@
         {
           "transmission":"watermarkToEncode",
           "bus":"busAToFPGA",
+          "fromPE":"FPGA1",
+          "toPE":"watermarking",
+          "fromTask":"procA",
+          "toTask":"encoding",
           "start":100,
           "duration":23,
           "end":123
@@ -386,6 +446,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAtoGPGPU",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"GPGPU1",
+          "toTask":"decoding",
           "start":11,
           "duration":51,
           "end":62
@@ -393,6 +457,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"procA",
+          "toTask":"watermarking",
           "start":82,
           "duration":7,
           "end":89
@@ -400,6 +468,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busAtoGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procA",
+          "toTask":"watermarking",
           "start":92,
           "duration":3,
           "end":95
@@ -476,6 +548,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAtoGPGPU",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"GPGPU1",
+          "toTask":"decoding",
           "start":11,
           "duration":51,
           "end":62
@@ -483,6 +559,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"busAtoGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"decoding",
+          "fromTask":"procA",
+          "toTask":"Transforming",
           "start":72,
           "duration":3,
           "end":75
@@ -490,6 +570,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busAtoGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procA",
+          "toTask":"watermarking",
           "start":82,
           "duration":3,
           "end":85
@@ -566,6 +650,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAToFPGA",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"FPGA1",
+          "toTask":"decoding",
           "start":11,
           "duration":53,
           "end":64
@@ -573,6 +661,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"busAToFPGA",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"procA",
+          "toTask":"Transforming",
           "start":74,
           "duration":5,
           "end":79
@@ -580,6 +672,10 @@
         {
           "transmission":"decodeToTransform2",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming2",
           "start":74,
           "duration":7,
           "end":81
@@ -587,6 +683,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busAtoGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procA",
+          "toTask":"watermarking",
           "start":91,
           "duration":3,
           "end":94
@@ -663,6 +763,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAToFPGA",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"FPGA1",
+          "toTask":"decoding",
           "start":11,
           "duration":53,
           "end":64
@@ -670,6 +774,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming",
           "start":74,
           "duration":7,
           "end":81
@@ -677,6 +785,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"procA",
+          "toTask":"watermarking",
           "start":91,
           "duration":7,
           "end":98
@@ -684,6 +796,10 @@
         {
           "transmission":"decodeToTransform2",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming2",
           "start":84,
           "duration":7,
           "end":91
@@ -691,6 +807,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busAtoGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procA",
+          "toTask":"watermarking",
           "start":101,
           "duration":3,
           "end":104
@@ -767,6 +887,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAToFPGA",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"FPGA1",
+          "toTask":"decoding",
           "start":11,
           "duration":53,
           "end":64
@@ -774,6 +898,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming",
           "start":74,
           "duration":7,
           "end":81
@@ -781,6 +909,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"FPGA1",
+          "toTask":"watermarking",
           "start":91,
           "duration":7,
           "end":98
@@ -788,6 +920,10 @@
         {
           "transmission":"decodeToTransform2",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming2",
           "start":84,
           "duration":7,
           "end":91
@@ -795,6 +931,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"FPGA1",
+          "toTask":"watermarking",
           "start":101,
           "duration":7,
           "end":108
@@ -802,6 +942,10 @@
         {
           "transmission":"watermarkToEncode",
           "bus":"busAToFPGA",
+          "fromPE":"FPGA1",
+          "toPE":"watermarking",
+          "fromTask":"procA",
+          "toTask":"encoding",
           "start":109,
           "duration":23,
           "end":132
@@ -878,6 +1022,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAtoGPGPU",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"GPGPU1",
+          "toTask":"decoding",
           "start":11,
           "duration":51,
           "end":62
@@ -885,6 +1033,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"procB",
+          "toTask":"watermarking",
           "start":82,
           "duration":7,
           "end":89
@@ -892,6 +1044,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"busBToGPGPU",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"procB",
+          "toTask":"watermarking",
           "start":92,
           "duration":5,
           "end":97
@@ -899,6 +1055,10 @@
         {
           "transmission":"side_comm",
           "bus":"globalBus",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"procB",
+          "toTask":"encoding",
           "start":11,
           "duration":16,
           "end":27
@@ -975,6 +1135,10 @@
         {
           "transmission":"inputToDecode",
           "bus":"busAToFPGA",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"FPGA1",
+          "toTask":"decoding",
           "start":11,
           "duration":53,
           "end":64
@@ -982,6 +1146,10 @@
         {
           "transmission":"decodeToTransform",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming",
           "start":74,
           "duration":7,
           "end":81
@@ -989,6 +1157,10 @@
         {
           "transmission":"transformToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming",
+          "fromTask":"FPGA1",
+          "toTask":"watermarking",
           "start":91,
           "duration":7,
           "end":98
@@ -996,6 +1168,10 @@
         {
           "transmission":"decodeToTransform2",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"decoding",
+          "fromTask":"GPGPU1",
+          "toTask":"Transforming2",
           "start":84,
           "duration":7,
           "end":91
@@ -1003,6 +1179,10 @@
         {
           "transmission":"transform2ToWatermark",
           "bus":"globalBus",
+          "fromPE":"GPGPU1",
+          "toPE":"Transforming2",
+          "fromTask":"FPGA1",
+          "toTask":"watermarking",
           "start":101,
           "duration":7,
           "end":108
@@ -1010,6 +1190,10 @@
         {
           "transmission":"watermarkToEncode",
           "bus":"globalBus",
+          "fromPE":"FPGA1",
+          "toPE":"watermarking",
+          "fromTask":"procB",
+          "toTask":"encoding",
           "start":109,
           "duration":61,
           "end":170
@@ -1017,6 +1201,10 @@
         {
           "transmission":"side_comm",
           "bus":"globalBus",
+          "fromPE":"procA",
+          "toPE":"inputting",
+          "fromTask":"procB",
+          "toTask":"encoding",
           "start":11,
           "duration":16,
           "end":27
