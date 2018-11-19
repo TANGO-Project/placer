@@ -1,14 +1,14 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the simplified aquascan model with 4 symmetric CPU and a FPGA with shared functions",
+  "info":"the simplified aquascan model with 4 symmetric CPU and a GPGPU",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
     {
       "switchingTask":
       {
-        "name":"cpu",
+        "name":"CPU_CORE",
         "resources":[],
         "properties":[],
         "switchingDelay":0
@@ -22,14 +22,6 @@
       "properties":[],
       "switchingDelay":0
       }
-    },
-    {
-      "multiTaskPermanentTasks":
-      {
-        "name":"fpga",
-        "resources":["gates"],
-        "properties":[]
-      }
     }
   ],
   "hardwareModel":
@@ -38,7 +30,7 @@
     "processingElements":
     [
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core1",
         "memSize":32768,
         "resources":[],
@@ -46,7 +38,7 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core2",
         "memSize":32768,
         "resources":[],
@@ -54,7 +46,7 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core3",
         "memSize":32768,
         "resources":[],
@@ -62,7 +54,7 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core4",
         "memSize":32768,
         "resources":[],
@@ -70,12 +62,13 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"fpga",
-        "name":"Fpga1",
+        "processorClass":"GPGPU",
+        "name":"GPGPU1",
         "memSize":32768,
-        "resources":[{"name":"gates", "value":1000}],
+        "resources":[],
         "properties":[],
-        "powerModel":"0"
+        "powerModel":"0",
+        "multiCore":1000
       }
     ],
     "busses":
@@ -90,7 +83,7 @@
             "Core2",
             "Core3",
             "Core4",
-            "Fpga1"
+            "GPGPU"
           ],
           "timeUnitPerDataUnit":1,
           "latency":1
@@ -101,16 +94,6 @@
   },
   "softwareModel":
   {
-    "sharedPermanentFunctions":[
-      {
-        "name":"FpgaDigitCorrelation",
-        "target":"fpga",
-        "parameters":[],
-        "resourceUsage":[{"name":"gates", "formula":"400"}],
-        "computationMemory":"2",
-        "duration":"8640"
-      }
-    ],
     "tasks":
     [
       {
@@ -119,7 +102,7 @@
         [
           {
             "name":"CpuInput",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -133,7 +116,7 @@
         [
           {
             "name":"CpuAvgFieldBrightnessCorrection",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -147,7 +130,7 @@
         [
           {
             "name":"CpuDigit1PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -161,14 +144,13 @@
         [
           {
             "name":"CpuDigit1Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
           }
-        ],
-        "sharedImplementation":["FpgaDigitCorrelation"]
+        ]
       },
       {
         "name":"Digit1PostTreatment",
@@ -176,7 +158,7 @@
         [
           {
             "name":"CpuDigit1PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -190,7 +172,7 @@
         [
           {
             "name":"CpuDigit2PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -204,14 +186,13 @@
         [
           {
             "name":"CpuDigit2Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
           }
-        ],
-        "sharedImplementation":["FpgaDigitCorrelation"]
+        ]
       },
       {
         "name":"Digit2PostTreatment",
@@ -219,7 +200,7 @@
         [
           {
             "name":"CpuDigit2PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -233,7 +214,7 @@
         [
           {
             "name":"CpuDigit3PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -247,14 +228,13 @@
         [
           {
             "name":"CpuDigit3Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
           }
-        ],
-        "sharedImplementation":["FpgaDigitCorrelation"]
+        ]
       },
       {
         "name":"Digit3PostTreatment",
@@ -262,7 +242,7 @@
         [
           {
             "name":"CpuDigit3PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -276,7 +256,7 @@
         [
           {
             "name":"CpuDigit4PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -290,14 +270,13 @@
         [
           {
             "name":"CpuDigit4Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
           }
-        ],
-        "sharedImplementation":["FpgaDigitCorrelation"]
+        ]
       },
       {
         "name":"Digit4PostTreatment",
@@ -305,7 +284,7 @@
         [
           {
             "name":"CpuDigit4PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -319,7 +298,7 @@
         [
           {
             "name":"CpuFinalValueDetermination",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -333,7 +312,7 @@
         [
           {
             "name":"CpuOutput",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
