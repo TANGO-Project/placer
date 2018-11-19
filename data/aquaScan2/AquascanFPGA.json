@@ -8,7 +8,7 @@
     {
       "switchingTask":
       {
-        "name":"cpu",
+        "name":"CPU_CORE",
         "resources":[],
         "properties":[],
         "switchingDelay":0
@@ -29,7 +29,7 @@
     "processingElements":
     [
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core1",
         "memSize":32768,
         "resources":[],
@@ -37,7 +37,7 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core2",
         "memSize":32768,
         "resources":[],
@@ -45,7 +45,7 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core3",
         "memSize":32768,
         "resources":[],
@@ -53,7 +53,7 @@
         "powerModel":"0"
       },
       {
-        "processorClass":"cpu",
+        "processorClass":"CPU_CORE",
         "name":"Core4",
         "memSize":32768,
         "resources":[],
@@ -110,7 +110,7 @@
         [
           {
             "name":"CpuInput",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -124,7 +124,7 @@
         [
           {
             "name":"CpuAvgFieldBrightnessCorrection",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -138,7 +138,7 @@
         [
           {
             "name":"CpuDigit1PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -152,7 +152,7 @@
         [
           {
             "name":"CpuDigit1Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -167,7 +167,7 @@
         [
           {
             "name":"CpuDigit1PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -181,7 +181,7 @@
         [
           {
             "name":"CpuDigit2PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -195,7 +195,7 @@
         [
           {
             "name":"CpuDigit2Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -210,7 +210,7 @@
         [
           {
             "name":"CpuDigit2PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -224,7 +224,7 @@
         [
           {
             "name":"CpuDigit3PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -238,7 +238,7 @@
         [
           {
             "name":"CpuDigit3Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -253,7 +253,7 @@
         [
           {
             "name":"CpuDigit3PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -267,7 +267,7 @@
         [
           {
             "name":"CpuDigit4PreTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -281,7 +281,7 @@
         [
           {
             "name":"CpuDigit4Correlation",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -296,7 +296,7 @@
         [
           {
             "name":"CpuDigit4PostTreatment",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -310,7 +310,7 @@
         [
           {
             "name":"CpuFinalValueDetermination",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -324,7 +324,7 @@
         [
           {
             "name":"CpuOutput",
-            "target":"cpu",
+            "target":"CPU_CORE",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
