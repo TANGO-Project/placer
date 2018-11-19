@@ -83,7 +83,7 @@
             "Core2",
             "Core3",
             "Core4",
-            "GPGPU"
+            "GPGPU1"
           ],
           "timeUnitPerDataUnit":1,
           "latency":1
@@ -149,6 +149,15 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
+          },
+          {
+            "name":"GPUDigit1Correlation",
+            "target":"GPGPU",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"43205/100",
+            "nbThreads":300
           }
         ]
       },
@@ -191,6 +200,15 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
+          },
+          {
+            "name":"GPUDigit2Correlation",
+            "target":"GPGPU",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"43205/100",
+            "nbThreads":300
           }
         ]
       },
@@ -233,6 +251,15 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
+          },
+          {
+            "name":"GPUDigit3Correlation",
+            "target":"GPGPU",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"43205/100",
+            "nbThreads":300
           }
         ]
       },
@@ -275,6 +302,15 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
+          },
+          {
+            "name":"GPUDigit4Correlation",
+            "target":"GPGPU",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"43205/100",
+            "nbThreads":300
           }
         ]
       },
