@@ -1,7 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the simplified aquascan model",
+  "info":"the simplified aquascan model with 4 symmetric CPU and a FPGA with shared functions",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
@@ -12,6 +12,23 @@
         "resources":[],
         "properties":[],
         "switchingDelay":0
+      }
+    },
+    {
+      "switchingTask":
+      {
+      "name":"GPGPU",
+      "resources":[],
+      "properties":[],
+      "switchingDelay":0
+      }
+    },
+    {
+      "multiTaskPermanentTasks":
+      {
+        "name":"fpga",
+        "resources":["gates"],
+        "properties":[]
       }
     }
   ],
@@ -51,6 +68,14 @@
         "resources":[],
         "properties":[],
         "powerModel":"0"
+      },
+      {
+        "processorClass":"fpga",
+        "name":"Fpga1",
+        "memSize":32768,
+        "resources":[{"name":"gates", "value":1000}],
+        "properties":[],
+        "powerModel":"0"
       }
     ],
     "busses":
@@ -58,13 +83,14 @@
       {
         "halfDuplexBus":
         {
-          "name":"globalBus",
+          "name":"fastInternalCPUBus",
           "relatedProcessors":
           [
             "Core1",
             "Core2",
             "Core3",
-            "Core4"
+            "Core4",
+            "Fpga1"
           ],
           "timeUnitPerDataUnit":1,
           "latency":1
@@ -75,6 +101,16 @@
   },
   "softwareModel":
   {
+    "sharedPermanentFunctions":[
+      {
+        "name":"FpgaDigitCorrelation",
+        "target":"fpga",
+        "parameters":[],
+        "resourceUsage":[{"name":"gates", "formula":"400"}],
+        "computationMemory":"2",
+        "duration":"8640"
+      }
+    ],
     "tasks":
     [
       {
@@ -131,7 +167,8 @@
             "computationMemory":"2",
             "duration":"43205"
           }
-        ]
+        ],
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit1PostTreatment",
@@ -173,7 +210,8 @@
             "computationMemory":"2",
             "duration":"43205"
           }
-        ]
+        ],
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit2PostTreatment",
@@ -215,7 +253,8 @@
             "computationMemory":"2",
             "duration":"43205"
           }
-        ]
+        ],
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit3PostTreatment",
@@ -257,7 +296,8 @@
             "computationMemory":"2",
             "duration":"43205"
           }
-        ]
+        ],
+        "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
         "name":"Digit4PostTreatment",
@@ -340,6 +380,13 @@
         "timing":"Sticky"
       },
       {
+        "name":"GlobalImageProcessingToDigit2PreTreatment",
+        "source":"GlobalImageProcessing",
+        "target":"Digit2PreTreatment",
+        "size":625,
+        "timing":"Sticky"
+      },
+      {
         "name":"Digit2PreTreatmentToDigit2DigitCorrelation",
         "source":"Digit2PreTreatment",
         "target":"Digit2Correlation",
@@ -358,6 +405,13 @@
         "source":"Digit2PostTreatment",
         "target":"FinalValueDetermination",
         "size":1,
+        "timing":"Sticky"
+      },
+      {
+        "name":"GlobalImageProcessingToDigit3PreTreatment",
+        "source":"GlobalImageProcessing",
+        "target":"Digit3PreTreatment",
+        "size":625,
         "timing":"Sticky"
       },
       {
@@ -381,6 +435,14 @@
         "size":1,
         "timing":"Sticky"
       },
+      {
+        "name":"GlobalImageProcessingToDigit4PreTreatment",
+        "source":"GlobalImageProcessing",
+        "target":"Digit4PreTreatment",
+        "size":625,
+        "timing":"Sticky"
+      },
+
       {
         "name":"Digit4PreTreatmentToDigit4DigitCorrelation",
         "source":"Digit4PreTreatment",
@@ -422,36 +484,7 @@
   "constraintsAndObjectives":
   [
     {
-      "maxMakespan":800000
-    },
-    {
-      "mustBeUsed":"Core1"
-    },
-    {
-      "mustBeUsed":"Core2"
-    },
-    {
-      "mustBeUsed":"Core3"
-    },
-    {
-      "mustBeUsed":"Core4"
-    },
-    {
       "symmetricPE":["Core1","Core2","Core3","Core4"]
-    },
-    {
-      "maxMakespan":175000
-    },
-    {
-      "samePE":[
-        "LightingNormalisation",
-        "Downscale",
-        "Binarisation",
-        "DetailsSuppression",
-        "OrientationEstimation",
-        "FirstRotation",
-        "OrientationDetermination"
-      ]
     },
     {
       "simpleObjective":"minMakespan"
