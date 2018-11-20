@@ -1,17 +1,45 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the simplified aquascan model with 4 symmetric CPU cores, not considering transfer time between cores",
+  "info":"the aquascan model with ZYNC and IMX6 and GPGPU and FPGA; this is a skeleton so far...",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
     {
       "switchingTask":
       {
-        "name":"CPU",
+        "name":"CPU_ZYNC",
         "resources":[],
         "properties":[],
         "switchingDelay":0
+      }
+    },
+    {
+      "switchingTask":
+      {
+        "name":"CPU_IMX6",
+        "resources":[],
+        "properties":[],
+        "switchingDelay":0
+      }
+    },
+    {
+      "switchingTask":
+      {
+        "name":"GPGPU",
+        "resources":[],
+        "properties":[],
+        "switchingDelay":0
+      }
+    },
+    {
+      "multiTaskPermanentTasks":
+      {
+        "name":"FPGA",
+        "resources":[
+          "gates"
+        ],
+        "properties":[]
       }
     }
   ],
@@ -21,13 +49,45 @@
     "processingElements":
     [
       {
-        "processorClass":"CPU",
-        "name":"CPU1",
+        "name":"Zync_1",
+        "processorClass":"CPU_ZYNC",
         "memSize":32768,
         "resources":[],
         "properties":[],
         "powerModel":"0",
         "multiCore":4
+      },
+      {
+        "name":"Imx6_1",
+        "processorClass":"CPU_IMX6",
+        "memSize":32768,
+        "resources":[],
+        "properties":[],
+        "powerModel":"0",
+        "multiCore":6
+      },
+      {
+        "name":"Gpgpu1",
+        "processorClass":"GPGPU",
+        "memSize":32768,
+        "resources":[],
+        "properties":[],
+        "powerModel":"0",
+        "multiCore":4
+      },
+      {
+        "name":"Fpga1",
+        "processorClass":"FPGA",
+        "memSize":32768,
+        "resources":
+        [
+          {
+            "name":"gates",
+            "value":1000
+          }
+        ],
+        "properties":[],
+        "powerModel":"0"
       }
     ],
     "busses":
@@ -35,13 +95,40 @@
       {
         "halfDuplexBus":
         {
-          "name":"globalBus",
+          "name":"IMX6PlatformBus",
           "relatedProcessors":
           [
-            "CPU1"
+            "Imx6_1",
+            "Gpgpu1"
           ],
           "timeUnitPerDataUnit":1,
           "latency":1
+        }
+      },
+      {
+        "halfDuplexBus":
+        {
+          "name":"ZyncPlatformBus",
+          "relatedProcessors":
+          [
+            "Zync_1",
+            "Fpga1"
+          ],
+          "timeUnitPerDataUnit":1,
+          "latency":1
+        }
+      },
+      {
+        "halfDuplexBus":
+        {
+          "name":"GlobalEthernetBus",
+          "relatedProcessors":
+          [
+            "CPU_ZYNC",
+            "Imx6_1"
+          ],
+          "timeUnitPerDataUnit":100,
+          "latency":100
         }
       }
     ],
@@ -56,8 +143,16 @@
         "implementations":
         [
           {
-            "name":"CpuInput",
-            "target":"CPU",
+            "name":"CpuZyncInput",
+            "target":"CPU_ZYNC",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"1"
+          },
+          {
+            "name":"CpuImx6Input",
+            "target":"CPU_IMX6",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -70,13 +165,22 @@
         "implementations":
         [
           {
-            "name":"CpuAvgFieldBrightnessCorrection",
-            "target":"CPU",
+            "name":"CpuZyncGlobalImageProcessing",
+            "target":"CPU_ZYNC",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"934 + 8690 + 534 + 275 + 2620 + 6690 + 322 + 103 + 1425 + 71 + 4230 + 1640 + 5810 + 5260 + 2040 + 483 + 13 + 131"
+          },
+          {
+            "name":"CpuImx6GlobalImageProcessing",
+            "target":"CPU_IMX6",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"934 + 8690 + 534 + 275 + 2620 + 6690 + 322 + 103 + 1425 + 71 + 4230 + 1640 + 5810 + 5260 + 2040 + 483 + 13 + 131"
           }
+
         ]
       },
       {
@@ -84,8 +188,16 @@
         "implementations":
         [
           {
-            "name":"CpuDigit1PreTreatment",
-            "target":"CPU",
+            "name":"CpuZyncDigit1PreTreatment",
+            "target":"CPU_ZYNC",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"33 + 17"
+          },
+          {
+            "name":"CpuImx6Digit1PreTreatment",
+            "target":"CPU_IMX6",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -93,17 +205,54 @@
           }
         ]
       },
+
+
       {
         "name":"Digit1Correlation",
         "implementations":
         [
           {
-            "name":"CpuDigit1Correlation",
-            "target":"CPU",
+            "name":"CpuZyncDigit1Correlation",
+            "target":"CPU_ZYNC",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"43205"
+          },
+          {
+            "name":"CpuImx6Digit1Correlation",
+            "target":"CPU_IMX6",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"43205"
+          },
+          {
+            "name":"GPUDigit1Correlation",
+            "target":"GPGPU",
+            "parameters":[
+              {
+                "name":"usedCores",
+                "values":[1,2,4]
+              }
+            ],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"43205/usedCores",
+            "nbThreads":"usedCores"
+          },
+          {
+            "name":"FpgaDigit1Correlation",
+            "target":"FPGA",
+            "parameters":[],
+            "resourceUsage":[
+              {
+                "name":"gates",
+                "formula":"400"
+              }
+            ],
+            "computationMemory":"2",
+            "duration":"43205/5"
           }
         ]
       },
@@ -112,8 +261,16 @@
         "implementations":
         [
           {
-            "name":"CpuDigit1PostTreatment",
-            "target":"CPU",
+            "name":"CpuZyncDigit1PostTreatment",
+            "target":"CPU_ZYNC",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"854 + 23 + 1"
+          },
+          {
+            "name":"CpuImx6Digit1PostTreatment",
+            "target":"CPU_IMX6",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -121,139 +278,23 @@
           }
         ]
       },
-      {
-        "name":"Digit2PreTreatment",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit2PreTreatment",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"33 + 17"
-          }
-        ]
-      },
-      {
-        "name":"Digit2Correlation",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit2Correlation",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"43205"
-          }
-        ]
-      },
-      {
-        "name":"Digit2PostTreatment",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit2PostTreatment",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"854 + 23 + 1"
-          }
-        ]
-      },
-      {
-        "name":"Digit3PreTreatment",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit3PreTreatment",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"33 + 17"
-          }
-        ]
-      },
-      {
-        "name":"Digit3Correlation",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit3Correlation",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"43205"
-          }
-        ]
-      },
-      {
-        "name":"Digit3PostTreatment",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit3PostTreatment",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"854 + 23 + 1"
-          }
-        ]
-      },
-      {
-        "name":"Digit4PreTreatment",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit4PreTreatment",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"33 + 17"
-          }
-        ]
-      },
-      {
-        "name":"Digit4Correlation",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit4Correlation",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"43205"
-          }
-        ]
-      },
-      {
-        "name":"Digit4PostTreatment",
-        "implementations":
-        [
-          {
-            "name":"CpuDigit4PostTreatment",
-            "target":"CPU",
-            "parameters":[],
-            "resourceUsage":[],
-            "computationMemory":"2",
-            "duration":"854 + 23 + 1"
-          }
-        ]
-      },
+
+
       {
         "name":"FinalValueDetermination",
         "implementations":
         [
           {
-            "name":"CpuFinalValueDetermination",
-            "target":"CPU",
+            "name":"CpuZyncFinalValueDetermination",
+            "target":"CPU_ZYNC",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"1"
+          },
+          {
+            "name":"CpuImx6FinalValueDetermination",
+            "target":"CPU_IMX6",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
@@ -266,8 +307,16 @@
         "implementations":
         [
           {
-            "name":"CpuOutput",
-            "target":"CPU",
+            "name":"CpuZyncOutput",
+            "target":"CPU_ZYNC",
+            "parameters":[],
+            "resourceUsage":[],
+            "computationMemory":"2",
+            "duration":"1"
+          },
+          {
+            "name":"CpuImx6Output",
+            "target":"CPU_IMX6",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
