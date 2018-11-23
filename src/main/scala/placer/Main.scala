@@ -20,10 +20,11 @@
 package placer
 
 import java.io.{File, PrintWriter}
+import java.util.Calendar
 
 import net.liftweb.json._
 import placer.algo.{Mapper, MapperConfig, Strategy}
-import placer.io.Extractor
+import placer.io.{Extractor, JSonHelper}
 import placer.metadata.MappingProblem
 
 import scala.io.Source
@@ -180,24 +181,29 @@ object Main extends App {
       val parsed = parse(problemFile.mkString)
       val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
+      println("overrideCommandLine:" + problem.overrideCommandLine)
+
       require(config.out != null || config.benchmark, "---out must be specified if not running benchmark mode")
 
       if (config.verbose) println(problem)
 
       val startTime = System.nanoTime()
-      val mappingSet = Mapper.findMapping(problem,
-        MapperConfig(maxDiscrepancy = config.discrepancy,
-          timeLimit = config.timeLimit,
-          lns = config.lns,
-          lnsTimeLimit = config.lnsTimeLimit,
-          strategy = config.strategies,
-          lnsMaxFails = config.lnsMaxFails,
-          lnsRelaxProba = config.lnsRelaxProba,
-          lnsNbRelaxations = config.lnsNbRelaxations,
-          lnsNbRelaxationNoImprove = config.lnsNbRelaxationNoImprove,
-          lnsCarryOnObjForMultiHardware = config.lnsCarryOnObjForMultiHardware,
-          lnsUseEarlyStop = config.lnsUseEarlyStop,
-          verbose = verbose))
+      val startTimeStamp = Calendar.getInstance.getTime.toString
+
+      val mapperConfig =  MapperConfig(maxDiscrepancy = config.discrepancy,
+        timeLimit = config.timeLimit,
+        lns = config.lns,
+        lnsTimeLimit = config.lnsTimeLimit,
+        strategy = config.strategies,
+        lnsMaxFails = config.lnsMaxFails,
+        lnsRelaxProba = config.lnsRelaxProba,
+        lnsNbRelaxations = config.lnsNbRelaxations,
+        lnsNbRelaxationNoImprove = config.lnsNbRelaxationNoImprove,
+        lnsCarryOnObjForMultiHardware = config.lnsCarryOnObjForMultiHardware,
+        lnsUseEarlyStop = config.lnsUseEarlyStop,
+        verbose = verbose)
+
+      val mappingSet = Mapper.findMapping(problem,mapperConfig)
 
       val endTime = System.nanoTime()
 
@@ -206,7 +212,11 @@ object Main extends App {
       if(config.benchmark){
         println("runTime: " + ((endTime - startTime)/(1000*1000)) + " ms" + " obj: " + mappingSet.mapping.map(_.objValues.mkString(",")))
         if(config.out != null) {
-          val outJSon = mappingSet.toJSon
+          val outJSon = mappingSet.toJSon(
+            JSonHelper.strings("cmd",args).replace("\\","/") + "," +
+              JSonHelper.string("startTime",startTimeStamp) + "," +
+              JSonHelper.string("endTime",Calendar.getInstance.getTime.toString)
+          )
           new PrintWriter(config.out) {
             val parsed = parse(outJSon)
             write(prettyRender(parsed))
@@ -214,7 +224,11 @@ object Main extends App {
           }
         }
       }else{
-        val outJSon = mappingSet.toJSon
+        val outJSon = mappingSet.toJSon(
+          JSonHelper.strings("cmd",args).replace("\\","/") + "," +
+            JSonHelper.string("startTime",startTimeStamp) + "," +
+            JSonHelper.string("endTime",Calendar.getInstance.getTime.toString)
+        )
         new PrintWriter(config.out) {
           val parsed = parse(outJSon)
           write(prettyRender(parsed))

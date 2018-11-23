@@ -139,12 +139,13 @@ case class Mappings(timeUnit:String,
                     info:String,
                     mapping: Iterable[Mapping]) {
 
-  def toJSon: String = {
+  def toJSon(additionalFields:String = ""): String = {
     "{" +
       JSonHelper.string("jsonFormat","PlacerBeta6Out") + "," +
       JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +
       JSonHelper.string("info",info) + "," +
+      additionalFields +
       JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
   }
 

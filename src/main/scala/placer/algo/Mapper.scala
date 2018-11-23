@@ -42,7 +42,22 @@ case class MapperConfig(maxDiscrepancy:Int,
                         performShavings:Boolean = false,
                         lnsUseEarlyStop:Boolean = true,
                         lnsTimeLimit:Int = Int.MaxValue,
-                        verbose:Boolean)
+                        verbose:Boolean){
+  override def toString: String = (
+    "MapperConfig(maxDiscrepancy:" + maxDiscrepancy +
+  " timeLimit:" + timeLimit  +
+  " lns:" + lns +
+  " strategy: " + strategy +
+  " lnsMaxFails:" + lnsMaxFails +
+  " lnsRelaxProba:" + lnsRelaxProba +
+  " lnsNbRelaxations:" + lnsNbRelaxations +
+  " lnsNbRelaxationNoImprove:" + lnsNbRelaxationNoImprove +
+  " lnsCarryOnObjForMultiHardware:" + lnsCarryOnObjForMultiHardware +
+  " performShavings: " + performShavings +
+  " lnsUseEarlyStop:" + lnsUseEarlyStop +
+  " lnsTimeLimit:" + lnsTimeLimit +
+  " verbose: " + verbose + ")")
+}
 
 object Mapper {
 
