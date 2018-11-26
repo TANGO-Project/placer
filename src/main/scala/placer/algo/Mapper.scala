@@ -308,6 +308,8 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         flow.size, flow.name, flow.timing)
     )
 
+
+
     val isWidthNeeded = problem.constraints.isWidthNeeded
 
     //creating the width var, in case needed for modulo scheduling
@@ -366,7 +368,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     }
 
     reportProgress("computing makeSpan on tasks")
-    val taskEnds = cpTasks.map(task => task.end)
+    val taskEnds = cpTasks.flatMap(task => if(task.outgoingCPTransmissions.isEmpty) Some(task.end) else None)
     val makeSpan = maximum(taskEnds)
 
     //does not work for multi-cores because of rounding stuff.
@@ -411,6 +413,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       }
     }
 
+    /*
     reportProgress("redundant bin-packing constraint on usage per bus")
 
     for (cpBus <- cpBusses) {
@@ -421,6 +424,7 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
         case _ => ;
       }
     }
+*/
 
     reportProgress("computing total energy consumption")
     val energyForEachTask = cpTasks.map(task => task.energy)
@@ -439,6 +443,19 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
             if(config.verbose) println("forbidden hardware: " + hardwareModel.name)
             return null
           }
+
+        case StartTimeConstraint(task,time) =>
+          reportProgress("posting StartTimeConstraint")
+
+          addDocumented(cpTasks(task.id).start === time, "" + constraint)
+
+        case OneTaskStartsAtZero() =>
+
+          //setting at least one tasks without predecessor wit hstartTime zero
+          val tasksWithoutIncomingTransmissions = cpTasks.filter(task => task.incomingCPTransmissions.isEmpty).toList
+          reportProgress("posting OneTaskStartsAtZero; tasksWithoutIncomingTransmissions :" + tasksWithoutIncomingTransmissions.map(_.task.name))
+
+          addDocumented(minimum(tasksWithoutIncomingTransmissions.map(_.start))  === 0,"at least one task without predecessor starts at time Zero")
 
         case PowerCap(maxPower:Int) =>
           reportProgress("posting powerCap")

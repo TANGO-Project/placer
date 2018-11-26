@@ -63,7 +63,7 @@
         "processorClass":"fpga",
         "name":"Fpga1",
         "memSize":32768,
-        "resources":[{"name":"gates", "value":1000}],
+        "resources":[{"name":"gates", "value":2000}],
         "properties":[],
         "powerModel":"0"
       }

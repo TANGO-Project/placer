@@ -21,6 +21,7 @@ package placer.io
 
 import net.liftweb.json.DefaultFormats
 import net.liftweb.json.JsonAST.JValue
+import placer.metadata
 import placer.metadata._
 import placer.metadata.hw.{ProcessingElementClass, _}
 import placer.metadata.sw.SoftwareClass.SoftwareClass
@@ -101,6 +102,8 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               energyCap:Option[Int],
                               maxMakespan:Option[Int],
                               maxWidth:Option[Int],
+                              startTime:Option[ETaskTime],
+                              oneTaskStartsAtZero:Option[Boolean],
                               forbidHardware:Option[List[String]]){
   def extract(hwOpt:Option[Iterable[ProcessingElement]],sw:SoftwareModel):MappingConstraint = {
 
@@ -153,6 +156,13 @@ case class EMappingConstraint(runOn:Option[ERunOn],
       }
     }
 
+    def extractStartTime(startTime:ETaskTime):StartTimeConstraint = {
+      val task = sw.simpleProcesses.find(p => p.name equals startTime.task) match{
+        case Some(x) => x
+        case None => throw new Error("cannot find task " + startTime.task + " used in mappingConstraint " + startTime)}
+
+      StartTimeConstraint(task,startTime.time)
+    }
 
     def extractBreaking(breaking:Option[String]):SymmetricPEConstraintType.Value = {
       breaking match{
@@ -248,6 +258,18 @@ case class EMappingConstraint(runOn:Option[ERunOn],
         acc(WidthCap(maxDelay:Int))
       case _ => ;
     }
+    startTime match{
+      case Some(ts) =>
+        acc(extractStartTime(ts))
+      case _ => ;
+    }
+
+    oneTaskStartsAtZero match{
+      case Some(t) if t =>
+        acc(OneTaskStartsAtZero())
+      case _ => ;
+    }
+
 
     forbidHardware match{
       case Some(hardwares) =>
@@ -260,6 +282,7 @@ case class EMappingConstraint(runOn:Option[ERunOn],
   }
 }
 
+case class ETaskTime(task:String,time:Int)
 case class ERunOn(task:String,processingElement:String)
 
 object EGoal{
@@ -268,7 +291,7 @@ object EGoal{
       case "minEnergy" => MinEnergy()
       case "minMakespan" => MinMakeSpan()
       case "minFrame" => MinFrame()
-      case _ => throw new Error("unknown simple mapping goal:" + name)
+      case _ => throw new Error("unknown simple mapping goal:" + name + "   expected: minEnergy, minMakespan, minFrame")
     }
   }
 }

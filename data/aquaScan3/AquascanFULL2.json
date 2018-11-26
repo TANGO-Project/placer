@@ -1,7 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the aquascan model with ZYNQ and IMX6 and GPGPU and FPGA",
+  "info":"the aquascan model with ZYNQ and IMX6 and GPGPU and FPGA with correct GPU numbers",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
@@ -102,7 +102,7 @@
             "Imx6Chip.GPU"
           ],
           "timeUnitPerDataUnit":5,
-          "latency":0
+          "latency":1
         }
       },
       {
@@ -115,7 +115,7 @@
             "ZynqChip.FPGA"
           ],
           "timeUnitPerDataUnit":1,
-          "latency":0
+          "latency":1
         }
       },
       {
@@ -178,7 +178,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"41127"
+            "duration":"13384"
           }
 
         ]
@@ -201,7 +201,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"193"
+            "duration":"142"
           }
         ]
       },
@@ -223,7 +223,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205"
+            "duration":"40217"
           },
           {
             "name":"GPUDigit1Correlation",
@@ -231,7 +231,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205/4",
+            "duration":"23345",
             "nbThreads":"4"
           },
           {
@@ -245,7 +245,7 @@
               }
             ],
             "computationMemory":"2",
-            "duration":"43205/5"
+            "duration":"23345/2"
           }
         ]
       },
@@ -267,10 +267,19 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"878"
+            "duration":"1104"
           }
         ]
       },
+
+
+
+
+
+
+
+
+
       {
         "name":"Digit2PreTreatment",
         "implementations":
@@ -289,7 +298,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"193"
+            "duration":"142"
           }
         ]
       },
@@ -311,15 +320,15 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205"
+            "duration":"40217"
           },
           {
-            "name":"GPUDigit3Correlation",
+            "name":"GPUDigit2Correlation",
             "target":"GPGPU",
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205/4",
+            "duration":"23345",
             "nbThreads":"4"
           },
           {
@@ -333,7 +342,7 @@
               }
             ],
             "computationMemory":"2",
-            "duration":"43205/5"
+            "duration":"23345/2"
           }
         ]
       },
@@ -355,10 +364,22 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"878"
+            "duration":"1104"
           }
         ]
       },
+
+
+
+
+
+
+
+
+
+
+
+
       {
         "name":"Digit3PreTreatment",
         "implementations":
@@ -377,7 +398,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"193"
+            "duration":"142"
           }
         ]
       },
@@ -399,7 +420,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205"
+            "duration":"40217"
           },
           {
             "name":"GPUDigit3Correlation",
@@ -407,7 +428,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205/4",
+            "duration":"23345",
             "nbThreads":"4"
           },
           {
@@ -421,7 +442,7 @@
               }
             ],
             "computationMemory":"2",
-            "duration":"43205/5"
+            "duration":"23345/2"
           }
         ]
       },
@@ -443,10 +464,25 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"878"
+            "duration":"1104"
           }
         ]
       },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {
         "name":"Digit4PreTreatment",
         "implementations":
@@ -465,7 +501,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"193"
+            "duration":"142"
           }
         ]
       },
@@ -487,7 +523,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205"
+            "duration":"40217"
           },
           {
             "name":"GPUDigit4Correlation",
@@ -495,7 +531,7 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43205/4",
+            "duration":"23345",
             "nbThreads":"4"
           },
           {
@@ -509,7 +545,7 @@
               }
             ],
             "computationMemory":"2",
-            "duration":"43205/5"
+            "duration":"23345/2"
           }
         ]
       },
@@ -531,10 +567,25 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"878"
+            "duration":"1104"
           }
         ]
       },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {
         "name":"FinalValueDetermination",
         "implementations":
@@ -727,13 +778,13 @@
       "maxMakespan":76538
     },
     {
-      "oneTaskStartsAtZero":true
-    },
-    {
       "runOn": {
         "task": "Input",
         "processingElement": "Imx6Chip.CPU"
       }
+    },
+    {
+      "oneTaskStartsAtZero":true
     },
     {
       "runOn": {
