@@ -727,9 +727,6 @@
       "maxMakespan":76538
     },
     {
-      "oneTaskStartsAtZero":true
-    },
-    {
       "runOn": {
         "task": "Input",
         "processingElement": "Imx6Chip.CPU"

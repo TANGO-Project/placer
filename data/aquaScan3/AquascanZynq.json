@@ -1,7 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the aquascan model with ZYNQ and IMX6 and GPGPU and FPGA with correct GPU numbers",
+  "info":"the aquascan model with ZYNQ",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
@@ -58,24 +58,6 @@
         "multiCore":2
       },
       {
-        "name":"Imx6Chip.CPU",
-        "processorClass":"ARM_CortexA9_IMX6",
-        "memSize":32768,
-        "resources":[],
-        "properties":[],
-        "powerModel":"0",
-        "multiCore":4
-      },
-      {
-        "name":"Imx6Chip.GPU",
-        "processorClass":"GPGPU",
-        "memSize":32768,
-        "resources":[],
-        "properties":[],
-        "powerModel":"0",
-        "multiCore":4
-      },
-      {
         "name":"ZynqChip.FPGA",
         "processorClass":"FPGA",
         "memSize":32768,
@@ -95,19 +77,6 @@
       {
         "halfDuplexBus":
         {
-          "name":"IMX6Chip.bus",
-          "relatedProcessors":
-          [
-            "Imx6Chip.CPU",
-            "Imx6Chip.GPU"
-          ],
-          "timeUnitPerDataUnit":5,
-          "latency":1
-        }
-      },
-      {
-        "halfDuplexBus":
-        {
           "name":"ZynqChip.bus",
           "relatedProcessors":
           [
@@ -116,19 +85,6 @@
           ],
           "timeUnitPerDataUnit":1,
           "latency":1
-        }
-      },
-      {
-        "halfDuplexBus":
-        {
-          "name":"GlobalEthernetBus",
-          "relatedProcessors":
-          [
-            "Imx6Chip.CPU",
-            "ZynqChip.CPU"
-          ],
-          "timeUnitPerDataUnit":3,
-          "latency":100
         }
       }
     ],
@@ -724,18 +680,6 @@
     },
     {
       "maxMakespan":100000
-    },
-    {
-      "runOn": {
-        "task": "Input",
-        "processingElement": "Imx6Chip.CPU"
-      }
-    },
-    {
-      "runOn": {
-        "task": "Output",
-        "processingElement": "Imx6Chip.CPU"
-      }
     }
   ]
 }
