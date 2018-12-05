@@ -1,7 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the aquascan model with ZYNQ",
+  "info":"the aquascan model with ZYNQ including its FPGA",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [

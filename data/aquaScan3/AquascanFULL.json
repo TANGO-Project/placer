@@ -1,7 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the aquascan model with ZYNQ and IMX6 and GPGPU and FPGA with correct GPU numbers",
+  "info":"the aquascan model with ZYNQ and IMX6 and GPGPU and FPGA",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
