@@ -181,8 +181,6 @@ object Main extends App {
       val parsed = parse(problemFile.mkString)
       val problem: MappingProblem = Extractor.extractProblem(parsed,verbose)
 
-      println("overrideCommandLine:" + problem.overrideCommandLine)
-
       require(config.out != null || config.benchmark, "---out must be specified if not running benchmark mode")
 
       if (config.verbose) println(problem)

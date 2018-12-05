@@ -161,8 +161,8 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
     val summedMaxTaskDurations =
       softwareModel.simpleProcesses.map(_.maxDuration(hardwareModel.processors, problem.properties ++ hardwareModel.properties ++ softwareModel.properties)).sum
 
-    val summedMaxTransmissionTimes =
-      softwareModel.transmissions.map(flow => hardwareModel.busses.map(bus => bus.transmissionDuration(flow.size)).max).sum
+    val summedMaxTransmissionTimes = if (hardwareModel.busses.isEmpty) 0
+    else softwareModel.transmissions.map(flow => hardwareModel.busses.map(bus => bus.transmissionDuration(flow.size)).max).sum
 
     val summedMaxSwitchingTimes = hardwareModel.processors.map(_.switchingDelay).max * softwareModel.simpleProcesses.length
 
@@ -413,6 +413,13 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
       }
     }
 
+    //setting at least one tasks without predecessor wit hstartTime zero
+    val tasksWithoutIncomingTransmissions = cpTasks.filter(task => task.incomingCPTransmissions.isEmpty).toList
+    reportProgress("posting OneTaskStartsAtZero; tasksWithoutIncomingTransmissions :" + tasksWithoutIncomingTransmissions.map(_.task.name))
+
+    addDocumented(minimum(tasksWithoutIncomingTransmissions.map(_.start))  === 0,"at least one task without predecessor starts at time Zero")
+
+
     /*
     reportProgress("redundant bin-packing constraint on usage per bus")
 
@@ -448,14 +455,6 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
           reportProgress("posting StartTimeConstraint")
 
           addDocumented(cpTasks(task.id).start === time, "" + constraint)
-
-        case OneTaskStartsAtZero() =>
-
-          //setting at least one tasks without predecessor wit hstartTime zero
-          val tasksWithoutIncomingTransmissions = cpTasks.filter(task => task.incomingCPTransmissions.isEmpty).toList
-          reportProgress("posting OneTaskStartsAtZero; tasksWithoutIncomingTransmissions :" + tasksWithoutIncomingTransmissions.map(_.task.name))
-
-          addDocumented(minimum(tasksWithoutIncomingTransmissions.map(_.start))  === 0,"at least one task without predecessor starts at time Zero")
 
         case PowerCap(maxPower:Int) =>
           reportProgress("posting powerCap")

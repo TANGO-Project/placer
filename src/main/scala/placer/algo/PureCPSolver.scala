@@ -29,7 +29,7 @@ class PureCPSolver(cpProblem: CPMappingProblem,
                    config:MapperConfig,
                    solver:CPSolver,
                    bestSolutionsSoFar:multiobjective.ListPareto[Mapping])
-extends SearchStrategy(cpProblem: CPMappingProblem,
+  extends SearchStrategy(cpProblem: CPMappingProblem,
     config:MapperConfig,
     solver:CPSolver){
 
@@ -85,7 +85,7 @@ extends SearchStrategy(cpProblem: CPMappingProblem,
     }
 
     val stat = start(nSols = if (isSearchOnlyOne) 1 else Int.MaxValue, timeLimit = config.timeLimit)
-    if(config.verbose) println(stat)
+    if (config.verbose) println(stat)
 
     goal match {
       case Some(MinPareto(a, b)) =>

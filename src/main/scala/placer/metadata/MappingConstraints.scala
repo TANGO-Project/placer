@@ -100,8 +100,6 @@ case class WidthCap(maxDelay:Int) extends MappingConstraint{
 
 case class StartTimeConstraint(task:AtomicTask,time:Int) extends MappingConstraint
 
-case class OneTaskStartsAtZero() extends MappingConstraint
-
 //software model is shared, so no need for specifying it
 //case class RestrictImplementations(task:AtomicTask,implementations:List[Implementation]) extends MappingConstraint
 //software model is shared, so no need for specifying it

@@ -33,7 +33,6 @@ import scala.collection.immutable.SortedMap
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
                           info:String,
-                          overrideCommandLine:Option[String],
                           properties:SortedMap[String,Int],
                           processorClasses: Array[ProcessingElementClass],
                           softwareModel: SoftwareModel,

@@ -47,7 +47,6 @@ case class EMappingProblem(timeUnit:String,
                            dataUnit:String,
                            info:Option[String],
                            jsonFormat:String,
-                           overrideCommandLine:Option[String] = None,
                            processingElementClasses:Array[EProcessingElementClass],
                            softwareModel:ESoftwareModel,
                            hardwareModel:Option[EHardwareModel],
@@ -77,7 +76,6 @@ case class EMappingProblem(timeUnit:String,
       timeUnit,
       dataUnit,
       info match{case None => ""; case Some(i) => i},
-      overrideCommandLine = overrideCommandLine,
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
       cl,
       sw,
@@ -103,7 +101,6 @@ case class EMappingConstraint(runOn:Option[ERunOn],
                               maxMakespan:Option[Int],
                               maxWidth:Option[Int],
                               startTime:Option[ETaskTime],
-                              oneTaskStartsAtZero:Option[Boolean],
                               forbidHardware:Option[List[String]]){
   def extract(hwOpt:Option[Iterable[ProcessingElement]],sw:SoftwareModel):MappingConstraint = {
 
@@ -263,13 +260,6 @@ case class EMappingConstraint(runOn:Option[ERunOn],
         acc(extractStartTime(ts))
       case _ => ;
     }
-
-    oneTaskStartsAtZero match{
-      case Some(t) if t =>
-        acc(OneTaskStartsAtZero())
-      case _ => ;
-    }
-
 
     forbidHardware match{
       case Some(hardwares) =>
