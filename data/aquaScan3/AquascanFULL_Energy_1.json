@@ -1,7 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
-  "info":"the aquascan model with ZYNQ and IMX6 and GPGPU and FPGA",
+  "info":"the aquascan model with full hardware and 1 image",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
   [
@@ -154,7 +154,7 @@
     "tasks":
     [
       {
-        "name":"Input",
+        "name":"Img1_Input",
         "implementations":
         [
           {
@@ -175,8 +175,9 @@
           }
         ]
       },
+
       {
-        "name":"GlobalImageProcessing",
+        "name":"Img1_GlobalImageProcessing",
         "implementations":
         [
           {
@@ -198,7 +199,7 @@
         ]
       },
       {
-        "name":"Digit1PreTreatment",
+        "name":"Img1_Digit1PreTreatment",
         "implementations":
         [
           {
@@ -220,7 +221,7 @@
         ]
       },
       {
-        "name":"Digit1Correlation",
+        "name":"Img1_Digit1Correlation",
         "implementations":
         [
           {
@@ -252,7 +253,7 @@
         "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
-        "name":"Digit1PostTreatment",
+        "name":"Img1_Digit1PostTreatment",
         "implementations":
         [
           {
@@ -294,7 +295,7 @@
 
 
       {
-        "name":"Digit2PreTreatment",
+        "name":"Img1_Digit2PreTreatment",
         "implementations":
         [
           {
@@ -316,7 +317,7 @@
         ]
       },
       {
-        "name":"Digit2Correlation",
+        "name":"Img1_Digit2Correlation",
         "implementations":
         [
           {
@@ -348,7 +349,7 @@
         "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
-        "name":"Digit2PostTreatment",
+        "name":"Img1_Digit2PostTreatment",
         "implementations":
         [
           {
@@ -389,7 +390,7 @@
 
 
       {
-        "name":"Digit3PreTreatment",
+        "name":"Img1_Digit3PreTreatment",
         "implementations":
         [
           {
@@ -411,7 +412,7 @@
         ]
       },
       {
-        "name":"Digit3Correlation",
+        "name":"Img1_Digit3Correlation",
         "implementations":
         [
           {
@@ -443,7 +444,7 @@
         "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
-        "name":"Digit3PostTreatment",
+        "name":"Img1_Digit3PostTreatment",
         "implementations":
         [
           {
@@ -475,7 +476,7 @@
 
 
       {
-        "name":"Digit4PreTreatment",
+        "name":"Img1_Digit4PreTreatment",
         "implementations":
         [
           {
@@ -497,7 +498,7 @@
         ]
       },
       {
-        "name":"Digit4Correlation",
+        "name":"Img1_Digit4Correlation",
         "implementations":
         [
           {
@@ -529,7 +530,7 @@
         "sharedImplementation":["FpgaDigitCorrelation"]
       },
       {
-        "name":"Digit4PostTreatment",
+        "name":"Img1_Digit4PostTreatment",
         "implementations":
         [
           {
@@ -560,7 +561,7 @@
 
 
       {
-        "name":"FinalValueDetermination",
+        "name":"Img1_FinalValueDetermination",
         "implementations":
         [
           {
@@ -582,7 +583,7 @@
         ]
       },
       {
-        "name":"Output",
+        "name":"Img1_Output",
         "implementations":
         [
           {
@@ -607,135 +608,135 @@
     "transmissions":
     [
       {
-        "name":"InputToGlobalImageProcessing",
-        "source":"Input",
-        "target":"GlobalImageProcessing",
+        "name":"Img1_InputToGlobalImageProcessing",
+        "source":"Img1_Input",
+        "target":"Img1_GlobalImageProcessing",
         "size":8192,
         "timing":"Sticky"
       },
       {
-        "name":"GlobalImageProcessingToDigit1PreTreatment",
-        "source":"GlobalImageProcessing",
-        "target":"Digit1PreTreatment",
+        "name":"Img1_GlobalImageProcessingToDigit1PreTreatment",
+        "source":"Img1_GlobalImageProcessing",
+        "target":"Img1_Digit1PreTreatment",
         "size":625,
         "timing":"Sticky"
       },
       {
-        "name":"Digit1PreTreatmentToDigit1DigitCorrelation",
-        "source":"Digit1PreTreatment",
-        "target":"Digit1Correlation",
+        "name":"Img1_Digit1PreTreatmentToDigit1DigitCorrelation",
+        "source":"Img1_Digit1PreTreatment",
+        "target":"Img1_Digit1Correlation",
         "size":26,
         "timing":"Sticky"
       },
       {
-        "name":"Digit1CorrelationToDigit1PostTreatment",
-        "source":"Digit1Correlation",
-        "target":"Digit1PostTreatment",
+        "name":"Img1_Digit1CorrelationToDigit1PostTreatment",
+        "source":"Img1_Digit1Correlation",
+        "target":"Img1_Digit1PostTreatment",
         "size":122,
         "timing":"Sticky"
       },
       {
-        "name":"Digit1PostTreatmentToFinalValueDetermination",
-        "source":"Digit1PostTreatment",
-        "target":"FinalValueDetermination",
+        "name":"Img1_Digit1PostTreatmentToFinalValueDetermination",
+        "source":"Img1_Digit1PostTreatment",
+        "target":"Img1_FinalValueDetermination",
         "size":1,
         "timing":"Sticky"
       },
       {
-        "name":"GlobalImageProcessingToDigit2PreTreatment",
-        "source":"GlobalImageProcessing",
-        "target":"Digit2PreTreatment",
+        "name":"Img1_GlobalImageProcessingToDigit2PreTreatment",
+        "source":"Img1_GlobalImageProcessing",
+        "target":"Img1_Digit2PreTreatment",
         "size":625,
         "timing":"Sticky"
       },
       {
-        "name":"Digit2PreTreatmentToDigit2DigitCorrelation",
-        "source":"Digit2PreTreatment",
-        "target":"Digit2Correlation",
+        "name":"Img1_Digit2PreTreatmentToDigit2DigitCorrelation",
+        "source":"Img1_Digit2PreTreatment",
+        "target":"Img1_Digit2Correlation",
         "size":26,
         "timing":"Sticky"
       },
       {
-        "name":"Digit2CorrelationToDigit2PostTreatment",
-        "source":"Digit2Correlation",
-        "target":"Digit2PostTreatment",
+        "name":"Img1_Digit2CorrelationToDigit2PostTreatment",
+        "source":"Img1_Digit2Correlation",
+        "target":"Img1_Digit2PostTreatment",
         "size":122,
         "timing":"Sticky"
       },
       {
-        "name":"Digit2PostTreatmentToFinalValueDetermination",
-        "source":"Digit2PostTreatment",
-        "target":"FinalValueDetermination",
+        "name":"Img1_Digit2PostTreatmentToFinalValueDetermination",
+        "source":"Img1_Digit2PostTreatment",
+        "target":"Img1_FinalValueDetermination",
         "size":1,
         "timing":"Sticky"
       },
       {
-        "name":"GlobalImageProcessingToDigit3PreTreatment",
-        "source":"GlobalImageProcessing",
-        "target":"Digit3PreTreatment",
+        "name":"Img1_GlobalImageProcessingToDigit3PreTreatment",
+        "source":"Img1_GlobalImageProcessing",
+        "target":"Img1_Digit3PreTreatment",
         "size":625,
         "timing":"Sticky"
       },
       {
-        "name":"Digit3PreTreatmentToDigit3DigitCorrelation",
-        "source":"Digit3PreTreatment",
-        "target":"Digit3Correlation",
+        "name":"Img1_Digit3PreTreatmentToDigit3DigitCorrelation",
+        "source":"Img1_Digit3PreTreatment",
+        "target":"Img1_Digit3Correlation",
         "size":26,
         "timing":"Sticky"
       },
       {
-        "name":"Digit3CorrelationToDigit3PostTreatment",
-        "source":"Digit3Correlation",
-        "target":"Digit3PostTreatment",
+        "name":"Img1_Digit3CorrelationToDigit3PostTreatment",
+        "source":"Img1_Digit3Correlation",
+        "target":"Img1_Digit3PostTreatment",
         "size":122,
         "timing":"Sticky"
       },
       {
-        "name":"Digit3PostTreatmentToFinalValueDetermination",
-        "source":"Digit3PostTreatment",
-        "target":"FinalValueDetermination",
+        "name":"Img1_Digit3PostTreatmentToFinalValueDetermination",
+        "source":"Img1_Digit3PostTreatment",
+        "target":"Img1_FinalValueDetermination",
         "size":1,
         "timing":"Sticky"
       },
       {
-        "name":"GlobalImageProcessingToDigit4PreTreatment",
-        "source":"GlobalImageProcessing",
-        "target":"Digit4PreTreatment",
+        "name":"Img1_GlobalImageProcessingToDigit4PreTreatment",
+        "source":"Img1_GlobalImageProcessing",
+        "target":"Img1_Digit4PreTreatment",
         "size":625,
         "timing":"Sticky"
       },
       {
-        "name":"Digit4PreTreatmentToDigit4DigitCorrelation",
-        "source":"Digit4PreTreatment",
-        "target":"Digit4Correlation",
+        "name":"Img1_Digit4PreTreatmentToDigit4DigitCorrelation",
+        "source":"Img1_Digit4PreTreatment",
+        "target":"Img1_Digit4Correlation",
         "size":26,
         "timing":"Sticky"
       },
       {
-        "name":"Digit4CorrelationToDigit4PostTreatment",
-        "source":"Digit4Correlation",
-        "target":"Digit4PostTreatment",
+        "name":"Img1_Digit4CorrelationToDigit4PostTreatment",
+        "source":"Img1_Digit4Correlation",
+        "target":"Img1_Digit4PostTreatment",
         "size":122,
         "timing":"Sticky"
       },
       {
-        "name":"Digit4PostTreatmentToFinalValueDetermination",
-        "source":"Digit4PostTreatment",
-        "target":"FinalValueDetermination",
+        "name":"Img1_Digit4PostTreatmentToFinalValueDetermination",
+        "source":"Img1_Digit4PostTreatment",
+        "target":"Img1_FinalValueDetermination",
         "size":1,
         "timing":"Sticky"
       },
       {
-        "name":"BarcodeDecodeToOutput",
-        "source":"GlobalImageProcessing",
-        "target":"Output",
+        "name":"Img1_BarcodeDecodeToOutput",
+        "source":"Img1_GlobalImageProcessing",
+        "target":"Img1_Output",
         "size":1,
         "timing":"Sticky"
       },
       {
-        "name":"FinalValueDeterminationToOutput",
-        "source":"FinalValueDetermination",
-        "target":"Output",
+        "name":"Img1_FinalValueDeterminationToOutput",
+        "source":"Img1_FinalValueDetermination",
+        "target":"Img1_Output",
         "size":1,
         "timing":"Sticky"
       }
@@ -752,13 +753,13 @@
     },
     {
       "runOn": {
-        "task": "Input",
+        "task": "Img1_Input",
         "processingElement": "Imx6Chip.CPU"
       }
     },
     {
       "runOn": {
-        "task": "Output",
+        "task": "Img1_Output",
         "processingElement": "Imx6Chip.CPU"
       }
     }

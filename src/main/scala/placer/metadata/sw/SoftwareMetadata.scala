@@ -43,10 +43,6 @@ abstract sealed class FlattenedImplementation() extends Indiced{
 case class ReferenceToSharedFlattenedImplementationConcrete(f:FlattenedImplementationConcrete,target:CPInstantiatedPermanentFunction) extends FlattenedImplementation{
   require(f.target.isInstanceOf[MultiTaskPermanentTasks],"reference to standard implementation should only refer to MultiTaskPermanentTasks")
 
-  def durationOnFinalHardware(proc: ProcessingElement, properties: SortedMap[String, Int]): Int = f.duration(proc,properties)
-
-  def canRunOnFinalHardare(proc: ProcessingElement): Boolean = f.canRunOn(proc)
-
   override def description: String = "shared:" + f.description
 
   def name = f.name
@@ -70,6 +66,7 @@ case class FlattenedImplementationConcrete(name: String,
                                            resourceUsage: SortedMap[String, Int],
                                            computationMemory: Int,
                                            duration: Formula,
+                                           overrideEnergy:Option[Int],
                                            originImplementation: ParametricImplementation = null,
                                            parameterValues: SortedMap[String, Int] = null) extends FlattenedImplementation {
 
@@ -104,6 +101,7 @@ case class FlattenedImplementationConcrete(name: String,
     resourceUsage = resourceUsage.mapValues(v => Const(v)),
     computationMemory = Const(computationMemory),
     duration = duration,
+    overrideEnergy = overrideEnergy match{case Some(e) => Some("" + e); case None => None},
     parameters = SortedMap.empty)
 }
 
@@ -132,6 +130,7 @@ case class ParametricImplementation(name: String,
                                     resourceUsage: SortedMap[String, Formula],
                                     computationMemory: Formula,
                                     duration: Formula,
+                                    overrideEnergy:Option[Formula],
                                     parameters: SortedMap[String, Iterable[Int]]) extends Implementation {
 
   def implementations:Iterable[FlattenedImplementationConcrete] = {
@@ -155,6 +154,12 @@ case class ParametricImplementation(name: String,
           resourceUsage.mapValues(resolve),
           resolve(computationMemory),
           simplify(duration),
+          overrideEnergy match{
+            case None => None
+            case Some(e) => simplify(e) match {
+              case Const(c) => Some(c)
+              case x =>
+                throw new Error("cannot simplify overrideEnergy based on parameters of implementation, remaining: " + x.prettyPrint())}},
           this,
           setParameters))
       case (param, values) :: tail =>

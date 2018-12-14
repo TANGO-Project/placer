@@ -337,7 +337,7 @@ case class EAtomicTask(name: String,
     def extractReferenceImplem(sharedImplementation:String):ReferenceToSharedParametricImplementation = {
       standardImplems.find(_.name equals sharedImplementation) match {
         case Some(x) => ReferenceToSharedParametricImplementation(x);
-        case None => throw new Error("cannot find reference implementation " + sharedImplementation)
+        case None => throw new Error("cannot find shared implementation " + sharedImplementation)
       }
     }
 
@@ -357,12 +357,15 @@ case class EParametricImplementation(name: String,
                                      resourceUsage: List[ENameFormula],
                                      computationMemory: String = "0",
                                      duration: String,
+                                     overrideEnergy:Option[String],
                                      parameters: List[ENameValues]){
   val parsedComputationMemory = FormulaParser(computationMemory)
   val parsedDuration = FormulaParser(duration)
 
   val parsedResources = SortedMap.empty[String, Formula] ++ resourceUsage.map(_.extract)
   val parsedNbThreads = nbThreads match{case None => Const(1); case Some(f) => FormulaParser(f)}
+
+  val parsedOverrideEnergy = overrideEnergy match{case None => None case Some(e) => Some(FormulaParser(e))}
 
   def extract(cl:Array[ProcessingElementClass]) = {
     val targetClass = cl.find(_.name equals target) match {
@@ -379,6 +382,7 @@ case class EParametricImplementation(name: String,
       parsedResources,
       parsedComputationMemory,
       parsedDuration,
+      parsedOverrideEnergy,
       SortedMap.empty[String, Iterable[Int]] ++ parameters.map(_.extract))
   }
 }

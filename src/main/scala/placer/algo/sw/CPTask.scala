@@ -102,16 +102,24 @@ case class CPTask(id: Int,
           targetedProcessors.map(p => {
             val durationPI = sharedImplem.f.duration(p.p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
             require(durationPI >= 0, "duration of implementation " + sharedImplem.name + " on processor " + p.p.name + " is negative:" + durationPI)
-            val power = Formula.eval(
-              p.p.powerModelForTask,
-              mapper.problem.properties ++
-                mapper.hardwareModel.properties ++
-                mapper.softwareModel.properties ++
-                p.p.processorClass.zeroResources ++
-                sharedImplem.f.resourceUsage)
+
+
+            val (power,energy) = sharedImplem.f.overrideEnergy match {
+              case None =>
+                val power = Formula.eval(
+                  p.p.powerModelForTask,
+                  mapper.problem.properties ++
+                    mapper.hardwareModel.properties ++
+                    mapper.softwareModel.properties ++
+                    p.p.processorClass.zeroResources ++
+                    sharedImplem.f.resourceUsage)
+                val energy = durationPI * power
+                (power, energy)
+              case Some(overrideEnergy) =>
+                (overrideEnergy/durationPI,overrideEnergy)
+            }
 
             require(power >= 0, "power of implementation " + sharedImplem.name + " on processor " + p.p.name + " is negative:" + power)
-            val energy = durationPI * power
             require(energy >= 0, "energy usage of implementation " + sharedImplem.name + " on processor " + p.p.name + " is negative:" + energy)
 
             ImplemAndProcessorAndDurationAndEnergyAndPower(
@@ -130,15 +138,24 @@ case class CPTask(id: Int,
           targetedProcessors.map(p => {
             val durationPI = concreteImplem.duration(p.p, mapper.problem.properties ++ mapper.hardwareModel.properties ++ mapper.softwareModel.properties)
             require(durationPI >= 0, "duration of implementation " + concreteImplem.name + " on processor " + p.p.name + " is negative:" + durationPI)
-            val power = Formula.eval(p.p.powerModelForTask,
-              mapper.problem.properties ++
-                mapper.hardwareModel.properties ++
-                mapper.softwareModel.properties ++
-                p.p.processorClass.zeroResources ++
-                concreteImplem.resourceUsage)
+
+
+            val (power,energy) = concreteImplem.overrideEnergy match {
+              case None =>
+                val power = Formula.eval(
+                  p.p.powerModelForTask,
+                  mapper.problem.properties ++
+                    mapper.hardwareModel.properties ++
+                    mapper.softwareModel.properties ++
+                    p.p.processorClass.zeroResources ++
+                    concreteImplem.resourceUsage)
+                val energy = durationPI * power
+                (power, energy)
+              case Some(overrideEnergy) =>
+                (overrideEnergy/durationPI,overrideEnergy)
+            }
 
             require(power >= 0, "power of implementation " + concreteImplem.name + " on processor " + p.p.name + " is negative:" + power)
-            val energy = durationPI * power
             require(energy >= 0, "energy usage of implementation " + concreteImplem.name + " on processor " + p.p.name + " is negative:" + energy)
 
             ImplemAndProcessorAndDurationAndEnergyAndPower(
