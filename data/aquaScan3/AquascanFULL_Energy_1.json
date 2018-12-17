@@ -1,6 +1,7 @@
 {
   "timeUnit":"us",
   "dataUnit":"8*32bit",
+  "energyUnit":"E-7J",
   "info":"the aquascan model with full hardware and 1 image",
   "jsonFormat":"PlacerBeta5",
   "processingElementClasses":
@@ -54,7 +55,7 @@
         "memSize":32768,
         "resources":[],
         "properties":[],
-        "powerModel":"0",
+        "powerModel":"10",
         "multiCore":2
       },
       {
@@ -63,7 +64,7 @@
         "memSize":32768,
         "resources":[],
         "properties":[],
-        "powerModel":"0",
+        "powerModel":"5",
         "multiCore":4
       },
       {
@@ -72,7 +73,7 @@
         "memSize":32768,
         "resources":[],
         "properties":[],
-        "powerModel":"0",
+        "powerModel":"11",
         "multiCore":4
       },
       {
@@ -87,7 +88,7 @@
           }
         ],
         "properties":[],
-        "powerModel":"0"
+        "powerModel":"20"
       }
     ],
     "busses":
@@ -148,7 +149,8 @@
           }
         ],
         "computationMemory":"2",
-        "duration":"33603"
+        "duration":"33603",
+        "overrideEnergy":"237430"
       }
     ],
     "tasks":
@@ -175,7 +177,6 @@
           }
         ]
       },
-
       {
         "name":"Img1_GlobalImageProcessing",
         "implementations":
@@ -186,7 +187,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"21252"
+            "duration":"21252",
+            "overrideEnergy":"25697"
           },
           {
             "name":"CpuImx6GlobalImageProcessing",
@@ -194,10 +196,13 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"13384"
+            "duration":"13384",
+            "overrideEnergy":"236414"
           }
         ]
       },
+     
+     
       {
         "name":"Img1_Digit1PreTreatment",
         "implementations":
@@ -208,7 +213,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1774"
+            "duration":"1774",
+            "overrideEnergy":"1763"
           },
           {
             "name":"CpuImx6Digit1PreTreatment",
@@ -216,7 +222,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1224"
+            "duration":"1224",
+            "overrideEnergy":"5831"
           }
         ]
       },
@@ -230,7 +237,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43478"
+            "duration":"43478",
+            "overrideEnergy":"178893"
           },
           {
             "name":"CpuImx6Digit1Correlation",
@@ -238,7 +246,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"40218"
+            "duration":"40218",
+            "overrideEnergy":"211176"
           },
           {
             "name":"GPUDigit1Correlation",
@@ -247,7 +256,8 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"22630",
-            "nbThreads":"4"
+            "nbThreads":"4",
+            "overrideEnergy":"693046"
           }
         ],
         "sharedImplementation":["FpgaDigitCorrelation"]
@@ -262,7 +272,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"23"
           },
           {
             "name":"CpuImx6Digit1PostTreatment",
@@ -270,26 +281,11 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"97"
           }
         ]
       },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -304,7 +300,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1774"
+            "duration":"1774",
+            "overrideEnergy":"1763"
           },
           {
             "name":"CpuImx6Digit2PreTreatment",
@@ -312,7 +309,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1224"
+            "duration":"1224",
+            "overrideEnergy":"5831"
           }
         ]
       },
@@ -326,7 +324,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43478"
+            "duration":"43478",
+            "overrideEnergy":"178893"
           },
           {
             "name":"CpuImx6Digit2Correlation",
@@ -334,7 +333,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"40218"
+            "duration":"40218",
+            "overrideEnergy":"211176"
           },
           {
             "name":"GPUDigit2Correlation",
@@ -343,7 +343,8 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"22630",
-            "nbThreads":"4"
+            "nbThreads":"4",
+            "overrideEnergy":"693046"
           }
         ],
         "sharedImplementation":["FpgaDigitCorrelation"]
@@ -358,7 +359,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"23"
           },
           {
             "name":"CpuImx6Digit2PostTreatment",
@@ -366,26 +368,11 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"97"
           }
         ]
       },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -399,7 +386,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1774"
+            "duration":"1774",
+            "overrideEnergy":"1763"
           },
           {
             "name":"CpuImx6Digit3PreTreatment",
@@ -407,7 +395,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1224"
+            "duration":"1224",
+            "overrideEnergy":"5831"
           }
         ]
       },
@@ -421,7 +410,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43478"
+            "duration":"43478",
+            "overrideEnergy":"178893"
           },
           {
             "name":"CpuImx6Digit3Correlation",
@@ -429,7 +419,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"40218"
+            "duration":"40218",
+            "overrideEnergy":"211176"
           },
           {
             "name":"GPUDigit3Correlation",
@@ -438,7 +429,8 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"22630",
-            "nbThreads":"4"
+            "nbThreads":"4",
+            "overrideEnergy":"693046"
           }
         ],
         "sharedImplementation":["FpgaDigitCorrelation"]
@@ -453,7 +445,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"23"
           },
           {
             "name":"CpuImx6Digit3PostTreatment",
@@ -461,17 +454,11 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"97"
           }
         ]
       },
-
-
-
-
-
-
-
 
 
 
@@ -485,7 +472,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1774"
+            "duration":"1774",
+            "overrideEnergy":"1763"
           },
           {
             "name":"CpuImx6Digit4PreTreatment",
@@ -493,7 +481,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1224"
+            "duration":"1224",
+            "overrideEnergy":"5831"
           }
         ]
       },
@@ -507,7 +496,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"43478"
+            "duration":"43478",
+            "overrideEnergy":"178893"
           },
           {
             "name":"CpuImx6Digit4Correlation",
@@ -515,7 +505,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"40218"
+            "duration":"40218",
+            "overrideEnergy":"211176"
           },
           {
             "name":"GPUDigit4Correlation",
@@ -524,7 +515,8 @@
             "resourceUsage":[],
             "computationMemory":"2",
             "duration":"22630",
-            "nbThreads":"4"
+            "nbThreads":"4",
+            "overrideEnergy":"693046"
           }
         ],
         "sharedImplementation":["FpgaDigitCorrelation"]
@@ -539,7 +531,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"23"
           },
           {
             "name":"CpuImx6Digit4PostTreatment",
@@ -547,17 +540,11 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"23"
+            "duration":"23",
+            "overrideEnergy":"97"
           }
         ]
       },
-
-
-
-
-
-
-
 
 
       {
@@ -570,7 +557,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1"
+            "duration":"1",
+            "overrideEnergy":"3"
           },
           {
             "name":"CpuImx6FinalValueDetermination",
@@ -578,7 +566,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1"
+            "duration":"1",
+            "overrideEnergy":"5"
           }
         ]
       },
@@ -592,7 +581,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1"
+            "duration":"1",
+            "overrideEnergy":"0"
           },
           {
             "name":"CpuImx6Output",
@@ -600,7 +590,8 @@
             "parameters":[],
             "resourceUsage":[],
             "computationMemory":"2",
-            "duration":"1"
+            "duration":"1",
+            "overrideEnergy":"0"
           }
         ]
       }
@@ -741,15 +732,15 @@
         "timing":"Sticky"
       }
     ],
-    "softwareClass":"iterativeSoftware"
+    "softwareClass":"oneShotSoftware"
   },
   "constraintsAndObjectives":
   [
     {
-      "simpleObjective":"minFrame"
+      "simpleObjective":"minEnergy"
     },
     {
-      "maxMakespan":90000
+      "maxMakespan":990000
     },
     {
       "runOn": {

@@ -136,6 +136,7 @@ case class Mapping(hardwareName: String,
 
 case class Mappings(timeUnit:String,
                     dataUnit:String,
+                    energyUnit:Option[String],
                     info:String,
                     mapping: Iterable[Mapping]) {
 
@@ -144,6 +145,7 @@ case class Mappings(timeUnit:String,
       JSonHelper.string("jsonFormat","PlacerBeta6Out") + "," +
       JSonHelper.string("timeUnit",timeUnit) + "," +
       JSonHelper.string("dataUnit",dataUnit) + "," +
+      (energyUnit match{case None => ""; case Some(e) => JSonHelper.string("energyUnit", e) + ","}) +
       JSonHelper.string("info",info) + "," +
       additionalFields +
       JSonHelper.multiples("mappings", mapping.map(_.toJSon)) + "}"
@@ -154,7 +156,8 @@ case class Mappings(timeUnit:String,
       "\n\tnbMapping:" + mapping.size +
       "\n\tinfo:" + info +
       "\n\ttimeUnit:" + timeUnit +
-      "\n\tdataUnit:" + dataUnit + "\n" +
+      "\n\tdataUnit:" + dataUnit +
+      (energyUnit match{case None => ""; case Some(e) => "\n\tenergyUnit:" + e + "\n"}) +
       mapping.map(l => l.toString).mkString("\n\n") + "\n)"
   }
 }

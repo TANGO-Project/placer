@@ -45,6 +45,7 @@ case class EMappingProblemHeaderOnly(jsonFormat:String){
 
 case class EMappingProblem(timeUnit:String,
                            dataUnit:String,
+                           energyUnit:Option[String],
                            info:Option[String],
                            jsonFormat:String,
                            processingElementClasses:Array[EProcessingElementClass],
@@ -75,6 +76,7 @@ case class EMappingProblem(timeUnit:String,
     MappingProblem(
       timeUnit,
       dataUnit,
+      energyUnit,
       info match{case None => ""; case Some(i) => i},
       SortedMap.empty[String, Int] ++ properties.map(_.toCouple),
       cl,

@@ -77,6 +77,7 @@ object Mapper {
         Mappings(
           timeUnit = problem.timeUnit,
           dataUnit = problem.dataUnit,
+          energyUnit=problem.energyUnit,
           info = problem.info,
           paretoSols.toList)
 
@@ -89,6 +90,7 @@ object Mapper {
             return Mappings(
               timeUnit = problem.timeUnit,
               dataUnit = problem.dataUnit,
+              energyUnit=problem.energyUnit,
               info = problem.info,
               List(newMappings.head))
           }
@@ -97,6 +99,7 @@ object Mapper {
         Mappings(
           timeUnit = problem.timeUnit,
           dataUnit = problem.dataUnit,
+          energyUnit=problem.energyUnit,
           info = problem.info,
           List.empty)
 
@@ -114,6 +117,7 @@ object Mapper {
         Mappings(
           timeUnit = problem.timeUnit,
           dataUnit = problem.dataUnit,
+          energyUnit=problem.energyUnit,
           info = problem.info,
           paretoSols.toList)
     }

@@ -32,6 +32,7 @@ import scala.collection.immutable.SortedMap
   */
 case class MappingProblem(timeUnit:String,
                           dataUnit:String,
+                          energyUnit:Option[String],
                           info:String,
                           properties:SortedMap[String,Int],
                           processorClasses: Array[ProcessingElementClass],
@@ -43,6 +44,7 @@ case class MappingProblem(timeUnit:String,
       hardwareModel =>
         MappingProblemMonoHardware(timeUnit:String,
           dataUnit:String,
+          energyUnit,
           info:String,
           properties:SortedMap[String,Int],
           processorClasses: Array[ProcessingElementClass],
@@ -55,6 +57,7 @@ case class MappingProblem(timeUnit:String,
 
 case class MappingProblemMonoHardware(timeUnit:String,
                                       dataUnit:String,
+                                      energyUnit:Option[String],
                                       info:String,
                                       properties:SortedMap[String,Int],
                                       processorClasses: Array[ProcessingElementClass],
