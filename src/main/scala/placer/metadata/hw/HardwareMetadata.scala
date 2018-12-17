@@ -154,7 +154,7 @@ case class ProcessingElement(processorClass: ProcessingElementClass,
     processorClass.name + " resources:{" + resources.toList.map({ case (a, b) => a + ":" + b }).mkString(" ") + "} " +
     "properties:{" + properties.toList.map({ case (a, b) => a + ":" + b }).mkString(" ") + "}" +
     " localMem:" + memSize +
-    " powerModel:" + powerModel.prettyPrint() + ")"
+    " powerModel:" + powerModel.prettyPrint() + " idlePower:" + constantPower.value + ")"
 
   override def compare(that: ProcessingElement): Int = {
     require(this.id != -1)

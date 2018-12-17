@@ -439,8 +439,9 @@ class Mapper(val problem: MappingProblemMonoHardware,config:MapperConfig,bestSol
 
     reportProgress("computing total energy consumption")
     val energyForEachTask = cpTasks.map(task => task.energy)
-    val backgroundPower: Int = cpProcessors.map(p => p.p.constantPower.value).sum
-    val energy = sum(energyForEachTask) + makeSpan * backgroundPower
+    val backgroundPower: Int = cpProcessorsSimple.map(p => p.p.constantPower.value).sum
+    println("background power: " + backgroundPower)
+    val energy = sum(energyForEachTask) + (makeSpan * backgroundPower)
 
 
     reportProgress("posting mapping constraints")
